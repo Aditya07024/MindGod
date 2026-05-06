@@ -1,8 +1,8 @@
-const tsConfigPaths = require('tsconfig-paths');
+const tsConfigPaths = require("tsconfig-paths");
 
 tsConfigPaths.register({
-  baseUrl: './dist',
+  baseUrl: "./dist",
   paths: {
-    '@/*': ['./*']
-  }
+    "@/*": ["./*"],
+  },
 });

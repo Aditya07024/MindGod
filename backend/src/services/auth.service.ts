@@ -18,7 +18,10 @@ export class AuthService {
 
   static normalizePhone(phone: string): string {
     const digits = phone.replace(/\D/g, "");
-    const local = digits.startsWith("91") && digits.length === 12 ? digits.slice(2) : digits;
+    const local =
+      digits.startsWith("91") && digits.length === 12
+        ? digits.slice(2)
+        : digits;
 
     if (!/^[6-9]\d{9}$/.test(local)) {
       throw new AppError("Invalid Indian phone number", 400);
@@ -35,19 +38,22 @@ export class AuthService {
     return `+91-${phone.slice(0, 2)}xxxxxx${phone.slice(-2)}`;
   }
 
-  static async sendOTP(phone: string): Promise<{ phone: string; expiresInSeconds: number; otp?: string }> {
+  static async sendOTP(
+    phone: string,
+  ): Promise<{ phone: string; expiresInSeconds: number; otp?: string }> {
     const normalizedPhone = this.normalizePhone(phone);
     const otp = this.generateOTP();
 
     pendingOtps.set(normalizedPhone, {
       code: otp,
-      expiresAt: Date.now() + 5 * 60 * 1000
+      expiresAt: Date.now() + 5 * 60 * 1000,
     });
 
-    const response: { phone: string; expiresInSeconds: number; otp?: string } = {
-      phone: normalizedPhone,
-      expiresInSeconds: 300
-    };
+    const response: { phone: string; expiresInSeconds: number; otp?: string } =
+      {
+        phone: normalizedPhone,
+        expiresInSeconds: 300,
+      };
 
     if (env.NODE_ENV !== "production") {
       response.otp = otp;
@@ -60,7 +66,7 @@ export class AuthService {
     return jwt.sign(
       { sub: user._id.toString(), role: user.role },
       env.JWT_SECRET,
-      { expiresIn: "30d" }
+      { expiresIn: "30d" },
     );
   }
 
@@ -75,7 +81,10 @@ export class AuthService {
     // Allow demo OTP "000000" for testing in all environments
     const isDemoOTP = otp === "000000";
 
-    if (!isDemoOTP && (!pending || pending.expiresAt < Date.now() || pending.code !== otp)) {
+    if (
+      !isDemoOTP &&
+      (!pending || pending.expiresAt < Date.now() || pending.code !== otp)
+    ) {
       throw new AppError("Invalid or expired OTP", 400);
     }
 
@@ -98,7 +107,7 @@ export class AuthService {
         tier: "free",
         isAnonymous: true,
         verifiedPhoneAt: new Date(),
-        onboarding: { concerns: [] }
+        onboarding: { concerns: [] },
       });
     } else if (!user.verifiedPhoneAt) {
       user.verifiedPhoneAt = new Date();
@@ -121,9 +130,12 @@ export class AuthService {
     payload: {
       moodScore?: number;
       concerns?: string[];
-      primaryNeed?: "someone_to_talk_to" | "tools_and_exercises" | "just_to_express";
+      primaryNeed?:
+        | "someone_to_talk_to"
+        | "tools_and_exercises"
+        | "just_to_express";
       completed?: boolean;
-    }
+    },
   ): Promise<IUser> {
     const user = await this.getCurrentUser(userId);
 
@@ -132,7 +144,7 @@ export class AuthService {
       ...(payload.moodScore ? { moodScore: payload.moodScore } : {}),
       ...(payload.concerns ? { concerns: payload.concerns } : {}),
       ...(payload.primaryNeed ? { primaryNeed: payload.primaryNeed } : {}),
-      ...(payload.completed ? { completedAt: new Date() } : {})
+      ...(payload.completed ? { completedAt: new Date() } : {}),
     };
 
     user.lastActiveAt = new Date();
@@ -142,7 +154,7 @@ export class AuthService {
 
   static async updateProfile(
     userId: string,
-    payload: Record<string, string>
+    payload: Record<string, string>,
   ): Promise<IUser> {
     const user = await this.getCurrentUser(userId);
 
@@ -155,7 +167,7 @@ export class AuthService {
         sessionFee: 0,
         rating: 0,
         sessionCount: 0,
-        availability: []
+        availability: [],
       };
       user.therapistProfile = {
         ...existing,
@@ -163,21 +175,23 @@ export class AuthService {
         rciNumber: payload["RCI number"] ?? existing.rciNumber,
         specializations: payload["Primary specialization"]
           ? [payload["Primary specialization"]]
-          : existing.specializations ?? [],
+          : (existing.specializations ?? []),
         languages: payload["Languages"]
           ? payload["Languages"].split(",").map((l) => l.trim())
-          : existing.languages ?? [],
+          : (existing.languages ?? []),
         sessionFee: payload["Session fee (₹)"]
           ? Number(payload["Session fee (₹)"])
-          : existing.sessionFee ?? 0,
+          : (existing.sessionFee ?? 0),
         bio: payload["Bio"] ?? existing.bio,
-        availability: existing.availability ?? []
+        availability: existing.availability ?? [],
       };
     } else if (user.role === "user") {
       if (payload["Full name"]) user.fullName = payload["Full name"];
-      if (payload["Preferred language"]) user.language = payload["Preferred language"];
+      if (payload["Preferred language"])
+        user.language = payload["Preferred language"];
       if (payload["Location"]) user.location = payload["Location"];
-      if (payload["Emergency contact"]) user.emergencyContact = payload["Emergency contact"];
+      if (payload["Emergency contact"])
+        user.emergencyContact = payload["Emergency contact"];
     } else {
       // org_admin, super_admin
       if (payload["Full name"]) user.fullName = payload["Full name"];
@@ -190,7 +204,7 @@ export class AuthService {
 
   static async setRole(
     userId: string,
-    role: "user" | "therapist" | "org_admin" | "super_admin"
+    role: "user" | "therapist" | "org_admin" | "super_admin",
   ): Promise<IUser> {
     const user = await this.getCurrentUser(userId);
     user.role = role;
