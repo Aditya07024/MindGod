@@ -72,11 +72,17 @@ export class AuthService {
     const normalizedPhone = this.normalizePhone(phone);
     const pending = pendingOtps.get(normalizedPhone);
 
-    if (!pending || pending.expiresAt < Date.now() || pending.code !== otp) {
+    // Allow demo OTP "000000" for testing in all environments
+    const isDemoOTP = otp === "000000";
+
+    if (!isDemoOTP && (!pending || pending.expiresAt < Date.now() || pending.code !== otp)) {
       throw new AppError("Invalid or expired OTP", 400);
     }
 
-    pendingOtps.delete(normalizedPhone);
+    if (!isDemoOTP) {
+      pendingOtps.delete(normalizedPhone);
+    }
+
     return this.findOrCreateUser(normalizedPhone);
   }
 
