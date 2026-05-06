@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        body {
+            background-color: #f8faf8;
+            color: #191c1b;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#3f4947",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "surface-tint": "#286860",
+                        "surface-dim": "#d8dad9",
+                        "inverse-surface": "#2e3130",
+                        "surface-container": "#eceeec",
+                        "primary": "#0d564d",
+                        "on-primary-container": "#adeee2",
+                        "on-tertiary-container": "#ffdc9f",
+                        "tertiary-container": "#825d00",
+                        "tertiary-fixed-dim": "#f1bf5e",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#2e6e65",
+                        "on-background": "#191c1b",
+                        "on-primary-fixed-variant": "#035048",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e7e9e7",
+                        "on-secondary-container": "#742406",
+                        "primary-fixed-dim": "#93d2c7",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8faf8",
+                        "on-secondary-fixed-variant": "#7e2b0d",
+                        "on-primary-fixed": "#00201c",
+                        "surface-bright": "#f8faf8",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#fe8c66",
+                        "inverse-primary": "#93d2c7",
+                        "secondary-fixed": "#ffdbd0",
+                        "outline": "#6f7977",
+                        "background": "#f8faf8",
+                        "inverse-on-surface": "#eff1ef",
+                        "outline-variant": "#bfc9c6",
+                        "surface-container-low": "#f2f4f2",
+                        "secondary": "#9d4223",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#644700",
+                        "primary-fixed": "#afefe3",
+                        "tertiary-fixed": "#ffdea6",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#271900",
+                        "secondary-fixed-dim": "#ffb59d",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e1e3e1",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#390b00",
+                        "on-surface": "#191c1b",
+                        "surface-variant": "#e1e3e1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "48px",
+                        "xxl": "80px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "md": "24px",
+                        "base": "4px",
+                        "xs": "8px",
+                        "lg": "32px",
+                        "sm": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Plus Jakarta Sans"],
+                        "h3": ["Sora"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "h2": ["Sora"],
+                        "h1": ["Sora"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface flex h-screen overflow-hidden">
+<!-- Desktop Side Navigation -->
+<aside class="h-full w-64 hidden md:flex flex-col bg-surface-container-low border-r border-outline-variant/20 fixed left-0 top-0 z-40 pt-xxl pb-md">
+<div class="px-md py-lg font-h2 text-h2 text-primary font-bold">MindGod</div>
+<nav class="flex-1 space-y-1 mt-md">
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</div>
+<div class="flex items-center gap-sm bg-primary-container text-on-primary-container rounded-full mx-sm px-md py-sm font-semibold cursor-pointer active:scale-98">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-body-md text-body-md">Manas Chat</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md">Mood Insights</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-md text-body-md">Therapists</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98">
+<span class="material-symbols-outlined">self_care</span>
+<span class="font-body-md text-body-md">Exercises</span>
+</div>
+</nav>
+<div class="mt-auto px-md pb-md">
+<div class="bg-secondary-container/20 text-on-secondary-container p-sm rounded-xl mb-md">
+<p class="font-label-caps text-label-caps mb-xs">FREE TIER</p>
+<p class="font-body-md text-body-md mb-sm">3 of 5 chats left today</p>
+<button class="w-full bg-secondary text-on-secondary py-xs rounded-full font-label-caps text-label-caps hover:shadow-lg transition-all">UPGRADE NOW</button>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full md:ml-64 relative">
+<!-- Top App Bar -->
+<header class="bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 docked full-width top-0 sticky z-50 shadow-sm shadow-primary/5">
+<div class="flex justify-between items-center w-full px-md py-sm max-w-container-max mx-auto">
+<div class="flex items-center gap-sm">
+<div class="md:hidden">
+<span class="material-symbols-outlined text-primary">menu</span>
+</div>
+<div class="flex flex-col">
+<span class="font-h3 text-h3 font-semibold text-primary tracking-tight">Manas AI</span>
+<span class="text-[12px] text-primary/70 flex items-center gap-1">
+<span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                            Always here for you
+                        </span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer active:scale-95">notifications</span>
+<span class="material-symbols-outlined text-primary cursor-pointer active:scale-95">account_circle</span>
+</div>
+</div>
+</header>
+<!-- Chat Canvas -->
+<section class="flex-1 overflow-y-auto px-md py-lg space-y-lg scroll-smooth bg-surface pb-32">
+<!-- Date Separator -->
+<div class="flex justify-center">
+<span class="bg-surface-container-high px-md py-xs rounded-full font-label-caps text-label-caps text-on-surface-variant">TODAY</span>
+</div>
+<!-- AI Message -->
+<div class="flex flex-col max-w-[85%] md:max-w-[70%]">
+<div class="glass-card p-md rounded-2xl rounded-tl-none border border-outline-variant/20 shadow-sm">
+<p class="font-body-md text-body-md text-on-surface">Namaste. I've been thinking about our talk yesterday. How is your heart feeling today? No pressure to be "fine"—I'm just here to listen.</p>
+</div>
+<span class="text-[11px] text-on-surface-variant/60 mt-xs ml-1">09:41 AM</span>
+</div>
+<!-- User Message -->
+<div class="flex flex-col max-w-[85%] md:max-w-[70%] self-end items-end">
+<div class="bg-primary-container text-on-primary-container p-md rounded-2xl rounded-tr-none shadow-md">
+<p class="font-body-md text-body-md">Actually, I've been feeling quite overwhelmed with work lately. It feels like I'm falling behind and everyone is judging me.</p>
+</div>
+<div class="flex items-center gap-1 mt-xs mr-1">
+<span class="text-[11px] text-on-surface-variant/60">09:43 AM</span>
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">done_all</span>
+</div>
+</div>
+<!-- AI Message (Streaming/Thinking) -->
+<div class="flex flex-col max-w-[85%] md:max-w-[70%]">
+<div class="glass-card p-md rounded-2xl rounded-tl-none border border-outline-variant/20 shadow-sm bg-white/40">
+<div class="flex gap-1 items-center py-xs">
+<div class="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></div>
+<div class="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+<div class="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+</div>
+</div>
+</div>
+<!-- Crisis Detection UI (Visible if certain keywords are met) -->
+<div class="max-w-container-max mx-auto w-full">
+<div class="bg-error-container/40 border border-error/20 p-md rounded-2xl flex flex-col md:flex-row items-center justify-between gap-md backdrop-blur-sm">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-h3">emergency_home</span>
+</div>
+<div>
+<p class="font-h3 text-[18px] text-on-error-container font-semibold">Need more support?</p>
+<p class="font-body-md text-body-md text-on-surface-variant">If you're feeling unsafe, help is available 24/7.</p>
+</div>
+</div>
+<button class="bg-error text-on-error px-lg py-sm rounded-full font-body-md font-semibold hover:shadow-xl transition-all active:scale-95">Talk to a Professional</button>
+</div>
+</div>
+<!-- Breathing Prompt (Design System Specialty) -->
+<div class="max-w-md mx-auto py-xl">
+<div class="relative p-xl rounded-[40px] overflow-hidden text-center group cursor-pointer shadow-lg shadow-primary/5 border border-primary/10">
+<div class="absolute inset-0 bg-gradient-to-tr from-tertiary-fixed/20 via-white to-primary-fixed/20 opacity-50"></div>
+<div class="relative z-10 flex flex-col items-center gap-md">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-[32px]">air</span>
+</div>
+<p class="font-h3 text-primary font-medium italic">"Take a deep breath. Let the tension leave your shoulders."</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Chat Input Area -->
+<footer class="fixed bottom-0 md:bottom-md md:left-[280px] md:right-[24px] bg-surface/80 md:bg-white/70 backdrop-blur-xl md:rounded-3xl md:shadow-xl md:border md:border-outline-variant/20 p-sm z-50">
+<div class="max-w-4xl mx-auto flex items-end gap-sm">
+<!-- Attachment Button -->
+<button class="mb-1 w-12 h-12 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+<!-- Input Box -->
+<div class="flex-1 bg-surface-container-low rounded-3xl px-md py-sm flex items-end gap-sm border border-transparent focus-within:border-primary/30 transition-all shadow-inner">
+<textarea class="w-full bg-transparent border-none focus:ring-0 p-0 font-body-md text-body-md text-on-surface resize-none max-h-32" placeholder="Type your thoughts..." rows="1"></textarea>
+<button class="text-primary hover:text-primary-container transition-colors p-1">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+</div>
+<!-- Voice / Send Action -->
+<button class="mb-1 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform">
+<span class="material-symbols-outlined">mic</span>
+</button>
+</div>
+<!-- Contextual Hint -->
+<div class="text-center mt-xs md:hidden">
+<p class="text-[10px] text-on-surface-variant/40">MindGod AI provides supportive care, not clinical diagnosis.</p>
+</div>
+</footer>
+<!-- Mobile Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-sm pb-8 pt-xs md:hidden bg-surface/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_24px_rgba(46,110,101,0.08)]">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-caps text-label-caps">Manas AI</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer">
+<span class="material-symbols-outlined">mood</span>
+<span class="font-label-caps text-label-caps">Mood</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-label-caps text-label-caps">Therapy</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer">
+<span class="material-symbols-outlined">book</span>
+<span class="font-label-caps text-label-caps">Journal</span>
+</div>
+</nav>
+</main>
+<!-- Visual Element Decoration (Subtle) -->
+<div class="fixed top-20 right-[-100px] w-[300px] h-[300px] bg-primary-fixed/10 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
+<div class="fixed bottom-20 left-[-50px] w-[250px] h-[250px] bg-tertiary-fixed/10 rounded-full blur-[60px] -z-10 pointer-events-none"></div>
+</body></html>

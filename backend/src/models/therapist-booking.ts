@@ -1,0 +1,46 @@
+import mongoose, { Schema, type Document, type Types } from "mongoose";
+
+interface IPayment {
+  razorpayOrderId?: string;
+  amount: number;
+  paid: boolean;
+}
+
+export interface ITherapistBooking extends Document {
+  userId: Types.ObjectId;
+  therapistId: Types.ObjectId;
+  slot: Date;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  payment: IPayment;
+  videoRoomId?: string;
+  therapistNotes?: string;
+  aiBrief?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const TherapistBookingSchema = new Schema<ITherapistBooking>(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    therapistId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    slot: { type: Date, required: true },
+    status: {
+      type: String,
+      enum: ["pending", "confirmed", "completed", "cancelled"],
+      default: "pending"
+    },
+    payment: {
+      razorpayOrderId: { type: String },
+      amount: { type: Number, required: true },
+      paid: { type: Boolean, default: false }
+    },
+    videoRoomId: { type: String },
+    therapistNotes: { type: String },
+    aiBrief: { type: String }
+  },
+  { timestamps: true }
+);
+
+TherapistBookingSchema.index({ therapistId: 1, slot: 1 });
+
+export const TherapistBooking = mongoose.model<ITherapistBooking>("TherapistBooking", TherapistBookingSchema);

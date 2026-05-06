@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#3f4947",
+                    "on-tertiary-fixed-variant": "#5d4200",
+                    "surface-tint": "#286860",
+                    "surface-dim": "#d8dad9",
+                    "inverse-surface": "#2e3130",
+                    "surface-container": "#eceeec",
+                    "primary": "#0d564d",
+                    "on-primary-container": "#adeee2",
+                    "on-tertiary-container": "#ffdc9f",
+                    "tertiary-container": "#825d00",
+                    "tertiary-fixed-dim": "#f1bf5e",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#2e6e65",
+                    "on-background": "#191c1b",
+                    "on-primary-fixed-variant": "#035048",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e7e9e7",
+                    "on-secondary-container": "#742406",
+                    "primary-fixed-dim": "#93d2c7",
+                    "error-container": "#ffdad6",
+                    "surface": "#f8faf8",
+                    "on-secondary-fixed-variant": "#7e2b0d",
+                    "on-primary-fixed": "#00201c",
+                    "surface-bright": "#f8faf8",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#fe8c66",
+                    "inverse-primary": "#93d2c7",
+                    "secondary-fixed": "#ffdbd0",
+                    "outline": "#6f7977",
+                    "background": "#f8faf8",
+                    "inverse-on-surface": "#eff1ef",
+                    "outline-variant": "#bfc9c6",
+                    "surface-container-low": "#f2f4f2",
+                    "secondary": "#9d4223",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#644700",
+                    "primary-fixed": "#afefe3",
+                    "tertiary-fixed": "#ffdea6",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#271900",
+                    "secondary-fixed-dim": "#ffb59d",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e1e3e1",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#390b00",
+                    "on-surface": "#191c1b",
+                    "surface-variant": "#e1e3e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "48px",
+                    "xxl": "80px",
+                    "gutter": "24px",
+                    "container-max": "1200px",
+                    "md": "24px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "lg": "32px",
+                    "sm": "16px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Plus Jakarta Sans"],
+                    "h3": ["Sora"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "h2": ["Sora"],
+                    "h1": ["Sora"],
+                    "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .breathing-circle {
+            animation: breathe 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.3; filter: blur(40px); }
+            50% { transform: scale(1.5); opacity: 0.6; filter: blur(60px); }
+        }
+        .step-transition {
+            transition: all 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed">
+<main class="relative w-full min-h-screen overflow-x-hidden">
+<!-- Step 1: Apna Dil Kholo (Initial Welcome) -->
+<section class="fixed inset-0 z-50 bg-primary flex flex-col items-center justify-center px-md" id="step-1">
+<div class="absolute inset-0 flex items-center justify-center overflow-hidden">
+<div class="breathing-circle w-64 h-64 rounded-full bg-primary-fixed-dim blur-3xl opacity-30"></div>
+</div>
+<div class="relative z-10 text-center space-y-lg max-w-md">
+<h1 class="font-h1 text-h1 text-on-primary tracking-tight">Apna Dil Kholo</h1>
+<p class="font-body-lg text-body-lg text-primary-fixed opacity-90">Welcome to MindGod. This is your safe space to breathe, reflect, and find clarity.</p>
+<div class="pt-xl">
+<button class="w-full bg-surface text-primary font-h3 py-md rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all">
+                        Begin My Journey
+                    </button>
+</div>
+</div>
+<div class="absolute bottom-xl w-full text-center px-md">
+<p class="font-label-caps text-label-caps text-primary-fixed uppercase tracking-widest opacity-60">Deep Breaths In • Deep Breaths Out</p>
+</div>
+</section>
+<!-- Main Flow Container (Steps 2-6) -->
+<div class="max-w-md mx-auto min-h-screen pt-xxl pb-xl px-md relative">
+<!-- Step Progress Indicator -->
+<div class="fixed top-0 left-0 w-full p-md bg-surface/80 backdrop-blur-md z-40">
+<div class="flex items-center gap-xs max-w-md mx-auto">
+<div class="h-1.5 flex-1 rounded-full bg-primary"></div>
+<div class="h-1.5 flex-1 rounded-full bg-outline-variant"></div>
+<div class="h-1.5 flex-1 rounded-full bg-outline-variant"></div>
+<div class="h-1.5 flex-1 rounded-full bg-outline-variant"></div>
+<div class="h-1.5 flex-1 rounded-full bg-outline-variant"></div>
+</div>
+</div>
+<!-- Step 2: Mood Slider -->
+<div class="space-y-xl py-xl" id="step-2">
+<div class="space-y-sm">
+<h2 class="font-h2 text-h2 text-primary">How are you feeling right now?</h2>
+<p class="font-body-md text-on-surface-variant">There are no wrong answers here.</p>
+</div>
+<div class="relative py-xxl text-center">
+<div class="text-8xl mb-xl">😊</div>
+<input class="w-full h-2 bg-outline-variant rounded-lg appearance-none cursor-pointer accent-primary" max="5" min="1" type="range" value="4"/>
+<div class="flex justify-between mt-sm font-label-caps text-on-surface-variant">
+<span>Low</span>
+<span>Neutral</span>
+<span>Great</span>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-h3 py-md rounded-full shadow-md hover:opacity-90 active:scale-95 transition-all">
+                    Next
+                </button>
+</div>
+<!-- Step 3: Concern Selection (Asymmetric Pill Layout) -->
+<div class="hidden space-y-xl py-xl" id="step-3">
+<div class="space-y-sm">
+<h2 class="font-h2 text-h2 text-primary">What's on your mind?</h2>
+<p class="font-body-md text-on-surface-variant">Select all that apply to you today.</p>
+</div>
+<div class="flex flex-wrap gap-sm">
+<button class="px-md py-sm rounded-full border-2 border-outline-variant text-on-surface-variant font-body-md hover:border-primary hover:text-primary transition-all">Work Stress</button>
+<button class="px-md py-sm rounded-full border-2 border-primary bg-primary-container text-on-primary-container font-body-md">Family</button>
+<button class="px-md py-sm rounded-full border-2 border-outline-variant text-on-surface-variant font-body-md">Loneliness</button>
+<button class="px-md py-sm rounded-full border-2 border-outline-variant text-on-surface-variant font-body-md">Health</button>
+<button class="px-md py-sm rounded-full border-2 border-primary bg-primary-container text-on-primary-container font-body-md">Relationships</button>
+<button class="px-md py-sm rounded-full border-2 border-outline-variant text-on-surface-variant font-body-md">Money</button>
+</div>
+<button class="w-full bg-primary text-on-primary font-h3 py-md rounded-full shadow-md">
+                    Continue
+                </button>
+</div>
+<!-- Step 4: Choice Cards (Soft Glassmorphism) -->
+<div class="hidden space-y-xl py-xl" id="step-4">
+<div class="space-y-sm">
+<h2 class="font-h2 text-h2 text-primary">How can we help?</h2>
+</div>
+<div class="grid gap-sm">
+<div class="p-lg bg-surface-container rounded-xl border border-outline-variant/30 flex items-start gap-md cursor-pointer hover:bg-surface-container-high transition-all">
+<div class="p-sm bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">forum</span>
+</div>
+<div>
+<h4 class="font-h3 text-body-lg font-bold text-primary">Someone to talk to</h4>
+<p class="text-on-surface-variant text-body-md">Connect with a empathetic listener or therapist.</p>
+</div>
+</div>
+<div class="p-lg bg-surface-container rounded-xl border-2 border-primary flex items-start gap-md cursor-pointer">
+<div class="p-sm bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">self_care</span>
+</div>
+<div>
+<h4 class="font-h3 text-body-lg font-bold text-primary">Tools &amp; exercises</h4>
+<p class="text-on-surface-variant text-body-md">Meditations and journaling prompts.</p>
+</div>
+</div>
+<div class="p-lg bg-surface-container rounded-xl border border-outline-variant/30 flex items-start gap-md cursor-pointer hover:bg-surface-container-high transition-all">
+<div class="p-sm bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">edit_note</span>
+</div>
+<div>
+<h4 class="font-h3 text-body-lg font-bold text-primary">Just to express myself</h4>
+<p class="text-on-surface-variant text-body-md">A private diary for your daily thoughts.</p>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-h3 py-md rounded-full">
+                    Confirm Choice
+                </button>
+</div>
+<!-- Step 5: Phone + OTP Verification -->
+<div class="hidden space-y-xl py-xl" id="step-5">
+<div class="space-y-sm">
+<h2 class="font-h2 text-h2 text-primary">Let's secure your space</h2>
+<p class="font-body-md text-on-surface-variant">We'll send a 4-digit code to your mobile.</p>
+</div>
+<div class="space-y-lg">
+<div class="relative">
+<span class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">+91</span>
+<input class="w-full pl-xl pr-md py-md bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary" placeholder="Mobile Number" type="tel"/>
+</div>
+<div class="grid grid-cols-4 gap-sm">
+<input class="aspect-square text-center font-h2 text-primary bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary" maxlength="1" type="text"/>
+<input class="aspect-square text-center font-h2 text-primary bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary" maxlength="1" type="text"/>
+<input class="aspect-square text-center font-h2 text-primary bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary" maxlength="1" type="text"/>
+<input class="aspect-square text-center font-h2 text-primary bg-surface-container-low rounded-xl border-none focus:ring-2 focus:ring-primary" maxlength="1" type="text"/>
+</div>
+<p class="text-center text-label-caps text-on-surface-variant cursor-pointer hover:text-primary underline">Resend Code in 00:59</p>
+</div>
+<button class="w-full bg-primary text-on-primary font-h3 py-md rounded-full shadow-md">
+                    Verify &amp; Enter
+                </button>
+</div>
+<!-- Step 6: First AI Message (The Breathing Room Layout) -->
+<div class="hidden min-h-[716px] flex flex-col justify-end py-xl" id="step-6">
+<div class="space-y-md">
+<!-- AI Bubble -->
+<div class="flex items-end gap-sm max-w-[85%]">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary-container text-sm">psychology</span>
+</div>
+<div class="p-md bg-surface-container-lowest border border-primary/10 rounded-2xl rounded-bl-none shadow-sm">
+<p class="font-body-md text-primary leading-relaxed">Namaste. I am <span class="font-bold">Manas</span>, your inner guide. I've listened to your heart, and I'm here to walk this path with you. How would you like to begin our journey today?</p>
+</div>
+</div>
+<!-- Streaming Indicator -->
+<div class="flex gap-1 pl-xl">
+<div class="w-1.5 h-1.5 rounded-full bg-primary/20"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary/20"></div>
+</div>
+<!-- Suggested Next Steps -->
+<div class="pt-xl grid grid-cols-2 gap-sm">
+<button class="p-md text-left bg-surface-container-low border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-white transition-all group">
+<span class="material-symbols-outlined text-primary mb-xs block">spa</span>
+<span class="text-label-caps text-on-surface-variant uppercase">Start</span>
+<span class="block font-h3 text-body-md font-bold text-primary">5-min Calm</span>
+</button>
+<button class="p-md text-left bg-surface-container-low border border-outline-variant/30 rounded-xl hover:border-primary hover:bg-white transition-all group">
+<span class="material-symbols-outlined text-primary mb-xs block">chat</span>
+<span class="text-label-caps text-on-surface-variant uppercase">Talk</span>
+<span class="block font-h3 text-body-md font-bold text-primary">Just Chat</span>
+</button>
+</div>
+</div>
+<div class="mt-xl relative">
+<div class="absolute inset-0 bg-gradient-to-r from-tertiary/10 to-primary/10 blur-2xl -z-10 rounded-full"></div>
+<div class="flex items-center bg-white/70 backdrop-blur-md rounded-full px-md py-sm border border-outline-variant/30">
+<input class="flex-1 bg-transparent border-none focus:ring-0 placeholder:text-outline" placeholder="Reply to Manas..." type="text"/>
+<button class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Artwork Decorations (Subtle Indian Mandalas/Florals) -->
+<div class="fixed top-0 right-0 -translate-y-1/4 translate-x-1/4 w-96 h-96 opacity-5 pointer-events-none">
+<img class="w-full h-full object-contain" data-alt="A delicate, highly detailed Indian floral mandala pattern in soft watercolor teal and gold strokes. The pattern is intricate and airy, set against a pristine off-white background with a soft focus. The aesthetic is serene, traditional yet modern, and evokes a sense of peace and organic balance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGjz-Iu1C-esFO4O-O7H8GpJmLoM9LoGhmSgRRDH2Xx7QomMQg9hWXDMjLzAitW7It1XS7Jza53Q7DOUlM6s9Qj1bhdHmH7Ht2F_dLda4DmBw4v2qyr_asWIRndR2xvG-dPpEZtOM0FpeMPzDqny5xXeTkGhPEkarLGoM9sg_h_6Y4r8zYhb0qi6dSyltoPd1aTdhPZDWJ4XiFVlgD9KjRYwPojaKTyhYrN4qF9UisX9-Ytbk5XAdlqniHnC5mGznnTC9QOXJO6jE"/>
+</div>
+<div class="fixed bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-80 h-80 opacity-5 pointer-events-none">
+<img class="w-full h-full object-contain" data-alt="A soft, abstract botanical illustration of an Indian lotus flower in muted earthy tones of coral and gold. The style is minimalist and organic, with ethereal textures and glowing soft lighting that feels like a sun-drenched sanctuary. The composition is spacious and calm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4PNjBO0I36rq-IGQKl8kCjPWbIus_EarOdRtMQo2p3JY5JciTqM6EnnoP7Kwe5RhBfgj-QkjTH2P17tEor3tzeOE08UtTKWP8mmDIeU-1BRNeuUtaM80O0aicqRU4jeTo-48TroZ-4QX31rZZC2fiq9hY5YraxRt66MfHTGGIzKi1tVIAY816zYD5MEX12lqSp9GSyXchdW_-iTcwrc6bGZmX0IUZVjb99d7QhEp4pUqHErmVPJjURaZmN9yGgmc7yNYNWwzCi8M"/>
+</div>
+</main>
+<!-- Shared Navigation Components (Hidden during onboarding) -->
+<!-- But defined here as per requirements for top-level relevance -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full z-40 flex-col pt-xxl pb-md bg-surface-container-low border-r border-outline-variant/20 w-64">
+<div class="font-h2 text-h2 text-primary font-bold px-md py-lg">MindGod</div>
+<div class="flex flex-col gap-base">
+<a class="flex items-center gap-sm bg-primary-container text-on-primary-container rounded-full mx-sm px-md py-sm font-semibold" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all" href="#">
+<span class="material-symbols-outlined">forum</span> Manas Chat
+            </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span> Mood Insights
+            </a>
+</div>
+<div class="mt-auto px-md py-sm">
+<button class="w-full py-md bg-secondary text-on-secondary rounded-full font-bold shadow-sm active:scale-95 transition-all">
+                Crisis Support
+            </button>
+</div>
+</nav>
+<footer class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-sm pb-8 pt-xs md:hidden bg-surface/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_24px_rgba(46,110,101,0.08)]">
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-caps text-label-caps">Manas AI</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">mood</span>
+<span class="font-label-caps text-label-caps">Mood</span>
+</div>
+</footer>
+</body></html>

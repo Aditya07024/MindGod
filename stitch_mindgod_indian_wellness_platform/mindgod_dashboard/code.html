@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#3f4947",
+                    "on-tertiary-fixed-variant": "#5d4200",
+                    "surface-tint": "#286860",
+                    "surface-dim": "#d8dad9",
+                    "inverse-surface": "#2e3130",
+                    "surface-container": "#eceeec",
+                    "primary": "#0d564d",
+                    "on-primary-container": "#adeee2",
+                    "on-tertiary-container": "#ffdc9f",
+                    "tertiary-container": "#825d00",
+                    "tertiary-fixed-dim": "#f1bf5e",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#2e6e65",
+                    "on-background": "#191c1b",
+                    "on-primary-fixed-variant": "#035048",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e7e9e7",
+                    "on-secondary-container": "#742406",
+                    "primary-fixed-dim": "#93d2c7",
+                    "error-container": "#ffdad6",
+                    "surface": "#f8faf8",
+                    "on-secondary-fixed-variant": "#7e2b0d",
+                    "on-primary-fixed": "#00201c",
+                    "surface-bright": "#f8faf8",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#fe8c66",
+                    "inverse-primary": "#93d2c7",
+                    "secondary-fixed": "#ffdbd0",
+                    "outline": "#6f7977",
+                    "background": "#f8faf8",
+                    "inverse-on-surface": "#eff1ef",
+                    "outline-variant": "#bfc9c6",
+                    "surface-container-low": "#f2f4f2",
+                    "secondary": "#9d4223",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#644700",
+                    "primary-fixed": "#afefe3",
+                    "tertiary-fixed": "#ffdea6",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#271900",
+                    "secondary-fixed-dim": "#ffb59d",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e1e3e1",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#390b00",
+                    "on-surface": "#191c1b",
+                    "surface-variant": "#e1e3e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "16px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "48px",
+                    "xxl": "80px",
+                    "gutter": "24px",
+                    "container-max": "1200px",
+                    "md": "24px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "lg": "32px",
+                    "sm": "16px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Plus Jakarta Sans"],
+                    "h3": ["Sora"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "h2": ["Sora"],
+                    "h1": ["Sora"],
+                    "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .breathing-room-gradient {
+            background: radial-gradient(circle at center, rgba(255, 222, 166, 0.15) 0%, rgba(175, 239, 227, 0.1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased">
+<!-- TopAppBar -->
+<header class="bg-surface/70 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-outline-variant/30 shadow-sm shadow-primary/5">
+<div class="flex justify-between items-center w-full px-md py-sm max-w-container-max mx-auto">
+<div class="font-h2 text-h2 font-semibold text-primary tracking-tight">MindGod</div>
+<div class="flex items-center gap-md">
+<nav class="hidden md:flex gap-lg items-center">
+<a class="text-primary font-semibold border-b-2 border-primary cursor-pointer active:scale-95 transition-colors duration-300" href="#">Home</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300 cursor-pointer active:scale-95" href="#">Manas AI</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300 cursor-pointer active:scale-95" href="#">Mood</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300 cursor-pointer active:scale-95" href="#">Therapy</a>
+</nav>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 p-xs" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 p-xs" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex max-w-container-max mx-auto">
+<!-- SideNavBar (Desktop Only) -->
+<aside class="h-full w-64 hidden md:flex flex-col fixed left-0 top-0 pt-xxl pb-md border-r border-outline-variant/20 bg-surface-container-low z-40">
+<div class="font-h2 text-h2 text-primary font-bold px-md py-lg">MindGod</div>
+<p class="px-md text-on-surface-variant text-sm mb-lg">Your inner sanctuary</p>
+<nav class="flex flex-col gap-base">
+<a class="flex items-center gap-sm bg-primary-container text-on-primary-container rounded-full mx-sm px-md py-sm font-semibold active:scale-98 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span> Dashboard
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span> Manas Chat
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span> Mood Insights
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span> Therapists
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="self_care">self_care</span> Exercises
+                </a>
+<a class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> Settings
+                </a>
+</nav>
+<div class="mt-auto px-md pb-md">
+<button class="w-full bg-[#DC2626] text-white py-sm rounded-full font-semibold shadow-lg shadow-red-900/10 active:scale-95 transition-transform">
+                    Crisis Support
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-md md:p-xl">
+<!-- Greeting & Streak -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-md">
+<div>
+<h1 class="font-h1 text-h1 text-primary">Namaste, Rohan</h1>
+<p class="font-body-lg text-on-surface-variant">Your journey to peace continues today.</p>
+</div>
+<div class="glass-card px-md py-sm rounded-xl flex items-center gap-sm border border-outline-variant shadow-sm shadow-primary/5">
+<div class="w-10 h-10 bg-secondary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="local_fire_department" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">CURRENT STREAK</div>
+<div class="font-h3 text-h3 text-secondary">12 Days</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Mood Tracker Section (Large Card) -->
+<section class="md:col-span-8 glass-card rounded-xl p-lg border border-outline-variant/30 flex flex-col gap-md">
+<div class="flex justify-between items-center">
+<h2 class="font-h2 text-h2 text-primary">How are you feeling now?</h2>
+<span class="material-symbols-outlined text-primary-container text-3xl" data-icon="sentiment_satisfied">sentiment_satisfied</span>
+</div>
+<div class="relative py-xl">
+<input class="w-full h-2 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary" max="5" min="1" step="1" type="range"/>
+<div class="flex justify-between mt-sm text-on-surface-variant font-label-caps px-base">
+<span>Anxious</span>
+<span>Low</span>
+<span>Neutral</span>
+<span>Good</span>
+<span>Radiant</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary rounded-full px-lg py-sm self-end font-semibold active:scale-95 transition-all">
+                        Log Mood
+                    </button>
+</section>
+<!-- Breathing Exercise Shortcut (Small Card) -->
+<section class="md:col-span-4 bg-primary-container text-on-primary-container rounded-xl p-lg flex flex-col justify-between shadow-lg shadow-primary/10">
+<div class="w-12 h-12 bg-on-primary-container/20 rounded-full flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-on-primary-container text-3xl" data-icon="air">air</span>
+</div>
+<div>
+<h3 class="font-h3 text-h3 mb-xs">Breathe With Us</h3>
+<p class="text-on-primary-container/80 text-sm mb-md">A 2-minute box breathing session to center your mind.</p>
+<button class="w-full bg-white text-primary rounded-full py-sm font-bold flex items-center justify-center gap-xs active:scale-95 transition-all">
+                            Start Session <span class="material-symbols-outlined" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</section>
+<!-- Manas AI Preview (Medium Card) -->
+<section class="md:col-span-5 glass-card rounded-xl p-lg border border-outline-variant/30 flex flex-col gap-sm">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-fixed text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<h3 class="font-h3 text-h3 text-primary">Manas AI</h3>
+</div>
+<div class="bg-surface-container-low rounded-xl p-md border border-outline-variant/10 italic text-on-surface-variant text-sm relative">
+                        "Rohan, I noticed you've been working late. Shall we do a quick decompression chat?"
+                        <div class="absolute -bottom-2 left-6 w-4 h-4 bg-surface-container-low rotate-45 border-r border-b border-outline-variant/10"></div>
+</div>
+<div class="mt-md flex gap-sm">
+<input class="flex-1 bg-surface-container-high border-none rounded-full px-md text-sm focus:ring-2 focus:ring-primary" placeholder="Type a message..." type="text"/>
+<button class="bg-primary p-sm rounded-full text-white active:scale-90">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</div>
+</section>
+<!-- Daily CBT Prompt (Asymmetric Large Card) -->
+<section class="md:col-span-7 rounded-xl overflow-hidden relative group">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A tranquil, sun-drenched sanctuary interior with soft, semi-transparent drapes catching the warm morning light. The environment is minimalist and organic, featuring natural wood textures and lush indoor plants. The overall aesthetic is serene and supportive, utilizing a palette of soft teals, warm golds, and pristine whites to evoke emotional safety and quiet contemplation. High-key lighting creates a soft-focus, dreamlike quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4CMYwfxQWUBk5yGtNbmKI-ifHfcj851jEyThAvuvvI5r_7OB9M61gYzNgzlWxRsWx2sQ79wKRri1CbUL8BXgbM7Bv64yzFr14McYICeAWtVanjpeaKyk2PAYp1bom5SWjKQ9LIDnn3qafgLmL4cTOiz5c4rodpC3MdV-pPvgX3_ESysrvBlEmvYaRR2a2JNdYupcAWnf5WsfEIlOuy7N-tRuy1avx2NNsNfr42AcWeEhzMsIxXD35WRS64Iyn6JTMVXkfq3mud9A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent p-lg flex flex-col justify-end">
+<div class="bg-white/10 backdrop-blur-md rounded-xl p-md border border-white/20">
+<h3 class="font-h3 text-h3 text-white mb-xs">Daily CBT Prompt</h3>
+<p class="text-white/90 font-body-md mb-md">"Identify one thought today that didn't serve your peace. How can we reframe it together?"</p>
+<button class="text-white font-bold flex items-center gap-xs hover:gap-md transition-all">
+                                Write Reflection <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Breathing Room Gradient Card (Full Width) -->
+<section class="md:col-span-12 breathing-room-gradient rounded-xl p-xxl border border-primary/10 text-center flex flex-col items-center">
+<div class="max-w-xl">
+<span class="font-label-caps text-label-caps text-primary tracking-widest block mb-md">MOMENT OF CALM</span>
+<h2 class="font-h1 text-h1 text-primary mb-sm">"Peace is a practice, not a destination."</h2>
+<p class="font-body-lg text-on-surface-variant mb-lg">Take three deep breaths now. Notice the expansion of your chest and the release of tension.</p>
+<div class="flex gap-md justify-center">
+<button class="bg-secondary text-white rounded-full px-lg py-sm font-semibold active:scale-95 shadow-md shadow-secondary/20">Guided Meditation</button>
+<button class="border-2 border-primary text-primary rounded-full px-lg py-sm font-semibold active:scale-95">Explore Sounds</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-sm pb-8 pt-xs md:hidden bg-surface/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_24px_rgba(46,110,101,0.08)] rounded-t-xl">
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-caps text-label-caps">Manas AI</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="mood">mood</span>
+<span class="font-label-caps text-label-caps">Mood</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-caps text-label-caps">Therapy</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="book">book</span>
+<span class="font-label-caps text-label-caps">Journal</span>
+</div>
+</nav>
+<!-- Floating Crisis Button (Mobile) -->
+<button class="fixed bottom-24 right-sm md:hidden w-14 h-14 bg-[#DC2626] text-white rounded-full shadow-xl flex items-center justify-center active:scale-90 z-50">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+</button>
+</body></html>

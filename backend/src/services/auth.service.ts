@@ -1,0 +1,194 @@
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import { env } from "@/config/env";
+import { AppError } from "@/lib/app-error";
+import { User, type IUser } from "@/models";
+
+type PendingOtpRecord = {
+  code: string;
+  expiresAt: number;
+};
+
+const pendingOtps = new Map<string, PendingOtpRecord>();
+
+export class AuthService {
+  static generateOTP(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  static normalizePhone(phone: string): string {
+    const digits = phone.replace(/\D/g, "");
+    const local = digits.startsWith("91") && digits.length === 12 ? digits.slice(2) : digits;
+
+    if (!/^[6-9]\d{9}$/.test(local)) {
+      throw new AppError("Invalid Indian phone number", 400);
+    }
+
+    return local;
+  }
+
+  static hashPhone(phone: string): string {
+    return crypto.createHash("sha256").update(phone).digest("hex");
+  }
+
+  static maskPhone(phone: string): string {
+    return `+91-${phone.slice(0, 2)}xxxxxx${phone.slice(-2)}`;
+  }
+
+  static async sendOTP(phone: string): Promise<{ phone: string; expiresInSeconds: number; otp?: string }> {
+    const normalizedPhone = this.normalizePhone(phone);
+    const otp = this.generateOTP();
+
+    pendingOtps.set(normalizedPhone, {
+      code: otp,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    });
+
+    const response: { phone: string; expiresInSeconds: number; otp?: string } = {
+      phone: normalizedPhone,
+      expiresInSeconds: 300
+    };
+
+    if (env.NODE_ENV !== "production") {
+      response.otp = otp;
+    }
+
+    return response;
+  }
+
+  static generateToken(user: IUser): string {
+    return jwt.sign(
+      { sub: user._id.toString(), role: user.role },
+      env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+  }
+
+  static verifyToken(token: string): { sub: string; role: string } {
+    return jwt.verify(token, env.JWT_SECRET) as { sub: string; role: string };
+  }
+
+  static async verifyOTP(phone: string, otp: string): Promise<IUser> {
+    const normalizedPhone = this.normalizePhone(phone);
+    const pending = pendingOtps.get(normalizedPhone);
+
+    if (!pending || pending.expiresAt < Date.now() || pending.code !== otp) {
+      throw new AppError("Invalid or expired OTP", 400);
+    }
+
+    pendingOtps.delete(normalizedPhone);
+    return this.findOrCreateUser(normalizedPhone);
+  }
+
+  static async findOrCreateUser(phone: string): Promise<IUser> {
+    const phoneHash = this.hashPhone(phone);
+    let user = await User.findOne({ phoneHash });
+
+    if (!user) {
+      user = await User.create({
+        phoneHash,
+        phoneMasked: this.maskPhone(phone),
+        role: "user",
+        tier: "free",
+        isAnonymous: true,
+        verifiedPhoneAt: new Date(),
+        onboarding: { concerns: [] }
+      });
+    } else if (!user.verifiedPhoneAt) {
+      user.verifiedPhoneAt = new Date();
+      await user.save();
+    }
+
+    return user;
+  }
+
+  static async getCurrentUser(userId: string): Promise<IUser> {
+    const user = await User.findById(userId);
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", 404);
+    }
+    return user;
+  }
+
+  static async updateOnboarding(
+    userId: string,
+    payload: {
+      moodScore?: number;
+      concerns?: string[];
+      primaryNeed?: "someone_to_talk_to" | "tools_and_exercises" | "just_to_express";
+      completed?: boolean;
+    }
+  ): Promise<IUser> {
+    const user = await this.getCurrentUser(userId);
+
+    user.onboarding = {
+      ...user.onboarding,
+      ...(payload.moodScore ? { moodScore: payload.moodScore } : {}),
+      ...(payload.concerns ? { concerns: payload.concerns } : {}),
+      ...(payload.primaryNeed ? { primaryNeed: payload.primaryNeed } : {}),
+      ...(payload.completed ? { completedAt: new Date() } : {})
+    };
+
+    user.lastActiveAt = new Date();
+    await user.save();
+    return user;
+  }
+
+  static async updateProfile(
+    userId: string,
+    payload: Record<string, string>
+  ): Promise<IUser> {
+    const user = await this.getCurrentUser(userId);
+
+    if (user.role === "therapist") {
+      const existing = user.therapistProfile ?? {
+        name: "",
+        verified: false,
+        specializations: [],
+        languages: [],
+        sessionFee: 0,
+        rating: 0,
+        sessionCount: 0,
+        availability: []
+      };
+      user.therapistProfile = {
+        ...existing,
+        name: payload["Full name"] ?? existing.name ?? "",
+        rciNumber: payload["RCI number"] ?? existing.rciNumber,
+        specializations: payload["Primary specialization"]
+          ? [payload["Primary specialization"]]
+          : existing.specializations ?? [],
+        languages: payload["Languages"]
+          ? payload["Languages"].split(",").map((l) => l.trim())
+          : existing.languages ?? [],
+        sessionFee: payload["Session fee (₹)"]
+          ? Number(payload["Session fee (₹)"])
+          : existing.sessionFee ?? 0,
+        bio: payload["Bio"] ?? existing.bio,
+        availability: existing.availability ?? []
+      };
+    } else if (user.role === "user") {
+      if (payload["Full name"]) user.fullName = payload["Full name"];
+      if (payload["Preferred language"]) user.language = payload["Preferred language"];
+      if (payload["Location"]) user.location = payload["Location"];
+      if (payload["Emergency contact"]) user.emergencyContact = payload["Emergency contact"];
+    } else {
+      // org_admin, super_admin
+      if (payload["Full name"]) user.fullName = payload["Full name"];
+    }
+
+    user.lastActiveAt = new Date();
+    await user.save();
+    return user;
+  }
+
+  static async setRole(
+    userId: string,
+    role: "user" | "therapist" | "org_admin" | "super_admin"
+  ): Promise<IUser> {
+    const user = await this.getCurrentUser(userId);
+    user.role = role;
+    await user.save();
+    return user;
+  }
+}

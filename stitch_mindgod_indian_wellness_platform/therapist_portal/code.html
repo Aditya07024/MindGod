@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#3f4947",
+                    "on-tertiary-fixed-variant": "#5d4200",
+                    "surface-tint": "#286860",
+                    "surface-dim": "#d8dad9",
+                    "inverse-surface": "#2e3130",
+                    "surface-container": "#eceeec",
+                    "primary": "#0d564d",
+                    "on-primary-container": "#adeee2",
+                    "on-tertiary-container": "#ffdc9f",
+                    "tertiary-container": "#825d00",
+                    "tertiary-fixed-dim": "#f1bf5e",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#2e6e65",
+                    "on-background": "#191c1b",
+                    "on-primary-fixed-variant": "#035048",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e7e9e7",
+                    "on-secondary-container": "#742406",
+                    "primary-fixed-dim": "#93d2c7",
+                    "error-container": "#ffdad6",
+                    "surface": "#f8faf8",
+                    "on-secondary-fixed-variant": "#7e2b0d",
+                    "on-primary-fixed": "#00201c",
+                    "surface-bright": "#f8faf8",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#fe8c66",
+                    "inverse-primary": "#93d2c7",
+                    "secondary-fixed": "#ffdbd0",
+                    "outline": "#6f7977",
+                    "background": "#f8faf8",
+                    "inverse-on-surface": "#eff1ef",
+                    "outline-variant": "#bfc9c6",
+                    "surface-container-low": "#f2f4f2",
+                    "secondary": "#9d4223",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#644700",
+                    "primary-fixed": "#afefe3",
+                    "tertiary-fixed": "#ffdea6",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#271900",
+                    "secondary-fixed-dim": "#ffb59d",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e1e3e1",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#390b00",
+                    "on-surface": "#191c1b",
+                    "surface-variant": "#e1e3e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "48px",
+                    "xxl": "80px",
+                    "gutter": "24px",
+                    "container-max": "1200px",
+                    "md": "24px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "lg": "32px",
+                    "sm": "16px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Plus Jakarta Sans"],
+                    "h3": ["Sora"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "h2": ["Sora"],
+                    "h1": ["Sora"],
+                    "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(191, 201, 198, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- Top Navigation -->
+<header class="bg-surface/70 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-sm shadow-primary/5 border-b border-outline-variant/30 px-md py-sm">
+<div class="flex justify-between items-center w-full max-w-container-max mx-auto">
+<h1 class="font-h2 text-h2 font-semibold text-primary tracking-tight">MindGod</h1>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer active:scale-95">notifications</span>
+<div class="flex items-center gap-xs cursor-pointer active:scale-95">
+<img class="w-10 h-10 rounded-full object-cover border-2 border-primary-fixed" data-alt="A professional portrait of a warm and approachable female therapist in her 40s. She is smiling gently at the camera, wearing a soft teal linen blazer. The background is a blurred, high-end minimalist therapy office with soft natural lighting and warm wood accents, creating a calm and professional atmosphere for a mental health platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBM-o6-EQY0kBdfWoAgIOyac9y6ULREq3jd6A7qbrr64ZUE5FnXoYDM_B54nlltMZ85Zbj43Z8Y-zln0rzHAOFmPaL7ZtiY2UzY2rJ9AZlDdkEzqfrgcCI9kzSfYlVI86nm__awfOu9sdZ1NZAKL8sBXinoyOrZE2VrObMpmjr84w9zA6VNdm_GNDu9NheLCI5WQfFEqxUTbZYbcwYUiuH_JH0QWlRizOFAvMm8Ngyea7N9d1mPMG5CbhKKc2X19zFtoGeHRqyDCIU"/>
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex max-w-container-max mx-auto min-h-[calc(100vh-72px)]">
+<!-- Side Navigation -->
+<nav class="h-full w-64 hidden md:flex flex-col border-r border-outline-variant/20 pt-xl pb-md bg-surface-container-low sticky top-[72px]">
+<div class="flex items-center gap-sm bg-primary-container text-on-primary-container rounded-full mx-sm px-md py-sm font-semibold cursor-pointer active:scale-98">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98 mt-xs">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-body-md text-body-md">Manas Chat</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98 mt-xs">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md">Mood Insights</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98 mt-xs">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-md text-body-md">Therapists</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98 mt-xs">
+<span class="material-symbols-outlined">self_care</span>
+<span class="font-body-md text-body-md">Exercises</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant mx-sm px-md py-sm hover:bg-surface-container-high rounded-full transition-all cursor-pointer active:scale-98 mt-xs">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</div>
+<div class="mt-auto px-md pb-md">
+<button class="w-full bg-secondary text-on-secondary rounded-full py-sm font-semibold flex items-center justify-center gap-xs active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emergency</span>
+                    Crisis Support
+                </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 p-lg overflow-y-auto">
+<!-- Hero Header -->
+<section class="mb-xl">
+<h2 class="font-h1 text-h1 text-on-surface mb-xs">Namaste, Dr. Aarav</h2>
+<p class="text-on-surface-variant font-body-lg">You have 4 sessions scheduled for today. The atmosphere is calm.</p>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Earnings Analytics (4 columns) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+<div class="glass-card rounded-xl p-md shadow-sm">
+<div class="flex justify-between items-start mb-md">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-base">MONTHLY EARNINGS</p>
+<h3 class="font-h2 text-h2 text-primary">₹84,200</h3>
+</div>
+<span class="material-symbols-outlined text-secondary bg-secondary-fixed rounded-full p-xs">trending_up</span>
+</div>
+<div class="h-24 w-full flex items-end gap-1">
+<!-- Simple Bar Chart Representing Earnings -->
+<div class="flex-1 bg-primary-container/20 rounded-t-lg h-12"></div>
+<div class="flex-1 bg-primary-container/20 rounded-t-lg h-16"></div>
+<div class="flex-1 bg-primary-container/40 rounded-t-lg h-20"></div>
+<div class="flex-1 bg-primary-container/30 rounded-t-lg h-14"></div>
+<div class="flex-1 bg-primary-container rounded-t-lg h-24"></div>
+</div>
+<p class="text-on-surface-variant font-label-caps mt-sm text-center">Last 5 weeks growth</p>
+</div>
+<div class="bg-surface-container-low rounded-xl p-md border border-outline-variant/30">
+<h4 class="font-h3 text-h3 text-on-surface mb-sm">Quick Links</h4>
+<div class="space-y-sm">
+<div class="flex items-center justify-between p-sm hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">history_edu</span>
+<span class="font-body-md">Clinical Notes</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">payments</span>
+<span class="font-body-md">Payout History</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Session Timeline (8 columns) -->
+<div class="col-span-12 lg:col-span-8">
+<div class="bg-white rounded-xl p-lg shadow-sm border border-outline-variant/20 h-full">
+<div class="flex justify-between items-center mb-lg">
+<h3 class="font-h2 text-h2 text-on-surface">Upcoming Sessions</h3>
+<div class="flex gap-xs">
+<button class="px-md py-xs rounded-full border border-outline-variant text-on-surface-variant font-label-caps hover:bg-surface-container transition-colors">CALENDAR VIEW</button>
+<button class="px-md py-xs rounded-full bg-primary text-on-primary font-label-caps active:scale-95 transition-transform">+ NEW SLOT</button>
+</div>
+</div>
+<div class="space-y-md relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-[2px] before:bg-outline-variant/30">
+<!-- Session Item 1 -->
+<div class="relative pl-lg flex items-start gap-md group">
+<div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary z-10 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">videocam</span>
+</div>
+<div class="flex-1 glass-card rounded-xl p-md border border-primary/10 group-hover:border-primary/40 transition-all">
+<div class="flex justify-between items-center mb-xs">
+<h4 class="font-h3 text-h3 text-primary">10:00 AM - 10:45 AM</h4>
+<span class="bg-primary-fixed text-on-primary-fixed px-sm py-xs rounded-full text-label-caps font-label-caps">STARTING IN 15M</span>
+</div>
+<div class="flex items-center gap-sm">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A close-up portrait of a young Indian woman with a serene but contemplative expression. She has warm, soulful eyes and is wearing a simple mustard yellow kurti. The background is softly out of focus, showing the warm greens of a tranquil garden at golden hour, maintaining a peaceful and safe atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAVrwsbjdtJ4sJGfj7huERDD2HhBfF-wf6ACpqjYUJLhhH2QK-LF8AA1VyZgz7lwmhRgHNRBJzhZvBAKE40neGohJ_uMivpSq36Pjbi7HnFGyZnqWQo4XmG6ebjzclX5v0GRAcGwk8d114os0tLt5-FjwUeXUqEE-pY0q-tq0JBD6zsbGi0eYul2MudtokfYbBBzUP_crJzikHrppPje29zn7MFciJJBBdm7cPro8WHR4U4-mxqqjPrjybzf8gHu6cwbmdoVw-QVo"/>
+<div>
+<p class="font-h3 text-[18px] text-on-surface">Ananya Iyer</p>
+<p class="text-on-surface-variant font-body-md">Topic: Anxiety Management &amp; Workplace Stress</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Session Item 2 -->
+<div class="relative pl-lg flex items-start gap-md group">
+<div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant z-10">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</div>
+<div class="flex-1 glass-card rounded-xl p-md border border-outline-variant/20 hover:border-primary/20 transition-all">
+<div class="flex justify-between items-center mb-xs">
+<h4 class="font-h3 text-h3 text-on-surface-variant">12:30 PM - 01:15 PM</h4>
+</div>
+<div class="flex items-center gap-sm">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A portrait of a young professional man in his late 20s, looking slightly tired but determined. He is wearing a clean white shirt. The lighting is soft and natural, coming from a large window. The aesthetic is clean and modern, following the organic minimalist style with soft shadows and breathable space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMhEZYLf416AiQHpR2h-bXq0pYeywCc0iwBf4T2jswTp8qAr9DVayxTSpqMi-4CqLQ9khbRQfUhiIG73eMu55fpW_JuOZ2TV7Iowkc53Nw3ONtc5JmhHISaoSzIuBAPRcV08xqaioBG7otZxnOo--xQawDCnjsfXTdBx-4juNGrAs4cCDPpbwXL-OvRMOtQfMBgl2Z8RUPhfnR6FTFV97l9t9WpKTnVj6aFbIenMlN0dFudlm7X8gpxWIGTOtSwd2ka6ZEdb2Q0H8"/>
+<div>
+<p class="font-h3 text-[18px] text-on-surface">Rohan Mehra</p>
+<p class="text-on-surface-variant font-body-md">Topic: Relationship Boundaries</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Client Brief Cards (12 columns) -->
+<div class="col-span-12">
+<div class="flex items-center justify-between mb-md mt-sm">
+<h3 class="font-h2 text-h2 text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                            AI Client Briefs
+                        </h3>
+<p class="text-on-surface-variant font-body-md italic">Summaries from recent journal entries &amp; mood logs</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- AI Brief Card 1 -->
+<div class="bg-primary-fixed/30 rounded-xl p-md border border-primary/10 relative overflow-hidden group hover:shadow-lg transition-shadow">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform"></div>
+<div class="flex items-center gap-sm mb-md">
+<span class="bg-primary text-on-primary px-sm py-xs rounded-full text-label-caps font-label-caps">ANANYA</span>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">sentiment_very_dissatisfied</span>
+<span class="text-label-caps font-label-caps text-secondary uppercase">Low Mood</span>
+</div>
+<p class="font-body-md text-on-surface mb-md line-clamp-4">
+                                Logged three entries this week regarding "mounting pressure at the Bangalore tech hub." Reports difficulty sleeping and persistent rumination about project deadlines. Mood has dipped since last session.
+                            </p>
+<div class="flex flex-wrap gap-xs">
+<span class="bg-white/50 text-on-surface-variant px-sm py-base rounded-full text-[12px] font-semibold border border-primary/10">#WorkAnxiety</span>
+<span class="bg-white/50 text-on-surface-variant px-sm py-base rounded-full text-[12px] font-semibold border border-primary/10">#Insomnia</span>
+</div>
+</div>
+<!-- AI Brief Card 2 -->
+<div class="bg-tertiary-fixed/30 rounded-xl p-md border border-tertiary/10 relative overflow-hidden group hover:shadow-lg transition-shadow">
+<div class="absolute top-0 right-0 w-32 h-32 bg-tertiary/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform"></div>
+<div class="flex items-center gap-sm mb-md">
+<span class="bg-tertiary-container text-on-tertiary-container px-sm py-xs rounded-full text-label-caps font-label-caps">ROHAN</span>
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">sentiment_neutral</span>
+<span class="text-label-caps font-label-caps text-tertiary uppercase">Stable</span>
+</div>
+<p class="font-body-md text-on-surface mb-md line-clamp-4">
+                                Consistency in morning meditation logs. Mentioned a difficult conversation with his father in his private journal, but concluded it with a positive self-reflection on his growing emotional resilience.
+                            </p>
+<div class="flex flex-wrap gap-xs">
+<span class="bg-white/50 text-on-surface-variant px-sm py-base rounded-full text-[12px] font-semibold border border-tertiary/10">#FamilyBoundaries</span>
+<span class="bg-white/50 text-on-surface-variant px-sm py-base rounded-full text-[12px] font-semibold border border-tertiary/10">#GrowthMindset</span>
+</div>
+</div>
+<!-- AI Brief Card 3 - Empty State or Placeholder -->
+<div class="border-2 border-dashed border-outline-variant/50 rounded-xl p-md flex flex-col items-center justify-center text-center opacity-60">
+<span class="material-symbols-outlined text-outline text-[40px] mb-sm">pending_actions</span>
+<p class="font-body-md text-on-surface-variant">More briefs will appear as clients update their daily logs.</p>
+</div>
+</div>
+</div>
+<!-- Breathing Room Promotional Container -->
+<div class="col-span-12 mt-xl">
+<div class="relative bg-gradient-to-r from-primary/5 to-tertiary/5 rounded-2xl p-xl overflow-hidden border border-primary/5">
+<div class="absolute -right-20 -top-20 w-80 h-80 bg-primary/10 rounded-full blur-[80px]"></div>
+<div class="absolute -left-20 -bottom-20 w-80 h-80 bg-tertiary/10 rounded-full blur-[80px]"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-lg">
+<div class="max-w-xl">
+<h3 class="font-h2 text-h2 text-primary mb-sm">Mindful Therapist Community</h3>
+<p class="text-on-surface-variant font-body-lg">Join our weekly peer supervision session this Friday at 4 PM. Connect with other MindGod professionals to share insights and foster growth in a safe space.</p>
+</div>
+<button class="bg-primary text-on-primary rounded-full px-lg py-sm font-semibold shadow-lg shadow-primary/20 active:scale-95 transition-transform">REGISTER NOW</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Navigation for Mobile -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-sm pb-8 pt-xs md:hidden bg-surface/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_24px_rgba(46,110,101,0.08)] rounded-t-xl">
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-caps text-label-caps">Manas AI</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">mood</span>
+<span class="font-label-caps text-label-caps">Mood</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-label-caps text-label-caps">Therapy</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">book</span>
+<span class="font-label-caps text-label-caps">Journal</span>
+</div>
+</nav>
+</body></html>

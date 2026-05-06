@@ -1,0 +1,114 @@
+import mongoose, { Schema, type Document, type Types } from "mongoose";
+
+export type UserTier = "free" | "mann_shanti" | "apna_therapist";
+export type UserRole = "user" | "therapist" | "org_admin" | "super_admin";
+
+export interface IOnboardingState {
+  moodScore?: number;
+  concerns: string[];
+  primaryNeed?: "someone_to_talk_to" | "tools_and_exercises" | "just_to_express";
+  completedAt?: Date;
+}
+
+export interface IUser extends Document {
+  _id: Types.ObjectId;
+  phoneHash: string;
+  phoneMasked: string;
+  fullName?: string;
+  role: UserRole;
+  tier: UserTier;
+  language: string;
+  location?: string;
+  streak: number;
+  lastActiveAt?: Date;
+  emergencyContact?: string;
+  orgId?: Types.ObjectId;
+  isAnonymous: boolean;
+  verifiedPhoneAt?: Date;
+  onboarding: IOnboardingState;
+  therapistProfile?: {
+    name: string;
+    rciNumber?: string;
+    verified: boolean;
+    specializations: string[];
+    languages: string[];
+    sessionFee: number;
+    rating: number;
+    sessionCount: number;
+    introVideoUrl?: string;
+    bio?: string;
+    availability: { day: number; slots: string[] }[];
+  };
+  deletedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const OnboardingSchema = new Schema<IOnboardingState>(
+  {
+    moodScore: { type: Number, min: 1, max: 10 },
+    concerns: { type: [String], default: [] },
+    primaryNeed: {
+      type: String,
+      enum: ["someone_to_talk_to", "tools_and_exercises", "just_to_express"]
+    },
+    completedAt: { type: Date }
+  },
+  { _id: false }
+);
+
+const UserSchema = new Schema<IUser>(
+  {
+    phoneHash: { type: String, required: true, unique: true, index: true },
+    phoneMasked: { type: String, required: true },
+    fullName: { type: String },
+    role: {
+      type: String,
+      enum: ["user", "therapist", "org_admin", "super_admin"],
+      default: "user"
+    },
+    tier: {
+      type: String,
+      enum: ["free", "mann_shanti", "apna_therapist"],
+      default: "free"
+    },
+    language: { type: String, default: "en-IN" },
+    location: { type: String },
+    streak: { type: Number, default: 0 },
+    lastActiveAt: { type: Date },
+    emergencyContact: { type: String },
+    orgId: { type: Schema.Types.ObjectId, ref: "Organization" },
+    isAnonymous: { type: Boolean, default: true },
+    verifiedPhoneAt: { type: Date },
+    onboarding: { type: OnboardingSchema, default: () => ({ concerns: [] }) },
+    therapistProfile: {
+      type: {
+        name: { type: String },
+        rciNumber: { type: String },
+        verified: { type: Boolean, default: false },
+        specializations: { type: [String], default: [] },
+        languages: { type: [String], default: [] },
+        sessionFee: { type: Number, default: 0 },
+        rating: { type: Number, default: 0 },
+        sessionCount: { type: Number, default: 0 },
+        introVideoUrl: { type: String },
+        bio: { type: String },
+        availability: {
+          type: [
+            {
+              _id: false,
+              day: { type: Number, required: true },
+              slots: { type: [String], default: [] }
+            }
+          ],
+          default: []
+        }
+      },
+      required: false
+    },
+    deletedAt: { type: Date }
+  },
+  { timestamps: true }
+);
+
+export const User = mongoose.model<IUser>("User", UserSchema);
