@@ -1,6 +1,27 @@
+# Dependencies
 node_modules/
+
+# Build output
 .next/
-.env
 dist/
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+.env.staging
+!.env.example
+
+# Logs
 *.log
+
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript build info
+*.tsbuildinfo
