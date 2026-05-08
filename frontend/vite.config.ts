@@ -17,21 +17,12 @@ export default defineConfig({
   ],
   build: {
     target: "es2020",
-    rollupOptions: {
-      output: {
-        // Reduce chunk sizes to improve memory usage
-      },
-    },
+    rollupOptions: {},
     // Reduce source map size in production
     sourcemap: false,
     // Increase chunk size warning threshold
     chunkSizeWarningLimit: 1000,
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
+    minify: true,
   },
   server: {
     middlewareMode: true,
