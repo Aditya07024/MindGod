@@ -1,0 +1,335 @@
+import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, Calendar, Clock, AlertCircle } from "lucide-react";
+import API from "@/lib/api";
+import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import RazorpayCheckout from "@/components/RazorpayCheckout";
+
+export const Route = createFileRoute("/booking/$therapistId")({
+  component: BookingFlow,
+});
+
+function BookingFlow() {
+  const { therapistId } = useParams({ from: "/booking/$therapistId" });
+  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const [bookingStep, setBookingStep] = useState<"select" | "confirm" | "payment" | "success">(
+    "select",
+  );
+  const [bookingId, setBookingId] = useState<string>("");
+
+  // Fetch therapist details
+  const { data: therapist, isLoading: therapistLoading } = useQuery({
+    queryKey: ["therapist", therapistId],
+    queryFn: () => API.therapist.get(therapistId),
+  });
+
+  // Fetch available slots
+  const { data: availability, isLoading: slotsLoading } = useQuery({
+    queryKey: ["therapist-availability", therapistId, selectedDate],
+    queryFn: () => API.therapist.availability(therapistId, { date: selectedDate }),
+    enabled: !!selectedDate,
+  });
+
+  // Create booking mutation
+  const createBookingMutation = useMutation({
+    mutationFn: (slotDateTime: string) =>
+      API.booking.create({
+        therapistId,
+        slot: slotDateTime,
+      }),
+    onSuccess: (data) => {
+      setBookingId(data.booking.id);
+      setBookingStep("confirm");
+    },
+  });
+
+  // Demo Verify Mutation
+  const demoVerifyMutation = useMutation({
+    mutationFn: (id: string) => API.payment.demoVerify({ bookingId: id }),
+    onSuccess: () => {
+      setBookingStep("success");
+    },
+  });
+
+  // Handle slot selection
+  const handleSelectSlot = (slot: string) => {
+    if (!selectedDate) return;
+    const [hours, minutes] = slot.split(":");
+    const dateTime = new Date(selectedDate);
+    dateTime.setHours(parseInt(hours), parseInt(minutes));
+    setSelectedSlot(slot);
+  };
+
+  // Handle booking confirmation
+  const handleConfirmBooking = () => {
+    if (!selectedDate || !selectedSlot) {
+      alert("Please select a date and slot");
+      return;
+    }
+    const [hours, minutes] = selectedSlot.split(":");
+    const dateTime = new Date(selectedDate);
+    dateTime.setHours(parseInt(hours), parseInt(minutes));
+    createBookingMutation.mutate(dateTime.toISOString());
+  };
+
+  if (therapistLoading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin">Loading...</div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!therapist) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-red-600">Therapist not found</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <button
+              onClick={() => navigate({ to: "/therapists" })}
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Therapists
+            </button>
+
+            {/* Therapist Info Card */}
+            <Card className="p-6 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+                  {(therapist.name || 'T').charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-slate-900">{therapist.name || 'Therapist'}</h1>
+                  <p className="text-slate-600">{therapist.specializations?.[0]}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-lg font-bold text-slate-900">
+                      ₹{therapist.sessionFee}/session
+                    </span>
+                    <span className="text-sm text-slate-500">
+                      {therapist.sessionCount} sessions completed
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-between mb-8">
+            {["select", "confirm", "payment", "success"].map((step, idx) => (
+              <div key={step} className="flex items-center flex-1">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    step === bookingStep
+                      ? "bg-blue-600 text-white"
+                      : ["select", "confirm", "payment"].includes(step) &&
+                          ["select", "confirm", "payment"].indexOf(step) <
+                            ["select", "confirm", "payment"].indexOf(bookingStep)
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {idx + 1}
+                </div>
+                <div className={`flex-1 h-1 mx-2 ${idx < 3 ? "bg-slate-200" : ""}`} />
+              </div>
+            ))}
+          </div>
+
+          {/* Content */}
+          {bookingStep === "select" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <Card className="p-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Select Date & Time
+                </h2>
+
+                {/* Date Input */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Choose a date
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setSelectedSlot("");
+                    }}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Time Slots */}
+                {selectedDate && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">
+                      <Clock className="w-4 h-4 inline mr-2" />
+                      Available time slots
+                    </label>
+
+                    {slotsLoading ? (
+                      <div className="text-slate-500">Loading available slots...</div>
+                    ) : availability?.openSlots && availability.openSlots.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {availability.openSlots.map((slot: string) => (
+                          <button
+                            key={slot}
+                            onClick={() => handleSelectSlot(slot)}
+                            className={`py-2 px-3 rounded-lg font-medium transition-colors ${
+                              selectedSlot === slot
+                                ? "bg-blue-600 text-white"
+                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            }`}
+                          >
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>No slots available for this date. Please select another date.</span>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </Card>
+
+              <Button
+                onClick={handleConfirmBooking}
+                disabled={!selectedDate || !selectedSlot || createBookingMutation.isPending}
+                className="w-full h-12 rounded-lg"
+              >
+                {createBookingMutation.isPending
+                  ? "Creating booking..."
+                  : "Continue to Confirmation"}
+              </Button>
+            </motion.div>
+          )}
+
+          {bookingStep === "confirm" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <Card className="p-6 border-2 border-green-200 bg-green-50">
+                <h2 className="text-lg font-bold text-green-900 mb-4">✓ Booking Created</h2>
+                <div className="space-y-3 text-slate-700">
+                  <p>
+                    <strong>Date & Time:</strong> {selectedDate} at {selectedSlot}
+                  </p>
+                  <p>
+                    <strong>Session Fee:</strong> ₹{therapist.sessionFee}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    Complete payment to confirm your booking. You'll receive confirmation SMS with
+                    video room link.
+                  </p>
+                </div>
+              </Card>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setBookingStep("select");
+                    setSelectedDate("");
+                    setSelectedSlot("");
+                  }}
+                  className="flex-1 h-12 rounded-lg"
+                >
+                  Change Slot
+                </Button>
+                <Button
+                  onClick={() => setBookingStep("payment")}
+                  className="flex-1 h-12 rounded-lg"
+                >
+                  Proceed to Payment
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {bookingStep === "payment" && bookingId && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <RazorpayCheckout
+                bookingId={bookingId}
+                amount={therapist.sessionFee}
+                userName={therapist.name}
+                onSuccess={() => setBookingStep("success")}
+              />
+              <div className="pt-4 border-t border-slate-200">
+                <Button 
+                  onClick={() => demoVerifyMutation.mutate(bookingId)} 
+                  disabled={demoVerifyMutation.isPending}
+                  variant="outline" 
+                  className="w-full text-slate-500 hover:text-slate-900 border-slate-300 border-dashed"
+                >
+                  {demoVerifyMutation.isPending ? 'Processing...' : 'Demo Mode: Bypass Payment'}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {bookingStep === "success" && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-6"
+            >
+              <Card className="p-8 border-2 border-green-200 bg-green-50">
+                <div className="text-5xl mb-4">✓</div>
+                <h2 className="text-2xl font-bold text-green-900 mb-2">Payment Successful!</h2>
+                <p className="text-slate-600 mb-4">
+                  Your therapy session with {therapist.name} is confirmed.
+                </p>
+                <p className="text-sm text-slate-500">
+                  Check your phone for SMS with video room link and session details.
+                </p>
+              </Card>
+
+              <Button
+                onClick={() => navigate({ to: "/dashboard" })}
+                className="w-full h-12 rounded-lg"
+              >
+                Go to Dashboard
+              </Button>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </AppShell>
+  );
+}

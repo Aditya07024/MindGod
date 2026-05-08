@@ -2,48 +2,29 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "@/lib/async-handler";
 import { AuthService } from "@/services/auth.service";
 import type { AuthedRequest } from "@/middleware/auth";
+import { User } from "@/models";
 
-const COOKIE_NAME = "mindgod_token";
-
-function serializeUser(
-  user: Awaited<ReturnType<typeof AuthService.getCurrentUser>>,
-) {
+function serializeUser(user: any) {
   return {
     id: user._id,
     role: user.role,
     tier: user.tier,
     language: user.language,
     phoneMasked: user.phoneMasked,
+    fullName: user.fullName,
     isAnonymous: user.isAnonymous,
     streak: user.streak,
     onboarding: user.onboarding,
+    therapistProfile: user.role === "therapist" ? user.therapistProfile : undefined,
   };
 }
 
 export class AuthController {
-  static sendOTP = asyncHandler(async (req: Request, res: Response) => {
-    const { phone } = req.body;
-    const result = await AuthService.sendOTP(phone);
-    res.json({ message: "OTP sent successfully", ...result });
-  });
-
-  static verifyOTP = asyncHandler(async (req: Request, res: Response) => {
-    const { phone, otp } = req.body;
-    const user = await AuthService.verifyOTP(phone, otp);
-    const token = AuthService.generateToken(user);
-
-    res.cookie(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",      domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ user: serializeUser(user) });
-  });
-
+  /** GET /auth/me — returns the current Clerk-authed user's MongoDB profile */
   static me = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const user = await AuthService.getCurrentUser(req.user!.sub);
-    res.json({ user: serializeUser(user) });
+    const user = await User.findById(req.user!.sub).lean();
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(serializeUser(user));
   });
 
   static updateOnboarding = asyncHandler(
@@ -55,43 +36,37 @@ export class AuthController {
         primaryNeed,
         completed,
       });
-      res.json({ user: serializeUser(user) });
+      res.json(serializeUser(user));
     },
   );
 
   static updateProfile = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
       const user = await AuthService.updateProfile(req.user!.sub, req.body);
-      res.json({ user: serializeUser(user) });
+      res.json(serializeUser(user));
     },
   );
-
-  static setDevRole = asyncHandler(
+  static setRole = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      if (process.env.NODE_ENV === "production") {
-        return res.status(403).json({ error: "Forbidden" });
+      const { role } = req.body;
+      const validRoles = ["user", "therapist", "org_admin", "super_admin"];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
       }
 
-      const { role } = req.body as {
-        role: "user" | "therapist" | "org_admin" | "super_admin";
-      };
+      const user = await User.findByIdAndUpdate(
+        req.user!.sub,
+        { role },
+        { new: true },
+      ).lean();
 
-      const user = await AuthService.setRole(req.user!.sub, role);
-      const token = AuthService.generateToken(user);
+      if (!user) return res.status(404).json({ error: "User not found" });
 
-      res.cookie(COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+      res.json({
+        message: `Role updated to ${role}`,
+        user: serializeUser(user),
       });
-
-      res.json({ user: serializeUser(user) });
     },
   );
 
-  static logout = asyncHandler(async (_req: Request, res: Response) => {
-    res.clearCookie(COOKIE_NAME);
-    res.json({ message: "Logged out successfully" });
-  });
 }

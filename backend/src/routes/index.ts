@@ -7,6 +7,8 @@ import therapistRoutes from "./therapist";
 import userRoutes from "./user";
 import bookingRoutes from "./booking";
 import adminRoutes from "./admin";
+import paymentRoutes from "./payment";
+import subscriptionRoutes from "./subscription";
 
 export const apiRouter = Router();
 
@@ -18,6 +20,10 @@ apiRouter.use("/user", userRoutes);
 apiRouter.use("/mood", moodRoutes);
 apiRouter.use("/moods", moodRoutes);
 apiRouter.use("/journal", journalRoutes);
-apiRouter.use("/therapists", therapistRoutes);
+apiRouter.use("/therapist", therapistRoutes);   // keep /therapist for any old callers
+apiRouter.use("/therapists", therapistRoutes);  // canonical plural
 apiRouter.use("/bookings", bookingRoutes);
+apiRouter.use("/payment", paymentRoutes);
+apiRouter.use("/subscription", subscriptionRoutes);
 apiRouter.use("/admin", adminRoutes);
+

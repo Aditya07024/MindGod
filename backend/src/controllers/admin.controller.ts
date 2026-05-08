@@ -85,4 +85,26 @@ export class AdminController {
       }))
     });
   });
+
+  /** PATCH /admin/therapist/:id/verify — Super admin: verify or revoke therapist */
+  static verifyTherapist = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { verified } = req.body as { verified: boolean };
+
+    const therapist = await User.findOneAndUpdate(
+      { _id: id, role: "therapist" },
+      { "therapistProfile.verified": verified },
+      { new: true }
+    ).select("therapistProfile").lean();
+
+    if (!therapist) throw new Error("Therapist not found");
+
+    res.json({
+      id,
+      verified,
+      name: therapist.therapistProfile?.name ?? "Unnamed",
+      message: verified ? "Therapist verified successfully" : "Verification revoked",
+    });
+  });
 }
+

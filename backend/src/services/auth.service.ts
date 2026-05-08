@@ -2,20 +2,10 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { env } from "@/config/env";
 import { AppError } from "@/lib/app-error";
+import { OTPService } from "@/services/otp.service";
 import { User, type IUser } from "@/models";
 
-type PendingOtpRecord = {
-  code: string;
-  expiresAt: number;
-};
-
-const pendingOtps = new Map<string, PendingOtpRecord>();
-
 export class AuthService {
-  static generateOTP(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
   static normalizePhone(phone: string): string {
     const digits = phone.replace(/\D/g, "");
     const local =
@@ -40,26 +30,13 @@ export class AuthService {
 
   static async sendOTP(
     phone: string,
-  ): Promise<{ phone: string; expiresInSeconds: number; otp?: string }> {
+  ): Promise<{ phone: string; expiresInSeconds: number }> {
     const normalizedPhone = this.normalizePhone(phone);
-    const otp = this.generateOTP();
+    const mobile = `91${normalizedPhone}`;
 
-    pendingOtps.set(normalizedPhone, {
-      code: otp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-    });
+    await OTPService.sendOTP(mobile);
 
-    const response: { phone: string; expiresInSeconds: number; otp?: string } =
-      {
-        phone: normalizedPhone,
-        expiresInSeconds: 300,
-      };
-
-    if (env.NODE_ENV !== "production") {
-      response.otp = otp;
-    }
-
-    return response;
+    return { phone: normalizedPhone, expiresInSeconds: 300 };
   }
 
   static generateToken(user: IUser): string {
@@ -76,21 +53,9 @@ export class AuthService {
 
   static async verifyOTP(phone: string, otp: string): Promise<IUser> {
     const normalizedPhone = this.normalizePhone(phone);
-    const pending = pendingOtps.get(normalizedPhone);
+    const mobile = `91${normalizedPhone}`;
 
-    // Allow demo OTP "000000" for testing in all environments
-    const isDemoOTP = otp === "000000";
-
-    if (
-      !isDemoOTP &&
-      (!pending || pending.expiresAt < Date.now() || pending.code !== otp)
-    ) {
-      throw new AppError("Invalid or expired OTP", 400);
-    }
-
-    if (!isDemoOTP) {
-      pendingOtps.delete(normalizedPhone);
-    }
+    await OTPService.verifyOTP(mobile, otp);
 
     return this.findOrCreateUser(normalizedPhone);
   }

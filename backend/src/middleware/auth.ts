@@ -1,21 +1,74 @@
 import type { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { env } from "@/config/env";
+import { clerkClient, getAuth } from "@clerk/express";
 import { AppError } from "@/lib/app-error";
+import { User } from "@/models";
 
 export type AuthedRequest = Request & {
-  user?: { sub: string; role: string };
+  user?: { sub: string; role: string; clerkId: string };
 };
 
-export function requireAuth(req: AuthedRequest, _res: Response, next: NextFunction) {
-  const token = req.cookies?.mindgod_token ?? req.headers.authorization?.replace("Bearer ", "");
-  if (!token) return next(new AppError("Unauthorized", 401));
-
+/**
+ * requireAuth — verifies Clerk session token from Authorization: Bearer header.
+ * On success, attaches req.user = { sub: mongoUserId, role, clerkId }.
+ * Creates the MongoDB user record on first login (auto-provisioning).
+ */
+export async function requireAuth(
+  req: AuthedRequest,
+  _res: Response,
+  next: NextFunction,
+) {
   try {
-    req.user = jwt.verify(token, env.JWT_SECRET) as { sub: string; role: string };
+    // getAuth safely extracts the user ID if clerkMiddleware successfully validated the token
+    const { userId: clerkUserId } = getAuth(req);
+    
+    if (!clerkUserId) {
+      return next(new AppError("Unauthorized - No Clerk User", 401));
+    }
+
+    // Look up or auto-provision the MongoDB user
+    let user = await User.findOne({ 
+      $or: [{ clerkId: clerkUserId }, { phoneHash: clerkUserId }] 
+    }).lean();
+
+    if (user && !user.clerkId) {
+      await User.updateOne({ _id: user._id }, { $set: { clerkId: clerkUserId } });
+      user.clerkId = clerkUserId;
+    }
+
+    if (!user) {
+      // First login — fetch Clerk user profile to populate name/email
+      const clerkUser = await clerkClient.users.getUser(clerkUserId);
+      const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+      const fullName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
+
+      try {
+        const created = await User.create({
+          clerkId: clerkUserId,
+          phoneHash: clerkUserId, // use clerkId as unique key
+          phoneMasked: email || clerkUserId.slice(-8),
+          fullName: fullName || undefined,
+          isAnonymous: false,
+          onboarding: { concerns: [] },
+        });
+        user = created.toObject();
+      } catch (createErr: any) {
+        if (createErr.code === 11000) {
+          user = await User.findOne({ clerkId: clerkUserId }).lean();
+        }
+        if (!user) throw createErr;
+      }
+    }
+
+    req.user = {
+      sub: String(user._id),
+      role: user.role,
+      clerkId: clerkUserId,
+    };
+
     next();
-  } catch (error) {
-    return next(new AppError("Invalid or expired token", 401));
+  } catch (err: any) {
+    console.error("Clerk Token Verification Failed:", err.message);
+    return next(new AppError("Invalid or expired session", 401));
   }
 }
 

@@ -11,7 +11,7 @@ export class UserController {
     const user = await User.findById(userId).select("streak").lean();
 
     const [moods, chatCount, bookingsCount] = await Promise.all([
-      Mood.find({ userId }).sort({ createdAt: -1 }).limit(30).select("score").lean(),
+      Mood.find({ userId }).sort({ createdAt: -1 }).limit(30).select("score createdAt").lean(),
       Conversation.countDocuments({ userId }),
       TherapistBooking.countDocuments({ userId, status: { $in: ["pending", "confirmed"] } })
     ]);
@@ -25,7 +25,8 @@ export class UserController {
       moodAvg,
       chatCount,
       bookingsCount,
-      latestMood: moods[0]?.score ?? null
+      latestMood: moods[0]?.score ?? null,
+      latestMoodDate: moods[0]?.createdAt ? new Date(moods[0].createdAt).toISOString().slice(0, 10) : null
     });
   });
 

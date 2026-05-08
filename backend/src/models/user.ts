@@ -12,6 +12,7 @@ export interface IOnboardingState {
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
+  clerkId?: string;          // Clerk user ID (set on first OAuth login)
   phoneHash: string;
   phoneMasked: string;
   fullName?: string;
@@ -59,9 +60,11 @@ const OnboardingSchema = new Schema<IOnboardingState>(
 
 const UserSchema = new Schema<IUser>(
   {
-    phoneHash: { type: String, required: true, unique: true, index: true },
+    clerkId: { type: String, unique: true, sparse: true, index: true },
+    phoneHash: { type: String, required: false, unique: true, sparse: true, index: true },
     phoneMasked: { type: String, required: true },
     fullName: { type: String },
+
     role: {
       type: String,
       enum: ["user", "therapist", "org_admin", "super_admin"],

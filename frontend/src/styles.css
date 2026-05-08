@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * MindGod Design System
+ * Warm, human, never clinical.
+ * Teal dominates. Coral warms. Gold accents. No purple.
+ */
+
+@theme inline {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Sora', system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 8px);
+  --radius-2xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 24px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-deep: var(--primary-deep);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-crisis: var(--crisis);
+  --color-crisis-foreground: var(--crisis-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 1rem; /* 16px */
+
+  /* Warm off-white canvas */
+  --background: oklch(0.985 0.005 90);
+  --foreground: oklch(0.22 0.02 180);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 180);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 180);
+
+  /* Teal #2E6E65 */
+  --primary: oklch(0.46 0.06 180);
+  --primary-foreground: oklch(0.99 0.005 90);
+  --primary-soft: oklch(0.93 0.03 180);
+  --primary-deep: oklch(0.32 0.06 180);
+
+  --secondary: oklch(0.95 0.015 180);
+  --secondary-foreground: oklch(0.32 0.06 180);
+
+  --muted: oklch(0.95 0.01 90);
+  --muted-foreground: oklch(0.50 0.02 180);
+
+  /* Coral #F4845F */
+  --accent: oklch(0.74 0.16 45);
+  --accent-foreground: oklch(0.22 0.05 30);
+  --accent-soft: oklch(0.94 0.05 45);
+
+  /* Gold #F4C261 */
+  --gold: oklch(0.83 0.13 85);
+  --gold-foreground: oklch(0.25 0.05 60);
+
+  /* Crisis red #DC2626 */
+  --crisis: oklch(0.58 0.22 27);
+  --crisis-foreground: oklch(0.99 0.005 90);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.99 0.005 90);
+
+  --border: oklch(0.90 0.015 180);
+  --input: oklch(0.92 0.01 180);
+  --ring: oklch(0.46 0.06 180);
+
+  --chart-1: oklch(0.46 0.06 180);
+  --chart-2: oklch(0.74 0.16 45);
+  --chart-3: oklch(0.83 0.13 85);
+  --chart-4: oklch(0.55 0.10 200);
+  --chart-5: oklch(0.65 0.12 30);
+
+  --sidebar: oklch(0.97 0.01 180);
+  --sidebar-foreground: oklch(0.22 0.02 180);
+  --sidebar-primary: oklch(0.46 0.06 180);
+  --sidebar-primary-foreground: oklch(0.99 0.005 90);
+  --sidebar-accent: oklch(0.93 0.03 180);
+  --sidebar-accent-foreground: oklch(0.32 0.06 180);
+  --sidebar-border: oklch(0.90 0.015 180);
+  --sidebar-ring: oklch(0.46 0.06 180);
+}
+
+.dark {
+  --background: oklch(0.18 0.02 180);
+  --foreground: oklch(0.97 0.005 90);
+  --card: oklch(0.22 0.025 180);
+  --card-foreground: oklch(0.97 0.005 90);
+  --popover: oklch(0.22 0.025 180);
+  --popover-foreground: oklch(0.97 0.005 90);
+  --primary: oklch(0.65 0.08 180);
+  --primary-foreground: oklch(0.18 0.02 180);
+  --primary-soft: oklch(0.30 0.04 180);
+  --primary-deep: oklch(0.55 0.07 180);
+  --secondary: oklch(0.27 0.03 180);
+  --secondary-foreground: oklch(0.97 0.005 90);
+  --muted: oklch(0.27 0.03 180);
+  --muted-foreground: oklch(0.70 0.02 180);
+  --accent: oklch(0.74 0.16 45);
+  --accent-foreground: oklch(0.18 0.02 180);
+  --accent-soft: oklch(0.35 0.06 45);
+  --gold: oklch(0.83 0.13 85);
+  --gold-foreground: oklch(0.18 0.02 180);
+  --crisis: oklch(0.65 0.22 27);
+  --crisis-foreground: oklch(0.97 0.005 90);
+  --destructive: oklch(0.65 0.22 27);
+  --destructive-foreground: oklch(0.97 0.005 90);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.65 0.08 180);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Breathing animation */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Soft pulse for live indicators */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
+}
+
+/* Typing dots */
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+.typing-dot {
+  animation: typing-bounce 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Gradient backgrounds */
+.bg-warm-gradient {
+  background: linear-gradient(135deg, oklch(0.46 0.06 180) 0%, oklch(0.55 0.07 175) 100%);
+}
+.bg-canvas-gradient {
+  background: linear-gradient(180deg, oklch(0.985 0.005 90) 0%, oklch(0.96 0.02 180) 100%);
+}
