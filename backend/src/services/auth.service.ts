@@ -41,16 +41,17 @@ export class AuthService {
 
   static generateToken(user: IUser): string {
     const secret = env.JWT_SECRET || "default-secret-key-change-in-production";
-    return jwt.sign(
-      { sub: user._id.toString(), role: user.role },
-      secret,
-      { expiresIn: "30d" },
-    );
+    return jwt.sign({ sub: user._id.toString(), role: user.role }, secret, {
+      expiresIn: "30d",
+    });
   }
 
   static verifyToken(token: string): { sub: string; role: string } {
     const secret = env.JWT_SECRET || "default-secret-key-change-in-production";
-    const decoded = jwt.verify(token, secret) as jwt.JwtPayload & { sub: string; role: string };
+    const decoded = jwt.verify(token, secret) as jwt.JwtPayload & {
+      sub: string;
+      role: string;
+    };
     return {
       sub: decoded.sub,
       role: decoded.role,

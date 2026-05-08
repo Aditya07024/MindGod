@@ -32,7 +32,8 @@ export class PaymentService {
     userName,
   }: CreateOrderParams) {
     try {
-      const numAmount = typeof amount === "string" ? parseFloat(amount) : amount || 0;
+      const numAmount =
+        typeof amount === "string" ? parseFloat(amount) : amount || 0;
       const order: RazorpayOrderResponse = (await razorpay.orders.create({
         amount: Math.round(numAmount * 100), // Convert to paise
         currency: "INR",
@@ -79,7 +80,8 @@ export class PaymentService {
   static async getPaymentDetails(paymentId: string) {
     try {
       const payment = await razorpay.payments.fetch(paymentId);
-      const paymentAmount = typeof payment.amount === "number" ? payment.amount : 0;
+      const paymentAmount =
+        typeof payment.amount === "number" ? payment.amount : 0;
       return {
         id: payment.id,
         amount: paymentAmount / 100,

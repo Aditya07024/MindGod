@@ -20,18 +20,21 @@ export async function requireAuth(
   try {
     // getAuth safely extracts the user ID if clerkMiddleware successfully validated the token
     const { userId: clerkUserId } = getAuth(req);
-    
+
     if (!clerkUserId) {
       return next(new AppError("Unauthorized - No Clerk User", 401));
     }
 
     // Look up or auto-provision the MongoDB user
-    let user: any = await User.findOne({ 
-      $or: [{ clerkId: clerkUserId }, { phoneHash: clerkUserId }] 
+    let user: any = await User.findOne({
+      $or: [{ clerkId: clerkUserId }, { phoneHash: clerkUserId }],
     }).lean();
 
     if (user && !user.clerkId) {
-      await User.updateOne({ _id: user._id }, { $set: { clerkId: clerkUserId } });
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { clerkId: clerkUserId } },
+      );
       user.clerkId = clerkUserId;
     }
 
@@ -39,7 +42,9 @@ export async function requireAuth(
       // First login — fetch Clerk user profile to populate name/email
       const clerkUser = await clerkClient.users.getUser(clerkUserId);
       const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
-      const fullName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
+      const fullName = [clerkUser.firstName, clerkUser.lastName]
+        .filter(Boolean)
+        .join(" ");
 
       try {
         const created = await User.create({

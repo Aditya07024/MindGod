@@ -15,18 +15,26 @@ export interface IJournalEntry extends Document {
 
 const JournalEntrySchema = new Schema<IJournalEntry>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     prompt: { type: String, required: true },
     situation: { type: String, required: true },
     thought: { type: String, required: true },
     feeling: { type: String, required: true },
     reframe: { type: String, required: true },
     content: { type: String },
-    aiResponse: { type: String }
+    aiResponse: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 JournalEntrySchema.index({ userId: 1, createdAt: -1 });
 
-export const JournalEntry = mongoose.model<IJournalEntry>("JournalEntry", JournalEntrySchema);
+export const JournalEntry = mongoose.model<IJournalEntry>(
+  "JournalEntry",
+  JournalEntrySchema,
+);
