@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { tanstackStart } from "@tanstack/react-start/vite";
-import { cloudflareVitePlugin } from "@cloudflare/vite-plugin";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import {cloudflare} from "@cloudflare/vite-plugin";
 import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [
-    cloudflareVitePlugin(),
+    cloudflare(),
     tanstackStart({
       server: { entry: "server" },
     }),
@@ -20,10 +20,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Reduce chunk sizes to improve memory usage
-        manualChunks: {
-          vendor: ["react", "react-dom", "@tanstack/react-router"],
-          charts: ["recharts", "d3"],
-        },
       },
     },
     // Reduce source map size in production
