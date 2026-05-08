@@ -4,7 +4,10 @@ import { PaymentController } from "@/controllers/payment.controller";
 
 const router = Router();
 
-// All payment routes require authentication
+// POST /api/payment/webhook - Razorpay webhook (no auth required)
+router.post("/webhook", PaymentController.handleWebhook);
+
+// All payment routes below require authentication
 router.use(requireAuth);
 
 // POST /api/payment/initiate - Initiate a payment
@@ -21,11 +24,5 @@ router.get("/:bookingId", PaymentController.getPaymentStatus);
 
 // POST /api/payment/:bookingId/refund - Refund a booking
 router.post("/:bookingId/refund", PaymentController.refundBooking);
-
-// POST /api/payment/webhook - Razorpay webhook (no auth required)
-router.post("/webhook", (req, res, next) => {
-  // Verify webhook and process
-  PaymentController.handleWebhook(req, res);
-});
 
 export default router;

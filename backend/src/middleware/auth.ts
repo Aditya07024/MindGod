@@ -26,7 +26,7 @@ export async function requireAuth(
     }
 
     // Look up or auto-provision the MongoDB user
-    let user = await User.findOne({ 
+    let user: any = await User.findOne({ 
       $or: [{ clerkId: clerkUserId }, { phoneHash: clerkUserId }] 
     }).lean();
 
@@ -50,7 +50,7 @@ export async function requireAuth(
           isAnonymous: false,
           onboarding: { concerns: [] },
         });
-        user = created.toObject();
+        user = created.toObject() as any;
       } catch (createErr: any) {
         if (createErr.code === 11000) {
           user = await User.findOne({ clerkId: clerkUserId }).lean();
@@ -59,9 +59,13 @@ export async function requireAuth(
       }
     }
 
+    if (!user) {
+      return next(new AppError("Failed to create or fetch user", 500));
+    }
+
     req.user = {
       sub: String(user._id),
-      role: user.role,
+      role: user.role || "user",
       clerkId: clerkUserId,
     };
 

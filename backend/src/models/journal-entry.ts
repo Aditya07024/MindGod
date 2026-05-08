@@ -7,6 +7,7 @@ export interface IJournalEntry extends Document {
   thought: string;
   feeling: string;
   reframe: string;
+  content?: string;
   aiResponse?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -20,6 +21,7 @@ const JournalEntrySchema = new Schema<IJournalEntry>(
     thought: { type: String, required: true },
     feeling: { type: String, required: true },
     reframe: { type: String, required: true },
+    content: { type: String },
     aiResponse: { type: String }
   },
   { timestamps: true }

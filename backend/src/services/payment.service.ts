@@ -2,15 +2,23 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  key_id: process.env.RAZORPAY_KEY_ID || "",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "",
 });
 
 interface CreateOrderParams {
-  amount: number;
+  amount: number | string | null;
   bookingId: string;
-  userEmail?: string;
-  userName?: string;
+  userEmail?: string | null;
+  userName?: string | null;
+}
+
+interface RazorpayOrderResponse {
+  id: string;
+  amount: number;
+  currency: string;
+  receipt: string;
+  [key: string]: any;
 }
 
 export class PaymentService {
@@ -24,20 +32,21 @@ export class PaymentService {
     userName,
   }: CreateOrderParams) {
     try {
-      const order = await razorpay.orders.create({
-        amount: Math.round(amount * 100), // Convert to paise
+      const numAmount = typeof amount === "string" ? parseFloat(amount) : amount || 0;
+      const order: RazorpayOrderResponse = (await razorpay.orders.create({
+        amount: Math.round(numAmount * 100), // Convert to paise
         currency: "INR",
         receipt: `booking_${bookingId}`,
         notes: {
           bookingId,
-          userEmail,
-          userName,
+          userEmail: userEmail || "",
+          userName: userName || "",
         },
-      });
+      })) as RazorpayOrderResponse;
 
       return {
         orderId: order.id,
-        amount: order.amount / 100, // Convert back to rupees
+        amount: (order.amount || 0) / 100, // Convert back to rupees
         currency: order.currency,
         receipt: order.receipt,
       };
@@ -70,9 +79,10 @@ export class PaymentService {
   static async getPaymentDetails(paymentId: string) {
     try {
       const payment = await razorpay.payments.fetch(paymentId);
+      const paymentAmount = typeof payment.amount === "number" ? payment.amount : 0;
       return {
         id: payment.id,
-        amount: payment.amount / 100,
+        amount: paymentAmount / 100,
         currency: payment.currency,
         status: payment.status,
         method: payment.method,
@@ -98,7 +108,7 @@ export class PaymentService {
       return {
         refundId: refund.id,
         paymentId: refund.payment_id,
-        amount: refund.amount / 100,
+        amount: (refund.amount || 0) / 100,
         status: refund.status,
         notes: refund.notes,
       };
