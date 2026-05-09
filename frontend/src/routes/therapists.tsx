@@ -15,6 +15,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const getYouTubeId = (url: string) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+  return match ? match[1] : null;
+};
+
 export const Route = createFileRoute("/therapists")({
   component: TherapistMarketplace,
 });
@@ -221,13 +227,22 @@ function TherapistMarketplace() {
                   {/* Video Thumbnail or Avatar */}
                   <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
                     {therapist.introVideoUrl ? (
-                      <video
-                        src={therapist.introVideoUrl}
-                        autoPlay
-                        muted
-                        loop
-                        className="w-full h-full object-cover"
-                      />
+                      getYouTubeId(therapist.introVideoUrl) ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${getYouTubeId(therapist.introVideoUrl)}?autoplay=1&mute=1&loop=1&playlist=${getYouTubeId(therapist.introVideoUrl)}&controls=0`}
+                          className="w-full h-full object-cover pointer-events-none"
+                          allow="autoplay; encrypted-media"
+                          frameBorder="0"
+                        />
+                      ) : (
+                        <video
+                          src={therapist.introVideoUrl}
+                          autoPlay
+                          muted
+                          loop
+                          className="w-full h-full object-cover"
+                        />
+                      )
                     ) : (
                       <div className="text-white text-4xl font-bold">
                         {therapist.name.charAt(0)}
@@ -325,14 +340,22 @@ function TherapistMarketplace() {
             >
               <div className="relative aspect-video bg-slate-900 w-full shrink-0">
                 {selectedTherapist.introVideoUrl ? (
-                  <video
-                    src={selectedTherapist.introVideoUrl}
-                    autoPlay
-                    muted
-                    loop
-                    controls
-                    className="w-full h-full object-cover"
-                  />
+                  getYouTubeId(selectedTherapist.introVideoUrl) ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${getYouTubeId(selectedTherapist.introVideoUrl)}?autoplay=1&mute=0&rel=0`}
+                      className="w-full h-full object-cover"
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      frameBorder="0"
+                    />
+                  ) : (
+                    <video
+                      src={selectedTherapist.introVideoUrl}
+                      autoPlay
+                      controls
+                      className="w-full h-full object-cover"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-700">
                     No intro video available
