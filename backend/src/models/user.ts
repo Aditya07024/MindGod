@@ -6,7 +6,7 @@ export type UserRole = "user" | "therapist" | "org_admin" | "super_admin";
 export interface IOnboardingState {
   moodScore?: number;
   concerns: string[];
-  primaryNeed?: "someone_to_talk_to" | "tools_and_exercises" | "just_to_express";
+  primaryNeed?: "talk" | "tools" | "express";
   completedAt?: Date;
 }
 

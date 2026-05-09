@@ -304,20 +304,22 @@ export class TherapistController {
           sessionCount: 0,
           sessionFee: 1500,
           verified: false,
+          verificationStatus: "pending",
         };
       }
 
-      if (bio !== undefined) user.therapistProfile.bio = bio;
+      const profile = user.therapistProfile!;
+      if (bio !== undefined) profile.bio = bio;
       if (fee !== undefined) {
         let f = Number(fee);
         if (f < 500) f = 500;
         if (f > 5000) f = 5000;
-        user.therapistProfile.sessionFee = f;
+        profile.sessionFee = f;
       }
       if (specializations !== undefined) {
-        user.therapistProfile.specializations = specializations.split(",").map((s: string) => s.trim()).filter(Boolean);
+        profile.specializations = specializations.split(",").map((s: string) => s.trim()).filter(Boolean);
       }
-      if (introVideoUrl !== undefined) user.therapistProfile.introVideoUrl = introVideoUrl;
+      if (introVideoUrl !== undefined) profile.introVideoUrl = introVideoUrl;
 
       await user.save();
 

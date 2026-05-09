@@ -128,9 +128,10 @@ export class AuthService {
     const user = await this.getCurrentUser(userId);
 
     if (user.role === "therapist") {
-      const existing = user.therapistProfile ?? {
+      const existing: any = user.therapistProfile ?? {
         name: "",
         verified: false,
+        verificationStatus: "pending",
         specializations: [],
         languages: [],
         sessionFee: 0,
@@ -142,11 +143,12 @@ export class AuthService {
         ...existing,
         name: payload["Full name"] ?? existing.name ?? "",
         rciNumber: payload["RCI number"] ?? existing.rciNumber,
+        verificationStatus: existing.verificationStatus ?? "pending",
         specializations: payload["Primary specialization"]
           ? [payload["Primary specialization"]]
           : (existing.specializations ?? []),
         languages: payload["Languages"]
-          ? payload["Languages"].split(",").map((l) => l.trim())
+          ? payload["Languages"].split(",").map((l: string) => l.trim())
           : (existing.languages ?? []),
         sessionFee: payload["Session fee (₹)"]
           ? Number(payload["Session fee (₹)"])
