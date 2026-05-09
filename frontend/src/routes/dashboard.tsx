@@ -42,12 +42,21 @@ function Dashboard() {
     API.auth.me().then(async (me: any) => {
       let role = me?.role ?? 'user';
 
+      const intentRole = localStorage.getItem('mindgod_intent_role');
       localStorage.removeItem('mindgod_intent_role');
 
-      if (role === 'therapist') nav({ to: '/therapist/dashboard', replace: true });
-      else if (role === 'org_admin') nav({ to: '/org/dashboard', replace: true });
-      else if (role === 'super_admin') nav({ to: '/admin/dashboard', replace: true });
-      else setIsCheckingRole(false);
+      if (role === 'therapist') return nav({ to: '/therapist/dashboard', replace: true });
+      if (role === 'org_admin') return nav({ to: '/org/dashboard', replace: true });
+      if (role === 'super_admin') return nav({ to: '/admin/dashboard', replace: true });
+      
+      if (intentRole === 'therapist') return nav({ to: '/therapist/dashboard', replace: true });
+      if (intentRole === 'org_admin') return nav({ to: '/org/onboarding', replace: true });
+
+      if (role === 'user' && !me?.onboarding?.completedAt) {
+        return nav({ to: '/onboarding', replace: true });
+      }
+
+      setIsCheckingRole(false);
     }).catch(() => {
       setIsCheckingRole(false);
     });

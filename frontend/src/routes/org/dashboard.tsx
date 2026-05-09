@@ -1,40 +1,20 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Users, BarChart2, Shield, Building2, TrendingUp, AlertTriangle, Download, Lock
+  Users, BarChart2, Shield, Building2, TrendingUp, AlertTriangle, Download,
+  CheckCircle, Clock, UserCheck, UserX, Upload, X, Loader2, ChevronRight
 } from 'lucide-react';
 import API from '@/lib/api';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton, useClerk } from '@clerk/clerk-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/org/dashboard')({ component: OrgDashboard });
 
-// --- Mock Data ---
-const DEPARTMENTS = [
-  { id: 'dept_1', name: 'Engineering', members: 45, avgMood: 6.8, sessions: 12 },
-  { id: 'dept_2', name: 'Sales', members: 18, avgMood: 5.2, sessions: 8, burnoutRisk: true },
-  { id: 'dept_3', name: 'HR', members: 8, avgMood: 7.1, sessions: 5 }, // n < 10, hidden
-  { id: 'dept_4', name: 'Operations', members: 27, avgMood: 6.2, sessions: 9 },
-  { id: 'dept_5', name: 'Marketing', members: 12, avgMood: 7.5, sessions: 4 },
-  { id: 'dept_6', name: 'Legal', members: 4, avgMood: 6.0, sessions: 1 }, // n < 10, hidden
-];
-
-const MOOD_DATA = Array.from({ length: 30 }).map((_, i) => ({
-  date: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-  mood: parseFloat((6.0 + Math.sin(i / 3) * 1.5 + Math.random() * 0.5).toFixed(1)),
-}));
-
-const USERS = [
-  { id: 'u1', name: 'Aarav Patel', email: 'aarav@company.com', dept: 'Engineering', status: 'Active' },
-  { id: 'u2', name: 'Diya Sharma', email: 'diya@company.com', dept: 'Sales', status: 'Active' },
-  { id: 'u3', name: 'Vihaan Singh', email: 'vihaan@company.com', dept: 'HR', status: 'Pending' },
-  { id: 'u4', name: 'Ananya Gupta', email: 'ananya@company.com', dept: 'Engineering', status: 'Active' },
-  { id: 'u5', name: 'Advik Kumar', email: 'advik@company.com', dept: 'Operations', status: 'Inactive' },
-];
+// All data is loaded live from the API — no hardcoded mock data.
 
 function DepartmentHeatmap({ data }: { data: typeof DEPARTMENTS }) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -140,26 +120,189 @@ function DepartmentHeatmap({ data }: { data: typeof DEPARTMENTS }) {
 
 function OrgDashboard() {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
+  const qc = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
+  const [orgData, setOrgData] = useState<any>(null);
+  const [tab, setTab] = useState<'overview' | 'therapists' | 'requests' | 'members'>('overview');
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  // Excel upload modal
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  // Member detail panel
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [memberDetail, setMemberDetail] = useState<any>(null);
+  const [memberLoading, setMemberLoading] = useState(false);
 
-  // Identify burnout risks
-  const burnoutDepts = DEPARTMENTS.filter(d => d.burnoutRisk && d.members >= 10);
+  // Verification Gate
+  useEffect(() => {
+    API.org.me()
+      .then((res: any) => {
+        const org = res?.organization;
+        if (!org) {
+          navigate({ to: '/org/onboarding', replace: true });
+        } else {
+          setOrgData(org);
+          setVerificationStatus(org.verificationStatus);
+        }
+      })
+      .catch(() => {
+        // Fallback if me() fails or user has no orgId
+        navigate({ to: '/org/onboarding', replace: true });
+      });
+  }, [navigate]);
+
+  const { data: therapistsData, refetch: refetchTherapists } = useQuery({
+    queryKey: ['org-pending-therapists'],
+    queryFn: () => API.org.pendingTherapists(),
+    enabled: !!orgData && tab === 'therapists',
+  });
+
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['org-stats'],
+    queryFn: () => API.org.stats(),
+    enabled: !!orgData && tab === 'overview',
+    refetchInterval: 60000,
+  });
+
+  const { data: joinReqData, refetch: refetchJoinReqs } = useQuery({
+    queryKey: ['org-join-requests'],
+    queryFn: () => API.org.joinRequests(),
+    enabled: !!orgData && tab === 'requests',
+  });
+
+  const { data: membersData, refetch: refetchMembers } = useQuery({
+    queryKey: ['org-members'],
+    queryFn: () => API.org.members(),
+    enabled: !!orgData && tab === 'members',
+  });
+
+  const handleVerifyTherapist = async (id: string, verified: boolean) => {
+    try {
+      await API.org.verifyTherapist(id, { verified });
+      toast.success(verified ? 'Therapist approved' : 'Therapist rejected');
+      refetchTherapists();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to verify therapist');
+    }
+  };
+
+  const handleJoinAction = async (userId: string, approve: boolean) => {
+    try {
+      if (approve) await API.org.approveJoinRequest(userId);
+      else await API.org.rejectJoinRequest(userId);
+      toast.success(approve ? 'User approved and linked' : 'Request rejected');
+      refetchJoinReqs();
+      refetchMembers();
+    } catch (e: any) {
+      toast.error(e.message || 'Action failed');
+    }
+  };
+
+  const handleUploadEmails = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res: any = await API.org.uploadEmails(file);
+      toast.success(res.message || 'Emails uploaded successfully');
+      setUploadOpen(false);
+      refetchJoinReqs();
+      refetchMembers();
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleViewMember = async (member: any) => {
+    setSelectedMember(member);
+    setMemberLoading(true);
+    try {
+      const res = await API.org.userDataForOrg(member.id);
+      setMemberDetail(res);
+    } catch {
+      setMemberDetail(null);
+    } finally {
+      setMemberLoading(false);
+    }
+  };
+
+  const liveMetrics = statsData?.metrics;
+  const liveDepts: any[] = statsData?.departments || [];
+  const liveMoodTrend: any[] = statsData?.moodTrend || [];
+  const burnoutDepts = liveDepts.filter((d: any) => d.burnoutRisk && d.members >= 10);
 
   const handleDownloadPdf = () => {
-    // html2canvas does not support modern CSS color spaces like oklch.
-    // Instead, we use the browser's native print-to-PDF functionality which supports all modern CSS.
     toast.success('Opening print dialog. Please save as PDF.', { id: 'pdf-toast' });
-    setTimeout(() => {
-      window.print();
-    }, 500);
+    setTimeout(() => { window.print(); }, 500);
   };
 
   const overviewMetrics = [
-    { label: 'Active Users', value: 87, sub: 'of 120 seats', icon: Users, color: 'text-blue-600 bg-blue-50' },
-    { label: 'Avg Team Mood', value: '6.4', sub: 'Last 30 days', icon: TrendingUp, color: 'text-green-600 bg-green-50' },
-    { label: 'Engagement', value: '72%', sub: 'Weekly active', icon: BarChart2, color: 'text-indigo-600 bg-indigo-50' },
-    { label: 'Crisis Alerts', value: 2, sub: 'Anonymised flags', icon: AlertTriangle, color: 'text-red-600 bg-red-50' },
+    { label: 'Active Users', value: liveMetrics ? `${liveMetrics.activeUsers}` : '—', sub: liveMetrics ? `of ${liveMetrics.totalUsers} users` : 'Loading...', icon: Users, color: 'text-blue-600 bg-blue-50' },
+    { label: 'Avg Team Mood', value: liveMetrics ? liveMetrics.avgTeamMood : '—', sub: 'Last 30 days', icon: TrendingUp, color: 'text-green-600 bg-green-50' },
+    { label: 'Engagement', value: liveMetrics ? `${liveMetrics.engagement}%` : '—', sub: 'Monthly active', icon: BarChart2, color: 'text-indigo-600 bg-indigo-50' },
+    { label: 'Crisis Alerts', value: liveMetrics ? liveMetrics.crisisAlerts : '—', sub: 'Anonymised flags', icon: AlertTriangle, color: 'text-red-600 bg-red-50' },
   ];
+
+  if (verificationStatus && verificationStatus !== 'verified') {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center px-4 relative overflow-hidden">
+        {/* Blurred background representation of the dashboard */}
+        <div className="absolute inset-0 pointer-events-none opacity-40 filter blur-xl select-none" aria-hidden="true">
+          <div className="max-w-6xl mx-auto h-full px-4 py-8 space-y-8">
+            <div className="h-24 bg-white rounded-xl" />
+            <div className="grid grid-cols-4 gap-4">
+              <div className="h-32 bg-white rounded-xl" />
+              <div className="h-32 bg-white rounded-xl" />
+              <div className="h-32 bg-white rounded-xl" />
+              <div className="h-32 bg-white rounded-xl" />
+            </div>
+            <div className="h-64 bg-white rounded-xl" />
+          </div>
+        </div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} 
+          className="bg-white p-8 md:p-12 rounded-[2rem] shadow-2xl max-w-lg w-full text-center border border-slate-200 z-10 relative">
+          
+          <div className="grid size-20 place-items-center rounded-3xl bg-blue-50 text-blue-600 mx-auto mb-6 shadow-inner border border-blue-100">
+            {verificationStatus === 'pending' ? <Clock className="size-10" /> : <Shield className="size-10" />}
+          </div>
+          
+          <h1 className="font-display text-3xl font-bold text-slate-900 mb-3 tracking-tight">
+            {verificationStatus === 'pending' ? 'Application Under Review' : 'Organization Approval Required'}
+          </h1>
+          
+          <p className="text-slate-500 font-medium leading-relaxed mb-8">
+            {verificationStatus === 'pending' 
+              ? "We are currently verifying your organization's documents. You'll receive an email as soon as your dashboard is unlocked."
+              : "All organizations must be fully verified before accessing employee wellness analytics. Please fill out the verification form."}
+          </p>
+          
+          <div className="space-y-3">
+            {verificationStatus === 'pending' ? (
+              <button onClick={() => window.location.reload()} className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 font-bold shadow-md text-base transition">
+                Refresh Status
+              </button>
+            ) : (
+              <button onClick={() => navigate({ to: '/org/onboarding' })} className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 font-bold shadow-md text-base transition-transform active:scale-[0.98]">
+                Fill Verification Form
+              </button>
+            )}
+            <button onClick={() => navigate({ to: '/' })} className="w-full rounded-xl h-12 font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition">
+              Go to Landing Page
+            </button>
+            <button onClick={() => signOut({ redirectUrl: '/' })} className="w-full rounded-xl h-12 font-bold text-red-500 hover:text-red-700 hover:bg-red-50 transition">
+              Sign Out
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white">
@@ -170,9 +313,17 @@ function OrgDashboard() {
               <Building2 className="size-5" />
             </div>
             <div>
-              <p className="font-bold text-slate-900">Org Admin Portal</p>
+              <p className="font-bold text-slate-900 flex items-center gap-2">
+                {orgData?.name || 'Org Admin Portal'}
+                {orgData?.verificationStatus === 'verified' && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle className="size-3" /> Verified {orgData?.type === 'college' ? 'College' : 'Organization'}
+                  </span>
+                )}
+              </p>
               <p className="text-xs text-slate-500 flex items-center gap-1">
                 <Shield className="size-3" /> Minimum 10 users per department required for aggregates.
+                {orgData && ` • ${orgData.address}`}
               </p>
             </div>
           </div>
@@ -193,9 +344,38 @@ function OrgDashboard() {
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="bg-white border-b border-slate-200 print:hidden">
+        <div className="max-w-6xl mx-auto px-4 flex gap-4">
+          <button onClick={() => setTab('overview')}
+            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            Overview
+          </button>
+          <button onClick={() => setTab('therapists')}
+            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'therapists' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            Pending Therapists
+            {therapistsData?.therapists?.length > 0 && (
+              <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">{therapistsData.therapists.length}</span>
+            )}
+          </button>
+          <button onClick={() => setTab('requests')}
+            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'requests' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            Join Requests
+            {joinReqData?.joinRequests?.length > 0 && (
+              <span className="ml-2 bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-xs">{joinReqData.joinRequests.length}</span>
+            )}
+          </button>
+          <button onClick={() => setTab('members')}
+            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'members' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            Members
+          </button>
+        </div>
+      </div>
+
       {/* The content to be captured in PDF */}
       <div id="dashboard-content" className="max-w-6xl mx-auto px-4 py-8 space-y-8 bg-slate-50">
-        
+        {tab === 'overview' && (
+          <>
         {/* Burnout Alert Banner */}
         {burnoutDepts.length > 0 && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
@@ -237,7 +417,7 @@ function OrgDashboard() {
             </div>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={MOOD_DATA} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                <LineChart data={liveMoodTrend} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} minTickGap={30} />
                   <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: '#64748b' }} />
@@ -257,7 +437,7 @@ function OrgDashboard() {
               <h2 className="font-bold text-slate-900">Department Heatmap</h2>
               <p className="text-xs text-slate-500">Visualizing wellness metrics. (n &lt; 10 filtered for privacy)</p>
             </div>
-            <DepartmentHeatmap data={DEPARTMENTS} />
+            <DepartmentHeatmap data={liveDepts} />
           </div>
 
         </div>
@@ -266,7 +446,7 @@ function OrgDashboard() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-200">
             <h2 className="font-bold text-slate-900">Seat Management</h2>
-            <p className="text-xs text-slate-500 mt-1">Manage active platform licenses. No individual wellness data is shown.</p>
+            <p className="text-xs text-slate-500 mt-1">Manage active platform licenses. No individual wellness data is shown here.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -278,37 +458,294 @@ function OrgDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {USERS.map((user) => (
+                {membersData?.members?.map((user: any) => (
                   <tr key={user.id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4">
                       <p className="font-semibold text-slate-900">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
+                      <p className="text-xs text-slate-500">{user.email || user.phoneMasked}</p>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        {user.dept}
+                        {user.department}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.status === 'Active' ? 'bg-green-100 text-green-800' :
-                        user.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                        'bg-slate-100 text-slate-600'
+                        user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'
                       }`}>
                         {user.status}
                       </span>
                     </td>
                   </tr>
                 ))}
+                {(!membersData?.members || membersData.members.length === 0) && (
+                  <tr><td colSpan={3} className="px-6 py-8 text-center text-slate-500">No active members yet.</td></tr>
+                )}
               </tbody>
             </table>
           </div>
           <div className="p-4 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-500">
-            Showing {USERS.length} users. 87 of 120 seats used.
+            Showing {membersData?.members?.length || 0} users. {liveMetrics ? `${liveMetrics.activeUsers} of ${orgData?.seats || 0} seats active.` : ''}
           </div>
         </div>
+          </>
+        )}
+
+        {tab === 'therapists' && (
+          <div className="space-y-4">
+            <h2 className="font-bold text-slate-900 text-xl mb-4">Therapists Pending Verification</h2>
+            {therapistsData?.therapists?.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-500">
+                No pending therapists require verification at this time.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {therapistsData?.therapists?.map((t: any) => (
+                  <div key={t.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-lg">{t.name}</h3>
+                        <p className="text-sm text-slate-500">{t.email}</p>
+                      </div>
+                      <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded">PENDING</span>
+                    </div>
+                    
+                    <div className="text-sm space-y-1 mb-4 text-slate-600">
+                      <p><strong>Qualification:</strong> {t.qualification}</p>
+                      <p><strong>Experience:</strong> {t.experienceYears} years</p>
+                      <p><strong>Specializations:</strong> {t.specializations?.join(', ')}</p>
+                    </div>
+
+                    <div className="flex gap-2 text-xs font-semibold mb-4">
+                      {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-blue-600 hover:underline">View Degree</a>}
+                      {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-blue-600 hover:underline">View License</a>}
+                      {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-blue-600 hover:underline">View ID</a>}
+                      {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-indigo-600 hover:underline">Intro Video</a>}
+                    </div>
+
+                    <div className="flex gap-2 border-t border-slate-100 pt-4 mt-2">
+                      <button onClick={() => handleVerifyTherapist(t.id, true)}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">
+                        Verify & Approve
+                      </button>
+                      <button onClick={() => handleVerifyTherapist(t.id, false)}
+                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-lg transition border border-red-200">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── NEW TABS ── */}
+        
+        {tab === 'requests' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-slate-900 text-xl">Employee Join Requests</h2>
+              <button onClick={() => setUploadOpen(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-800 transition">
+                <Upload className="size-4" /> Upload Whitelist
+              </button>
+            </div>
+            
+            {!joinReqData?.joinRequests || joinReqData.joinRequests.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-500">
+                No pending employee join requests.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {joinReqData.joinRequests.map((req: any) => (
+                  <div key={req.userId} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-lg">{req.fullName || 'Unnamed Employee'}</h3>
+                        <p className="text-sm text-slate-500">{req.email || req.phoneMasked}</p>
+                        <p className="text-xs text-slate-400 mt-1">Requested: {new Date(req.requestedAt).toLocaleDateString()}</p>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded ${
+                        req.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        req.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {req.status.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {req.autoApproved && (
+                      <div className="mb-4 bg-blue-50 text-blue-700 text-xs p-2 rounded flex items-center gap-1 font-semibold">
+                        <CheckCircle className="size-3" /> Auto-approved via Whitelist
+                      </div>
+                    )}
+
+                    {req.status === 'pending' && (
+                      <div className="flex gap-2 border-t border-slate-100 pt-4 mt-2">
+                        <button onClick={() => handleJoinAction(req.userId, true)}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                          <UserCheck className="size-4" /> Approve
+                        </button>
+                        <button onClick={() => handleJoinAction(req.userId, false)}
+                          className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-lg transition border border-red-200 flex items-center justify-center gap-2">
+                          <UserX className="size-4" /> Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'members' && (
+          <div className="flex gap-6 h-[600px]">
+            {/* Left side list */}
+            <div className="w-1/3 bg-white rounded-xl border border-slate-200 flex flex-col shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-slate-200 font-bold text-slate-900">
+                Verified Members ({membersData?.members?.length || 0})
+              </div>
+              <div className="overflow-y-auto flex-1">
+                {membersData?.members?.map((m: any) => (
+                  <button key={m.id} onClick={() => handleViewMember(m)}
+                    className={`w-full text-left p-4 border-b border-slate-100 transition hover:bg-slate-50 flex items-center justify-between ${selectedMember?.id === m.id ? 'bg-blue-50 border-blue-100' : ''}`}>
+                    <div>
+                      <p className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+                        {m.name}
+                        {m.role === 'therapist' ? (
+                          <span className="bg-teal-100 text-teal-800 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Therapist</span>
+                        ) : (
+                          <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Employee</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">{m.department}</p>
+                    </div>
+                    <ChevronRight className={`size-4 ${selectedMember?.id === m.id ? 'text-blue-600' : 'text-slate-400'}`} />
+                  </button>
+                ))}
+                {(!membersData?.members || membersData.members.length === 0) && (
+                  <div className="p-8 text-center text-sm text-slate-500">No members approved yet.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Right side detail panel */}
+            <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-y-auto">
+              {memberLoading ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                  <Loader2 className="size-8 animate-spin mb-4 text-blue-600" /> Loading employee data...
+                </div>
+              ) : memberDetail ? (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                      {memberDetail.user.name}
+                      {selectedMember?.role === 'therapist' ? (
+                        <span className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Therapist</span>
+                      ) : (
+                        <span className="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider">Employee</span>
+                      )}
+                    </h2>
+                    <p className="text-slate-500 mt-1">Department: {memberDetail.user.department}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Avg Mood</p>
+                      <p className="text-3xl font-bold text-slate-900">{memberDetail.wellness.avgMood ?? '—'}</p>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Sessions</p>
+                      <p className="text-3xl font-bold text-slate-900">{memberDetail.wellness.sessionCount}</p>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Journals</p>
+                      <p className="text-3xl font-bold text-slate-900">{memberDetail.wellness.journalCount}</p>
+                    </div>
+                  </div>
+
+                  {memberDetail.wellness.moodHistory.length > 0 && (
+                    <div>
+                      <h3 className="font-bold text-slate-900 mb-3">Recent Mood Check-ins</h3>
+                      <div className="space-y-2">
+                        {memberDetail.wellness.moodHistory.slice(0, 5).map((m: any, i: number) => (
+                          <div key={i} className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-white shadow-sm border border-slate-200">
+                              {m.score}/10
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{m.note || 'No note provided'}</p>
+                              <p className="text-xs text-slate-500">{new Date(m.createdAt).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                  <UserCheck className="size-12 text-slate-200 mb-4" />
+                  <p>Select a member from the list to view their wellness engagement.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
+
+      {/* Upload Modal */}
+      {uploadOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button onClick={() => setUploadOpen(false)} className="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+              <X className="size-5" />
+            </button>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Upload Email Whitelist</h2>
+            <p className="text-sm text-slate-500 mb-4">
+              Upload an Excel (.xlsx) file containing employee emails. Matching join requests will be auto-approved.
+            </p>
+            
+            {/* Format Instructions */}
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
+              <h3 className="text-xs font-bold text-blue-900 mb-1 flex items-center gap-1">
+                <CheckCircle className="size-3" /> Expected Format
+              </h3>
+              <p className="text-xs text-blue-800">
+                Your file should contain a single column with the header exactly named <strong>Email</strong>.
+              </p>
+              <div className="mt-2 bg-white rounded border border-blue-200 overflow-hidden text-xs">
+                <table className="w-full text-left">
+                  <thead className="bg-blue-100 text-blue-900">
+                    <tr><th className="py-1 px-2 border-b border-blue-200">Email</th></tr>
+                  </thead>
+                  <tbody className="text-slate-600">
+                    <tr><td className="py-1 px-2 border-b border-blue-50">aarav@yourcompany.com</td></tr>
+                    <tr><td className="py-1 px-2 border-b border-blue-50">diya@yourcompany.com</td></tr>
+                    <tr><td className="py-1 px-2 text-slate-400 italic">...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer"
+                 onClick={() => fileRef.current?.click()}>
+              <Upload className="size-8 text-blue-500 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-slate-700">Click to browse file</p>
+              <p className="text-xs text-slate-500 mt-1">.xlsx format only</p>
+              <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileRef} onChange={handleUploadEmails} disabled={uploading} />
+            </div>
+
+            {uploading && (
+              <div className="mt-4 flex items-center justify-center text-sm font-medium text-blue-600">
+                <Loader2 className="size-4 animate-spin mr-2" /> Processing file...
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }

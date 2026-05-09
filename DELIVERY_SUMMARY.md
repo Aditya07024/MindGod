@@ -319,7 +319,7 @@ Frontend: http://localhost:5173/therapists
 
 ```
 Frontend: http://localhost:5173/subscription
-- Select tier (Mann Shanti ₹199 or Apna Therapist ₹7499)
+- Select tier (Mann Shanti ₹199 or Apna Therapist ₹499)
 - Complete Razorpay payment
 - Tier upgraded immediately
 ```

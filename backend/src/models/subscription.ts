@@ -16,7 +16,6 @@ const SubscriptionSchema = new Schema<ISubscription>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     plan: {
       type: String,
-      enum: ["free", "mann_shanti", "apna_therapist"],
       required: true
     },
     status: {

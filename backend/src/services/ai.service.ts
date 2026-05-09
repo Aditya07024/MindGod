@@ -16,7 +16,7 @@ const CRISIS_KEYWORDS = [
 ];
 
 const PLAN_LIMITS: Record<IUser["tier"], number> = {
-  free: 3,
+  free: 7,
   mann_shanti: 100,
   apna_therapist: Number.POSITIVE_INFINITY
 };

@@ -9,6 +9,7 @@ const router = Router();
 
 router.get("/me", requireAuth, AuthController.me);
 router.patch("/onboarding", requireAuth, AuthController.updateOnboarding);
+router.post("/therapist/onboarding", requireAuth, AuthController.therapistOnboarding);
 router.patch("/profile", requireAuth, AuthController.updateProfile);
 router.patch("/role", requireAuth, AuthController.setRole);
 

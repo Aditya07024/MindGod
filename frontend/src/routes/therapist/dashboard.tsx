@@ -2,10 +2,10 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton, useClerk } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/therapist/dashboard')({ component: TherapistDashboard });
@@ -29,12 +29,34 @@ function riskBadge(level: string) {
 
 function TherapistDashboard() {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription'>('schedule');
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [availability, setAvailability] = useState<{ day: number; slots: string[] }[]>(
     DAYS.map((_, day) => ({ day, slots: day >= 1 && day <= 5 ? ['10:00', '14:00', '16:00'] : [] }))
   );
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+
+  const upgradeMutation = useMutation({
+    mutationFn: (planId: string) =>
+      API.subscription.upgrade({ tier: planId as "mann_shanti" | "apna_therapist" }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+      setUpgrading(null);
+      if (data.shortUrl) {
+        window.open(data.shortUrl, "_blank");
+        toast.success("Redirecting to payment…");
+      } else {
+        toast.success("Subscription activated!");
+      }
+    },
+    onError: (e: Error) => {
+      setUpgrading(null);
+      toast.error(e.message);
+    },
+  });
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['therapist-stats'],
@@ -45,6 +67,12 @@ function TherapistDashboard() {
     queryKey: ['therapist-bookings'],
     queryFn: () => API.therapist.meBookings(),
   });
+
+  const { data: plansData } = useQuery({
+    queryKey: ['subscription-plans'],
+    queryFn: () => API.plan.getAll(),
+  });
+  const plans = plansData?.plans || [];
 
   const { data: briefData, isLoading: briefLoading } = useQuery({
     queryKey: ['ai-brief', briefBookingId],
@@ -77,6 +105,17 @@ function TherapistDashboard() {
     specializations: '',
     introVideoUrl: '',
   });
+
+  useEffect(() => {
+    API.auth.me().then((me: any) => {
+      const status = me?.therapistProfile?.verificationStatus;
+      if (!me?.therapistProfile || status !== 'verified') {
+        setVerificationStatus(status || 'not_started');
+      } else {
+        setVerificationStatus('verified');
+      }
+    }).catch(() => setVerificationStatus('not_started'));
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -112,6 +151,57 @@ function TherapistDashboard() {
       )
     );
   };
+
+  if (verificationStatus && verificationStatus !== 'verified') {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center px-4 relative overflow-hidden">
+        {/* Blurred background representation of the dashboard */}
+        <div className="absolute inset-0 pointer-events-none opacity-40 filter blur-xl select-none" aria-hidden="true">
+          <div className="max-w-5xl mx-auto h-full px-4 py-8 space-y-8">
+            <div className="h-20 bg-white rounded-3xl" />
+            <div className="h-40 bg-white rounded-3xl" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-64 bg-white rounded-3xl" />
+              <div className="h-64 bg-white rounded-3xl" />
+            </div>
+          </div>
+        </div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} 
+          className="bg-white p-8 md:p-12 rounded-[2rem] shadow-2xl max-w-lg w-full text-center border border-slate-200 z-10 relative">
+          
+          <div className="grid size-20 place-items-center rounded-3xl bg-teal-50 text-teal-600 mx-auto mb-6 shadow-inner border border-teal-100">
+            {verificationStatus === 'pending' ? <Clock className="size-10" /> : <Shield className="size-10" />}
+          </div>
+          
+          <h1 className="font-display text-3xl font-bold text-slate-900 mb-3 tracking-tight">
+            {verificationStatus === 'pending' ? 'Application Under Review' : 'Account Approval Required'}
+          </h1>
+          
+          <p className="text-slate-500 font-medium leading-relaxed mb-8">
+            {verificationStatus === 'pending' 
+              ? "We are currently reviewing your documents and video introduction. You'll be notified as soon as you're approved to start taking sessions."
+              : "To maintain a high quality of care, all therapists must be verified before they can start working. Please fill out the verification form to begin."}
+          </p>
+          
+          <div className="space-y-3">
+            {verificationStatus === 'pending' ? (
+              <Button onClick={() => window.location.reload()} className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 font-bold shadow-md text-base">
+                Refresh Status
+              </Button>
+            ) : (
+              <Button onClick={() => navigate({ to: '/therapist/onboarding' })} className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-12 font-bold shadow-md text-base transition-transform active:scale-[0.98]">
+                Fill Verification Form
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => signOut({ redirectUrl: '/' })} className="w-full rounded-xl h-12 font-bold text-red-500 hover:text-red-700 hover:bg-red-50 transition">
+              Sign Out
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50">
@@ -177,7 +267,6 @@ function TherapistDashboard() {
         {/* SCHEDULE TAB */}
         {tab === 'schedule' && (
           <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className="space-y-6">
-            {/* Unread messages panel */}
             <div className="bg-gradient-to-r from-teal-50 to-white border border-teal-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition">
               <div className="flex items-center gap-4">
                 <div className="bg-white p-3 rounded-2xl text-teal-600 shadow-sm border border-teal-50">
@@ -191,7 +280,6 @@ function TherapistDashboard() {
               <Button variant="outline" className="text-teal-700 border-teal-200 hover:bg-teal-100 rounded-xl h-10 px-5 font-semibold">View Inbox</Button>
             </div>
 
-            {/* Demo Video Session Button */}
             <div className="bg-gradient-to-r from-indigo-50 to-white border border-indigo-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition">
               <div className="flex items-center gap-4">
                 <div className="bg-white p-3 rounded-2xl text-indigo-600 shadow-sm border border-indigo-50">
@@ -349,8 +437,18 @@ function TherapistDashboard() {
                 <input value={profileForm.introVideoUrl} onChange={e => setProfileForm(p => ({...p, introVideoUrl: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-600 mb-2">Session Fee (₹)</label>
-                <input type="number" value={profileForm.fee} onChange={e => setProfileForm(p => ({...p, fee: Number(e.target.value)}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
+                <label className="block text-sm font-bold text-slate-600 mb-2">Session Fee (₹) <span className="font-normal text-slate-400 text-xs ml-2">(Limits: 500 - 5000)</span></label>
+                <input type="number" min={500} max={5000} value={profileForm.fee} onChange={e => {
+                  let val = Number(e.target.value);
+                  setProfileForm(p => ({...p, fee: val}));
+                }} 
+                onBlur={e => {
+                  let val = Number(e.target.value);
+                  if (val < 500) val = 500;
+                  if (val > 5000) val = 5000;
+                  setProfileForm(p => ({...p, fee: val}));
+                }}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-600 mb-2">Specialisations (comma separated)</label>
@@ -372,22 +470,30 @@ function TherapistDashboard() {
           <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className="space-y-6">
             <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Subscription Tiers</h2>
             <div className="grid md:grid-cols-3 gap-6">
-              {['Basic', 'Professional', 'Clinic'].map((tier, i) => (
-                <div key={tier} className={`rounded-3xl border-2 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md bg-white ${i === 1 ? 'border-teal-500 relative' : 'border-slate-200'}`}>
-                  {i === 1 && <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-teal-500 text-white text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-sm">Popular</span>}
-                  <h3 className="font-display text-2xl font-bold text-slate-900">{tier}</h3>
-                  <div className="mt-3 text-4xl font-bold text-teal-700">₹{[999, 2499, 4999][i]}<span className="text-sm font-bold text-slate-400">/mo</span></div>
-                  <ul className="mt-8 mb-10 space-y-4 flex-1 text-sm font-medium text-slate-600">
-                    <li className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> Listing in directory</li>
-                    <li className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> {[10, 50, 'Unlimited'][i]} bookings/mo</li>
-                    {i > 0 && <li className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> AI Session Briefs</li>}
-                    {i > 1 && <li className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> Priority support</li>}
-                  </ul>
-                  <Button variant={i === 1 ? 'default' : 'outline'} className={`w-full rounded-xl h-12 font-bold ${i===1?'bg-teal-600 hover:bg-teal-700 text-white shadow-md':'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-                    {i === 0 ? 'Current Plan' : 'Upgrade'}
-                  </Button>
-                </div>
-              ))}
+              {plans.map((plan: any) => {
+                const isUpgrading = upgrading === plan._id && upgradeMutation.isPending;
+                return (
+                  <div key={plan._id} className="bg-white rounded-3xl border-2 border-slate-200 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                    <h3 className="font-display text-2xl font-bold text-slate-900">{plan.name}</h3>
+                    <div className="mt-3 text-4xl font-bold text-teal-700">₹{plan.price}<span className="text-sm font-bold text-slate-400">/mo</span></div>
+                    <ul className="mt-8 mb-10 space-y-4 flex-1 text-sm font-medium text-slate-600">
+                      {plan.features.map((f: string, i: number) => (
+                          <li key={i} className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> {f}</li>
+                      ))}
+                    </ul>
+                    <Button 
+                      onClick={() => {
+                        setUpgrading(plan._id);
+                        upgradeMutation.mutate(plan._id);
+                      }}
+                      disabled={isUpgrading}
+                      variant="outline" 
+                      className="w-full rounded-xl h-12 font-bold border-slate-200 text-slate-700 hover:bg-slate-50">
+                      {isUpgrading ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</> : 'Upgrade'}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}

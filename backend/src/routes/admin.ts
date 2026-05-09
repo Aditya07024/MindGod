@@ -1,13 +1,23 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "@/middleware/auth";
 import { AdminController } from "@/controllers/admin.controller";
+import { PlanController } from "@/controllers/plan.controller";
 
 const router = Router();
 
 router.get("/stats", requireAuth, requireRole(["super_admin"]), AdminController.platformStats);
 router.get("/org-stats", requireAuth, AdminController.orgStats);
-router.get("/pending-therapists", requireAuth, requireRole(["super_admin"]), AdminController.pendingTherapists);
+router.get("/therapists", requireAuth, requireRole(["super_admin"]), AdminController.pendingTherapists);
 router.patch("/therapist/:id/verify", requireAuth, requireRole(["super_admin"]), AdminController.verifyTherapist);
 
-export default router;
+router.post("/verify-password-public", AdminController.verifyPasswordPublic);
+router.post("/verify-password", requireAuth, requireRole(["super_admin"]), AdminController.verifyPassword);
 
+router.get("/pending-orgs", requireAuth, requireRole(["super_admin"]), AdminController.pendingOrgs);
+router.patch("/org/:id/verify", requireAuth, requireRole(["super_admin"]), AdminController.verifyOrg);
+
+router.post("/plans", requireAuth, requireRole(["super_admin"]), PlanController.createPlan);
+router.put("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanController.updatePlan);
+router.delete("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanController.deletePlan);
+
+export default router;

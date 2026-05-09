@@ -102,10 +102,7 @@ export class AuthService {
     payload: {
       moodScore?: number;
       concerns?: string[];
-      primaryNeed?:
-        | "someone_to_talk_to"
-        | "tools_and_exercises"
-        | "just_to_express";
+      primaryNeed?: "talk" | "tools" | "express";
       completed?: boolean;
     },
   ): Promise<IUser> {

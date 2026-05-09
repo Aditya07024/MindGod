@@ -14,7 +14,7 @@ const PLAN_CACHE: Record<string, string | undefined> = {
 
 const PLAN_CONFIG = {
   mann_shanti: { amount: 19900, name: "Mann Shanti ₹199/mo", interval: 1, period: "monthly" as const },
-  apna_therapist: { amount: 749900, name: "Apna Therapist ₹7499/mo", interval: 1, period: "monthly" as const },
+  apna_therapist: { amount: 49900, name: "Apna Therapist ₹499/mo", interval: 1, period: "monthly" as const },
 };
 
 export class SubscriptionService {
@@ -37,6 +37,32 @@ export class SubscriptionService {
     PLAN_CACHE[tier] = plan.id;
     console.log(`[Subscription] Created Razorpay plan ${plan.id} for tier ${tier}`);
     return plan.id;
+  }
+
+  /** Create a Razorpay subscription for a user using an existing Razorpay Plan ID */
+  static async createDynamicSubscription(
+    razorpayPlanId: string,
+    tierName: string,
+    userPhone: string,
+  ) {
+    const subscription = await razorpay.subscriptions.create({
+      plan_id: razorpayPlanId,
+      total_count: 12, // 12 billing cycles = 1 year
+      quantity: 1,
+      notify_info: {
+        notify_phone: userPhone,
+      },
+      notes: {
+        tier: tierName,
+        source: "mindgod_app",
+      },
+    });
+
+    return {
+      subscriptionId: subscription.id,
+      shortUrl: (subscription as any).short_url ?? null,
+      status: subscription.status,
+    };
   }
 
   /** Create a Razorpay subscription for a user */
@@ -64,6 +90,21 @@ export class SubscriptionService {
       shortUrl: (subscription as any).short_url ?? null,
       status: subscription.status,
     };
+  }
+
+  /** Create a Razorpay Plan dynamically */
+  static async createRazorpayPlan(name: string, amount: number) {
+    const plan = await razorpay.plans.create({
+      period: "monthly",
+      interval: 1,
+      item: {
+        name: name,
+        amount: amount * 100, // Convert to paise
+        currency: "INR",
+        description: `MindGod ${name} subscription`,
+      },
+    });
+    return plan.id;
   }
 
   /** Cancel an active Razorpay subscription */

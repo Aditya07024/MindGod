@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Users, BarChart2, CheckCircle, XCircle, Search,
-  TrendingUp, LogOut, AlertTriangle, Star, Eye, EyeOff
+  TrendingUp, LogOut, AlertTriangle, Star, Eye, EyeOff, Building2
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -25,13 +25,17 @@ async function adminFetch(path: string, opts: RequestInit = {}) {
 function SuperAdminDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'therapists' | 'subscriptions' | 'flags'>('overview');
+  const [tab, setTab] = useState<'overview' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'flags'>('overview');
   const [search, setSearch] = useState('');
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
+  const [verifyModal, setVerifyModal] = useState<{ open: boolean; id: string; name: string; verify: boolean, type: 'therapist' | 'org' } | null>(null);
+  const [planModal, setPlanModal] = useState<{ open: boolean, plan?: any } | null>(null);
+  const [planForm, setPlanForm] = useState({ name: '', price: 0, audience: 'therapist', features: '', isActive: true });
+  const [adminPassword, setAdminPassword] = useState('');
 
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
     queryKey: ['admin-therapists'],
-    queryFn: () => adminFetch('/api/therapists?verified=false&limit=100'),
+    queryFn: () => adminFetch('/api/admin/therapists'),
   });
 
   const { data: subsData } = useQuery({
@@ -40,14 +44,47 @@ function SuperAdminDashboard() {
     enabled: tab === 'subscriptions',
   });
 
+  const { data: orgsData, isLoading: orgsLoading } = useQuery({
+    queryKey: ['admin-orgs'],
+    queryFn: () => adminFetch('/api/admin/pending-orgs'),
+    enabled: tab === 'organizations' || tab === 'overview',
+  });
+
+  const { data: plansData, isLoading: plansLoading } = useQuery({
+    queryKey: ['admin-plans'],
+    queryFn: () => adminFetch('/api/plans'),
+    enabled: tab === 'plans',
+  });
+
   const verifyMutation = useMutation({
-    mutationFn: ({ id, verified }: { id: string; verified: boolean }) =>
-      adminFetch(`/api/admin/therapist/${id}/verify`, {
-        method: 'PATCH', body: JSON.stringify({ verified })
-      }),
-    onSuccess: (_, { verified }) => {
-      toast.success(verified ? 'Therapist verified ✓' : 'Verification removed');
-      qc.invalidateQueries({ queryKey: ['admin-therapists'] });
+    mutationFn: ({ id, verified, password, type }: { id: string; verified: boolean; password?: string, type: 'therapist' | 'org' }) => {
+      const endpoint = type === 'therapist' 
+        ? `/api/admin/therapist/${id}/verify`
+        : `/api/admin/org/${id}/verify`;
+      return adminFetch(endpoint, {
+        method: 'PATCH', body: JSON.stringify({ verified, password })
+      });
+    },
+    onSuccess: (_, { verified, type }) => {
+      setVerifyModal(null);
+      setAdminPassword('');
+      toast.success(verified ? `${type} verified ✓` : 'Verification removed');
+      qc.invalidateQueries({ queryKey: [`admin-${type}s`] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const planMutation = useMutation({
+    mutationFn: ({ id, data, isDelete }: { id?: string, data?: any, isDelete?: boolean }) => {
+      if (isDelete) return adminFetch(`/api/admin/plans/${id}`, { method: 'DELETE', body: JSON.stringify({ password: adminPassword }) });
+      if (id) return adminFetch(`/api/admin/plans/${id}`, { method: 'PUT', body: JSON.stringify({ ...data, password: adminPassword }) });
+      return adminFetch('/api/admin/plans', { method: 'POST', body: JSON.stringify({ ...data, password: adminPassword }) });
+    },
+    onSuccess: (_, { isDelete }) => {
+      setPlanModal(null);
+      setAdminPassword('');
+      toast.success(isDelete ? 'Plan marked inactive' : 'Plan saved successfully');
+      qc.invalidateQueries({ queryKey: ['admin-plans'] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -57,14 +94,23 @@ function SuperAdminDashboard() {
     t.name?.toLowerCase().includes(search.toLowerCase()) ||
     t.rciNumber?.toLowerCase().includes(search.toLowerCase())
   );
-  const subscriptions: any[] = subsData?.subscriptions ?? [];
+  const subscriptions: any[] = (subsData?.subscriptions ?? []).filter((s: any) => s.userId?.role !== 'super_admin');
+
+  const orgs: any[] = orgsData?.organizations ?? [];
+  const filteredOrgs = orgs.filter((o) =>
+    o.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const plans: any[] = plansData?.plans ?? [];
 
   const platformStats = {
     totalTherapists: therapists.length,
     verified: therapists.filter((t) => t.verified).length,
-    pending: therapists.filter((t) => !t.verified).length,
+    pending: therapists.filter((t) => !t.verified).length + orgs.length,
     paidSubs: subscriptions.filter((s) => s.status === 'active').length,
   };
+
+
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -92,7 +138,7 @@ function SuperAdminDashboard() {
       {/* Tab Nav */}
       <div className="bg-slate-900 border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 flex gap-1">
-          {(['overview', 'therapists', 'subscriptions', 'flags'] as const).map((t) => (
+          {(['overview', 'therapists', 'organizations', 'subscriptions', 'plans', 'flags'] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-3 text-sm font-semibold capitalize transition border-b-2 ${
                 tab === t ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -174,19 +220,37 @@ function SuperAdminDashboard() {
                         <span key={s} className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{s}</span>
                       ))}
                     </div>
+                    {/* Expanded details */}
+                    <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-700 pt-3">
+                      <div>
+                        <p className="text-xs text-slate-400 font-semibold mb-1">Professional Details</p>
+                        <p className="text-xs text-slate-300">Exp: {t.experienceYears} yrs</p>
+                        <p className="text-xs text-slate-300">Qual: {t.qualification}</p>
+                        <p className="text-xs text-slate-300 line-clamp-1" title={t.clinicDetails}>Clinic: {t.clinicDetails}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-semibold mb-1">Verification Links</p>
+                        <div className="flex flex-col gap-1">
+                          {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Degree / Certificate ↗</a>}
+                          {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-xs text-violet-400 hover:underline">License / RCI ↗</a>}
+                          {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Government ID ↗</a>}
+                          {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-xs text-blue-400 hover:underline">Intro Video ↗</a>}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex items-center gap-1 mr-2">
+                  <div className="flex flex-col items-end justify-between gap-4 flex-shrink-0 self-stretch">
+                    <div className="flex items-center gap-1">
                       <Star className="size-3 text-amber-400 fill-amber-400" />
                       <span className="text-xs text-slate-300">{t.rating?.toFixed(1) ?? '—'}</span>
                     </div>
                     {t.verified ? (
-                      <button onClick={() => verifyMutation.mutate({ id: t.id, verified: false })}
+                      <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
                         className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-900/30 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/50 transition">
                         <XCircle className="size-3.5" /> Revoke
                       </button>
                     ) : (
-                      <button onClick={() => verifyMutation.mutate({ id: t.id, verified: true })}
+                      <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
                         className="flex items-center gap-1 text-xs font-semibold text-green-400 bg-green-900/30 border border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-900/50 transition">
                         <CheckCircle className="size-3.5" /> Verify
                       </button>
@@ -196,6 +260,80 @@ function SuperAdminDashboard() {
               ))}
               {filteredTherapists.length === 0 && !therapistsLoading && (
                 <p className="text-slate-500 text-sm text-center py-8">No therapists found</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ORGANIZATIONS TAB */}
+        {tab === 'organizations' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-white flex-1">Organization Verification</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name…"
+                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500" />
+              </div>
+            </div>
+
+            {orgsLoading && (
+              <div className="space-y-3">
+                {[1,2].map(i => <div key={i} className="h-20 rounded-xl bg-slate-800 animate-pulse" />)}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {filteredOrgs.map((o) => (
+                <div key={o.id} className="bg-slate-800 rounded-xl border border-slate-700 p-4 flex items-center gap-4">
+                  <div className="grid size-12 place-items-center rounded-xl bg-slate-700 text-white font-bold text-lg flex-shrink-0">
+                    <Building2 className="size-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white">{o.name}</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-wide">{o.type}</p>
+                    
+                    {/* Expanded details */}
+                    <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-700 pt-3">
+                      <div>
+                        <p className="text-xs text-slate-400 font-semibold mb-1">Contact Details</p>
+                        <p className="text-xs text-slate-300">Rep: {o.contactPerson}</p>
+                        <p className="text-xs text-slate-300">Email: {o.officialEmail}</p>
+                        <p className="text-xs text-slate-300">Phone: {o.phone}</p>
+                        <p className="text-xs text-slate-300 line-clamp-1">Address: {o.address}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-semibold mb-1">Verification Links</p>
+                        <div className="flex flex-col gap-1">
+                          {o.documents?.registrationUrl && <a href={o.documents.registrationUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Registration / Trust ↗</a>}
+                          {o.documents?.accreditationUrl && <a href={o.documents.accreditationUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Accreditation ↗</a>}
+                          {o.documents?.governmentIdUrl && <a href={o.documents.governmentIdUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Government ID ↗</a>}
+                          {o.website && <a href={o.website} target="_blank" className="text-xs text-blue-400 hover:underline">Website ↗</a>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end justify-between gap-4 flex-shrink-0 self-stretch">
+                    <div className="flex items-center gap-1">
+                      {o.verificationStatus === 'pending' && <span className="text-xs text-amber-400 bg-amber-900/30 px-2 py-1 rounded">Pending</span>}
+                    </div>
+                    {o.verificationStatus === 'verified' ? (
+                      <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: false, type: 'org' })}
+                        className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-900/30 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/50 transition">
+                        <XCircle className="size-3.5" /> Revoke
+                      </button>
+                    ) : (
+                      <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: true, type: 'org' })}
+                        className="flex items-center gap-1 text-xs font-semibold text-green-400 bg-green-900/30 border border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-900/50 transition">
+                        <CheckCircle className="size-3.5" /> Verify
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {filteredOrgs.length === 0 && !orgsLoading && (
+                <p className="text-slate-500 text-sm text-center py-8">No pending organizations found</p>
               )}
             </div>
           </div>
@@ -218,7 +356,14 @@ function SuperAdminDashboard() {
                 <tbody className="divide-y divide-slate-800">
                   {subscriptions.slice(0, 50).map((s) => (
                     <tr key={s._id} className="hover:bg-slate-750 transition">
-                      <td className="px-4 py-3 text-slate-300 font-mono text-xs">{String(s.userId).slice(-6)}</td>
+                      <td className="px-4 py-3">
+                        <div className="text-slate-300 font-medium text-sm">
+                          {s.userId?.orgId?.name || s.userId?.therapistProfile?.name || s.userId?.fullName || 'Unknown User'}
+                        </div>
+                        <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mt-0.5">
+                          {s.userId?.role || 'user'}
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                           s.plan === 'apna_therapist' ? 'bg-violet-900 text-violet-300' : 'bg-blue-900 text-blue-300'
@@ -239,6 +384,74 @@ function SuperAdminDashboard() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* PLANS TAB */}
+        {tab === 'plans' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-white">Subscription Plans</h2>
+              <button onClick={() => {
+                  setPlanForm({ name: '', price: 0, audience: 'therapist', features: '', isActive: true });
+                  setPlanModal({ open: true });
+                }}
+                className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md transition">
+                + Create New Plan
+              </button>
+            </div>
+
+            {plansLoading && (
+              <div className="grid md:grid-cols-3 gap-4">
+                {[1,2,3].map(i => <div key={i} className="h-40 rounded-xl bg-slate-800 animate-pulse" />)}
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-3 gap-4">
+              {plans.map(p => (
+                <div key={p._id} className={`bg-slate-800 rounded-xl border p-5 ${p.isActive ? 'border-slate-700' : 'border-slate-800 opacity-60'}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] bg-slate-900 text-slate-400 px-2 py-0.5 rounded font-bold uppercase tracking-widest">{p.audience}</span>
+                    {!p.isActive && <span className="text-[10px] text-red-400 bg-red-950 px-2 py-0.5 rounded font-bold">INACTIVE</span>}
+                  </div>
+                  <h3 className="font-bold text-white text-xl">{p.name}</h3>
+                  <div className="mt-1 text-3xl font-black text-violet-400">₹{p.price}<span className="text-sm font-bold text-slate-500">/mo</span></div>
+                  <ul className="mt-4 mb-6 space-y-2 text-xs font-medium text-slate-400">
+                    {p.features.map((f: string, i: number) => (
+                      <li key={i} className="flex gap-2"><span className="text-violet-500">✓</span> {f}</li>
+                    ))}
+                  </ul>
+                  <div className="flex gap-2">
+                    <button onClick={() => {
+                        setPlanForm({ name: p.name, price: p.price, audience: p.audience, features: p.features.join('\n'), isActive: p.isActive });
+                        setPlanModal({ open: true, plan: p });
+                      }}
+                      className="flex-1 border border-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition">
+                      Edit Plan
+                    </button>
+                    {p.isActive && (
+                      <button onClick={() => {
+                          if (confirm('Are you sure you want to deactivate this plan?')) {
+                            const pwd = prompt('Enter Admin Password to confirm delete:');
+                            if (pwd) {
+                              setAdminPassword(pwd);
+                              planMutation.mutate({ id: p._id, isDelete: true });
+                            }
+                          }
+                        }}
+                        className="border border-red-900/50 text-red-400 hover:bg-red-950/50 px-3 py-2 rounded-lg text-xs font-bold transition">
+                        Deactivate
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {plans.length === 0 && !plansLoading && (
+                <div className="col-span-3 text-center py-10 border border-dashed border-slate-700 rounded-2xl text-slate-500">
+                  No subscription plans created yet.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -271,6 +484,130 @@ function SuperAdminDashboard() {
         )}
 
       </div>
+
+      {/* Verify Password Modal */}
+      <AnimatePresence>
+        {verifyModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-800 bg-slate-800/50">
+                <h3 className="font-bold text-white">
+                  {verifyModal.verify ? 'Verify Therapist' : 'Revoke Verification'}
+                </h3>
+              </div>
+              <div className="p-5">
+                <p className="text-sm text-slate-400 mb-4">
+                  {verifyModal.verify 
+                    ? `Are you sure you want to verify Dr. ${verifyModal.name}? They will gain full access to the platform.`
+                    : `Are you sure you want to revoke verification for Dr. ${verifyModal.name}? Their access will be restricted.`}
+                </p>
+                
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Admin Action Password</label>
+                <input 
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none"
+                />
+              </div>
+              <div className="px-5 py-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+                <button 
+                  onClick={() => { setVerifyModal(null); setAdminPassword(''); }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition">
+                  Cancel
+                </button>
+                <button 
+                  disabled={!adminPassword || verifyMutation.isPending}
+                  onClick={() => verifyModal && verifyMutation.mutate({ id: verifyModal.id, verified: verifyModal.verify, password: adminPassword, type: verifyModal.type })}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition ${
+                    verifyModal?.verify ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                  } disabled:opacity-50`}>
+                  {verifyMutation.isPending ? 'Processing...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Plan Form Modal */}
+      <AnimatePresence>
+        {planModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-8">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-xl w-full max-w-md max-h-full flex flex-col overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-800 bg-slate-800/50 flex justify-between items-center">
+                <h3 className="font-bold text-white">
+                  {planModal.plan ? 'Edit Subscription Plan' : 'Create New Plan'}
+                </h3>
+              </div>
+              <div className="p-5 overflow-y-auto space-y-4">
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Plan Name</label>
+                    <input value={planForm.name} onChange={e => setPlanForm({...planForm, name: e.target.value})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Price (₹/mo)</label>
+                    <input type="number" value={planForm.price} onChange={e => setPlanForm({...planForm, price: Number(e.target.value)})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Audience</label>
+                  <select value={planForm.audience} onChange={e => setPlanForm({...planForm, audience: e.target.value})}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none">
+                    <option value="therapist">Therapist</option>
+                    <option value="user">User</option>
+                    <option value="organization">Organization</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Features (one per line)</label>
+                  <textarea value={planForm.features} onChange={e => setPlanForm({...planForm, features: e.target.value})} rows={5}
+                    placeholder="Listing in directory\n10 bookings per month\nPriority support"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={planForm.isActive} onChange={e => setPlanForm({...planForm, isActive: e.target.checked})} />
+                    <span className="text-sm text-white font-medium">Plan is Active (visible to users)</span>
+                  </label>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Admin Action Password</label>
+                  <input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Required to save"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
+                </div>
+
+              </div>
+              <div className="px-5 py-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3 mt-auto">
+                <button onClick={() => { setPlanModal(null); setAdminPassword(''); }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition">
+                  Cancel
+                </button>
+                <button disabled={!adminPassword || planMutation.isPending || !planForm.name}
+                  onClick={() => planMutation.mutate({ 
+                    id: planModal.plan?._id, 
+                    data: { ...planForm, features: planForm.features.split('\n').filter(Boolean) } 
+                  })}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition disabled:opacity-50">
+                  {planMutation.isPending ? 'Saving...' : 'Save Plan'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

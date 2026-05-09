@@ -43,7 +43,7 @@
   - Post-session rating flow
 
 - [x] Subscription Page (`/subscription`)
-  - 3 tier display: Free, Mann Shanti (₹199/mo), Apna Therapist (₹7499/mo)
+  - 3 tier display: Free, Mann Shanti (₹199/mo), Apna Therapist (₹499/mo)
   - Feature comparison table
   - FAQs
 
@@ -257,7 +257,7 @@ POST /api/payment/verify
 
 ### 4. Subscription Tiers
 
-| Feature             | Free   | Mann Shanti (₹199/mo) | Apna Therapist (₹7499/mo) |
+| Feature             | Free   | Mann Shanti (₹199/mo) | Apna Therapist (₹499/mo) |
 | ------------------- | ------ | --------------------- | ------------------------- |
 | AI Chat Messages    | 3/day  | 100/day               | Unlimited                 |
 | CBT Journal Entries | 3/week | Unlimited             | Unlimited                 |

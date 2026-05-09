@@ -310,7 +310,7 @@ completed → (feedback) → (ends naturally)
 ### Subscription Tiers
 
 ```
-free → mann_shanti (₹199/mo) → apna_therapist (₹7499/mo)
+free → mann_shanti (₹199/mo) → apna_therapist (₹499/mo)
 Can upgrade at any time
 ```
 

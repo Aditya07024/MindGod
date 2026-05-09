@@ -55,7 +55,7 @@ const TIERS = [
   {
     id: "apna_therapist",
     name: "Apna Therapist",
-    price: 7499,
+    price: 499,
     period: "/mo",
     description: "Premium therapy experience",
     icon: Crown,

@@ -46,7 +46,7 @@ function TherapistMarketplace() {
   const [language, setLanguage] = useState("");
   const [gender, setGender] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([500, 5000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<TherapistCard | null>(null);
 

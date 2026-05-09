@@ -9,6 +9,8 @@ import bookingRoutes from "./booking";
 import adminRoutes from "./admin";
 import paymentRoutes from "./payment";
 import subscriptionRoutes from "./subscription";
+import orgRoutes from "./org";
+import planRoutes from "./plan";
 
 export const apiRouter = Router();
 
@@ -26,4 +28,6 @@ apiRouter.use("/bookings", bookingRoutes);
 apiRouter.use("/payment", paymentRoutes);
 apiRouter.use("/subscription", subscriptionRoutes);
 apiRouter.use("/admin", adminRoutes);
+apiRouter.use("/org", orgRoutes);
+apiRouter.use("/plans", planRoutes);
 

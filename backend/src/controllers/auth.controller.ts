@@ -46,6 +46,58 @@ export class AuthController {
       res.json(serializeUser(user));
     },
   );
+
+  static therapistOnboarding = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const {
+        fullName,
+        email,
+        phone,
+        qualification,
+        experienceYears,
+        specializations,
+        clinicDetails,
+        degreeUrl,
+        licenseUrl,
+        governmentIdUrl,
+        introVideoUrl,
+        orgId
+      } = req.body;
+
+      const user = await User.findById(req.user!.sub);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      if (fullName) user.fullName = fullName;
+      if (orgId) user.orgId = orgId;
+
+      // Ensure they have the therapist role now, but verification is pending
+      user.role = "therapist";
+      
+      user.therapistProfile = {
+        name: fullName || user.fullName || "",
+        verified: false,
+        verificationStatus: "pending",
+        qualification,
+        experienceYears,
+        clinicDetails,
+        specializations: specializations || [],
+        documents: {
+          degreeUrl,
+          licenseUrl,
+          governmentIdUrl,
+        },
+        introVideoUrl,
+        languages: [],
+        sessionFee: 0,
+        rating: 0,
+        sessionCount: 0,
+        availability: []
+      };
+
+      await user.save();
+      res.json(serializeUser(user));
+    }
+  );
   static setRole = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
       const { role } = req.body;

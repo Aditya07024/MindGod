@@ -20,6 +20,7 @@ export interface IUser extends Document {
   tier: UserTier;
   language: string;
   location?: string;
+  department?: string;
   streak: number;
   lastActiveAt?: Date;
   emergencyContact?: string;
@@ -31,6 +32,15 @@ export interface IUser extends Document {
     name: string;
     rciNumber?: string;
     verified: boolean;
+    verificationStatus: "pending" | "verified" | "rejected";
+    qualification?: string;
+    experienceYears?: number;
+    clinicDetails?: string;
+    documents?: {
+      degreeUrl?: string;
+      licenseUrl?: string;
+      governmentIdUrl?: string;
+    };
     specializations: string[];
     languages: string[];
     sessionFee: number;
@@ -51,7 +61,7 @@ const OnboardingSchema = new Schema<IOnboardingState>(
     concerns: { type: [String], default: [] },
     primaryNeed: {
       type: String,
-      enum: ["someone_to_talk_to", "tools_and_exercises", "just_to_express"]
+      enum: ["talk", "tools", "express"]
     },
     completedAt: { type: Date }
   },
@@ -77,6 +87,7 @@ const UserSchema = new Schema<IUser>(
     },
     language: { type: String, default: "en-IN" },
     location: { type: String },
+    department: { type: String },
     streak: { type: Number, default: 0 },
     lastActiveAt: { type: Date },
     emergencyContact: { type: String },
@@ -89,6 +100,18 @@ const UserSchema = new Schema<IUser>(
         name: { type: String },
         rciNumber: { type: String },
         verified: { type: Boolean, default: false },
+        verificationStatus: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" },
+        qualification: { type: String },
+        experienceYears: { type: Number },
+        clinicDetails: { type: String },
+        documents: {
+          type: {
+            degreeUrl: { type: String },
+            licenseUrl: { type: String },
+            governmentIdUrl: { type: String }
+          },
+          required: false
+        },
         specializations: { type: [String], default: [] },
         languages: { type: [String], default: [] },
         sessionFee: { type: Number, default: 0 },

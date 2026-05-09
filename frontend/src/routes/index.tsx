@@ -5,9 +5,11 @@ import {
   Sparkles, MessageCircle, Heart, Wind, ShieldCheck,
   Users, Building2, Shield, ChevronRight,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import API from '@/lib/api';
 import logoUrl from '@/assets/logo.png';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const Route = createFileRoute('/')({
   component: Landing,
@@ -61,6 +63,10 @@ const PORTALS = [
 function Landing() {
   const { isSignedIn, isLoaded } = useAuth();
   const navigate = useNavigate();
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState('');
 
   // Auto-redirect signed-in users to their role's portal
   useEffect(() => {
@@ -76,8 +82,39 @@ function Landing() {
       .catch(() => navigate({ to: '/dashboard' }));
   }, [isSignedIn, isLoaded, navigate]);
 
+  const handlePortalClick = (e: React.MouseEvent, portalId: string, dest: string) => {
+    e.preventDefault();
+    if (portalId === 'super_admin') {
+      setAdminModalOpen(true);
+    } else {
+      localStorage.setItem('mindgod_intent_role', portalId);
+      navigate({ to: dest });
+    }
+  };
+
+  const verifyAdminPassword = async () => {
+    setIsVerifying(true);
+    setError('');
+    try {
+      const r = await fetch(`${API_BASE}/api/admin/verify-password-public`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      if (!r.ok) throw new Error('Invalid password');
+      
+      localStorage.setItem('mindgod_intent_role', 'super_admin');
+      navigate({ to: '/sign-in' });
+    } catch (err: any) {
+      setError(err.message);
+      setAdminPassword('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-canvas-gradient">
+    <div className="min-h-screen bg-canvas-gradient relative">
       {/* Header */}
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
@@ -138,9 +175,9 @@ function Landing() {
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.07 }}
               >
-                <Link to={p.dest}
-                  onClick={() => localStorage.setItem('mindgod_intent_role', p.id)}
-                  className={`group flex items-center gap-4 rounded-2xl border bg-gradient-to-br p-4 transition-all ${p.color}`}>
+                <a href={p.dest}
+                  onClick={(e) => handlePortalClick(e, p.id, p.dest)}
+                  className={`group flex items-center gap-4 rounded-2xl border bg-gradient-to-br p-4 transition-all cursor-pointer ${p.color}`}>
                   <div className={`grid size-12 flex-shrink-0 place-items-center rounded-xl ${p.iconBg}`}>
                     <p.icon className="size-6" />
                   </div>
@@ -149,7 +186,7 @@ function Landing() {
                     <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{p.subtitle}</p>
                   </div>
                   <ChevronRight className="size-5 text-muted-foreground group-hover:text-primary transition flex-shrink-0" />
-                </Link>
+                </a>
               </motion.div>
             ))}
           </div>
@@ -183,6 +220,49 @@ function Landing() {
           ))}
         </section>
       </main>
+
+      {/* Super Admin Password Modal */}
+      {adminModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-800 bg-slate-800/50">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <Shield className="size-4 text-violet-400" /> Super Admin Access
+              </h3>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-slate-400 mb-4">
+                Please enter the portal password to proceed to the Super Admin sign-in.
+              </p>
+              
+              <input 
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && verifyAdminPassword()}
+                placeholder="Enter password"
+                autoFocus
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none"
+              />
+              {error && <p className="text-xs text-red-400 mt-2 font-semibold">{error}</p>}
+            </div>
+            <div className="px-5 py-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+              <button 
+                onClick={() => { setAdminModalOpen(false); setAdminPassword(''); setError(''); }}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition">
+                Cancel
+              </button>
+              <button 
+                disabled={!adminPassword || isVerifying}
+                onClick={verifyAdminPassword}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition disabled:opacity-50">
+                {isVerifying ? 'Verifying...' : 'Proceed'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

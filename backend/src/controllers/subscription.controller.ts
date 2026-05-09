@@ -38,7 +38,7 @@ export class SubscriptionController {
         conv?.messages.filter((m) => m.role === "user").length ?? 0;
 
       const dailyLimit =
-        user.tier === "free" ? 3 : user.tier === "mann_shanti" ? 100 : Infinity;
+        user.tier === "free" ? 7 : user.tier === "mann_shanti" ? 100 : Infinity;
 
       res.json({
         tier: user.tier,
@@ -67,28 +67,45 @@ export class SubscriptionController {
   /** POST /subscription/upgrade — create Razorpay recurring subscription */
   static upgradeSubscription = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      const { tier } = req.body as { tier: "mann_shanti" | "apna_therapist" };
-      if (!["mann_shanti", "apna_therapist"].includes(tier)) {
-        throw new AppError("Invalid tier", 400);
-      }
-
+      const { tier } = req.body;
+      
       const user = await User.findById(req.user!.sub).lean();
       if (!user) throw new AppError("User not found", 404);
 
-      if (user.tier === tier) {
-        throw new AppError("Already on this plan", 400);
-      }
+      let finalTier = tier;
+      let planName = tier;
+      let razorpaySub: any;
 
-      // Create Razorpay subscription
-      const razorpaySub = await SubscriptionService.createSubscription(
-        tier,
-        user.phoneMasked,
-      );
+      if (["mann_shanti", "apna_therapist"].includes(tier)) {
+        if (user.tier === tier) {
+          throw new AppError("Already on this plan", 400);
+        }
+        razorpaySub = await SubscriptionService.createSubscription(tier, user.phoneMasked);
+      } else {
+        // Dynamic Plan Support
+        const { SubscriptionPlan } = await import("@/models");
+        const dynamicPlan = await SubscriptionPlan.findById(tier);
+        if (!dynamicPlan) throw new AppError("Invalid tier or plan ID", 400);
+
+        // Make sure it has a razorpayPlanId
+        if (!dynamicPlan.razorpayPlanId) {
+          dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
+          await dynamicPlan.save();
+        }
+
+        finalTier = dynamicPlan._id.toString();
+        planName = dynamicPlan.name;
+        razorpaySub = await SubscriptionService.createDynamicSubscription(
+          dynamicPlan.razorpayPlanId,
+          dynamicPlan.name,
+          user.phoneMasked
+        );
+      }
 
       // Save pending subscription record (activated via webhook)
       await Subscription.create({
         userId: req.user!.sub,
-        plan: tier,
+        plan: planName,
         status: "active", // Will be validated by webhook in production
         razorpaySubscriptionId: razorpaySub.subscriptionId,
         startDate: new Date(),
@@ -96,12 +113,17 @@ export class SubscriptionController {
       });
 
       // Optimistically update user tier (webhook will confirm)
-      await User.findByIdAndUpdate(req.user!.sub, { tier });
+      // For dynamic plans, we just leave user.tier as is or set it if we want.
+      // But user.tier enum restricts to 'free' | 'mann_shanti' | 'apna_therapist'
+      // Therapists just check Subscription collection anyway
+      if (["mann_shanti", "apna_therapist"].includes(tier)) {
+        await User.findByIdAndUpdate(req.user!.sub, { tier });
+      }
 
       res.json({
         subscriptionId: razorpaySub.subscriptionId,
         shortUrl: razorpaySub.shortUrl,
-        tier,
+        tier: finalTier,
         message: "Subscription created. Complete payment to activate.",
       });
     },
@@ -195,6 +217,11 @@ export class SubscriptionController {
   static adminListAll = asyncHandler(
     async (_req: AuthedRequest, res: Response) => {
       const subs = await Subscription.find()
+        .populate({
+          path: "userId",
+          select: "fullName role therapistProfile orgId",
+          populate: { path: "orgId", select: "name" }
+        })
         .sort({ createdAt: -1 })
         .limit(200)
         .lean();

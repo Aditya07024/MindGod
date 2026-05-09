@@ -128,7 +128,7 @@ MANN SHANTI (₹199/month)
   - 10% therapist discount
   - Priority booking
 
-APNA THERAPIST (₹7499/month)
+APNA THERAPIST (₹499/month)
   - Unlimited messages
   - Unlimited journal entries
   - 30-day mood calendar

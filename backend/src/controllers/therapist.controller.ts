@@ -10,7 +10,7 @@ export class TherapistController {
     const {
       specialization,
       language,
-      minFee = 500,
+      minFee = 0,
       maxFee = 5000,
       verified,
       rating,
@@ -308,7 +308,12 @@ export class TherapistController {
       }
 
       if (bio !== undefined) user.therapistProfile.bio = bio;
-      if (fee !== undefined) user.therapistProfile.sessionFee = Number(fee);
+      if (fee !== undefined) {
+        let f = Number(fee);
+        if (f < 500) f = 500;
+        if (f > 5000) f = 5000;
+        user.therapistProfile.sessionFee = f;
+      }
       if (specializations !== undefined) {
         user.therapistProfile.specializations = specializations.split(",").map((s: string) => s.trim()).filter(Boolean);
       }

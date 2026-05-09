@@ -20,8 +20,10 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BreatheRouteImport } from './routes/breathe'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TherapistOnboardingRouteImport } from './routes/therapist/onboarding'
 import { Route as TherapistDashboardRouteImport } from './routes/therapist/dashboard'
 import { Route as SessionBookingIdRouteImport } from './routes/session.$bookingId'
+import { Route as OrgOnboardingRouteImport } from './routes/org/onboarding'
 import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
 import { Route as BookingTherapistIdRouteImport } from './routes/booking.$therapistId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -82,6 +84,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TherapistOnboardingRoute = TherapistOnboardingRouteImport.update({
+  id: '/therapist/onboarding',
+  path: '/therapist/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TherapistDashboardRoute = TherapistDashboardRouteImport.update({
   id: '/therapist/dashboard',
   path: '/therapist/dashboard',
@@ -90,6 +97,11 @@ const TherapistDashboardRoute = TherapistDashboardRouteImport.update({
 const SessionBookingIdRoute = SessionBookingIdRouteImport.update({
   id: '/session/$bookingId',
   path: '/session/$bookingId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgOnboardingRoute = OrgOnboardingRouteImport.update({
+  id: '/org/onboarding',
+  path: '/org/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrgDashboardRoute = OrgDashboardRouteImport.update({
@@ -129,8 +141,10 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
+  '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
+  '/therapist/onboarding': typeof TherapistOnboardingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,8 +162,10 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
+  '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
+  '/therapist/onboarding': typeof TherapistOnboardingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,8 +184,10 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
+  '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
+  '/therapist/onboarding': typeof TherapistOnboardingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,8 +207,10 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/booking/$therapistId'
     | '/org/dashboard'
+    | '/org/onboarding'
     | '/session/$bookingId'
     | '/therapist/dashboard'
+    | '/therapist/onboarding'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,8 +228,10 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/booking/$therapistId'
     | '/org/dashboard'
+    | '/org/onboarding'
     | '/session/$bookingId'
     | '/therapist/dashboard'
+    | '/therapist/onboarding'
   id:
     | '__root__'
     | '/'
@@ -227,8 +249,10 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/booking/$therapistId'
     | '/org/dashboard'
+    | '/org/onboarding'
     | '/session/$bookingId'
     | '/therapist/dashboard'
+    | '/therapist/onboarding'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,8 +271,10 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   BookingTherapistIdRoute: typeof BookingTherapistIdRoute
   OrgDashboardRoute: typeof OrgDashboardRoute
+  OrgOnboardingRoute: typeof OrgOnboardingRoute
   SessionBookingIdRoute: typeof SessionBookingIdRoute
   TherapistDashboardRoute: typeof TherapistDashboardRoute
+  TherapistOnboardingRoute: typeof TherapistOnboardingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -330,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/therapist/onboarding': {
+      id: '/therapist/onboarding'
+      path: '/therapist/onboarding'
+      fullPath: '/therapist/onboarding'
+      preLoaderRoute: typeof TherapistOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/therapist/dashboard': {
       id: '/therapist/dashboard'
       path: '/therapist/dashboard'
@@ -342,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/session/$bookingId'
       fullPath: '/session/$bookingId'
       preLoaderRoute: typeof SessionBookingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/onboarding': {
+      id: '/org/onboarding'
+      path: '/org/onboarding'
+      fullPath: '/org/onboarding'
+      preLoaderRoute: typeof OrgOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/org/dashboard': {
@@ -391,8 +431,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   BookingTherapistIdRoute: BookingTherapistIdRoute,
   OrgDashboardRoute: OrgDashboardRoute,
+  OrgOnboardingRoute: OrgOnboardingRoute,
   SessionBookingIdRoute: SessionBookingIdRoute,
   TherapistDashboardRoute: TherapistDashboardRoute,
+  TherapistOnboardingRoute: TherapistOnboardingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
