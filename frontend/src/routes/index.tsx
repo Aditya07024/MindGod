@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useEffect } from 'react';
 import API from '@/lib/api';
+import logoUrl from '@/assets/logo.png';
 
 export const Route = createFileRoute('/')({
   component: Landing,
@@ -80,9 +81,7 @@ function Landing() {
       {/* Header */}
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
-          <div className="grid size-9 place-items-center rounded-xl bg-warm-gradient text-primary-foreground">
-            <Sparkles className="size-5" />
-          </div>
+          <img src={logoUrl} alt="MindGod Logo" className="size-9 object-contain" />
           <span className="font-display text-xl font-bold text-primary-deep">MindGod</span>
         </div>
         <Link to="/sign-in"

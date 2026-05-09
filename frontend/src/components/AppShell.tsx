@@ -4,6 +4,8 @@ import { Home, MessageCircle, Heart, Users, CalendarCheck } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';
 import { setTokenGetter } from '@/lib/api';
 
+import logoUrl from '@/assets/logo.png';
+
 const tabs = [
   { to: '/dashboard', icon: Home, label: 'Home' },
   { to: '/chat', icon: MessageCircle, label: 'Manas' },
@@ -38,9 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="grid size-8 place-items-center rounded-xl bg-warm-gradient text-primary-foreground">
-              <span className="text-sm font-black">M</span>
-            </div>
+            <img src={logoUrl} alt="MindGod Logo" className="size-8 object-contain" />
             <span className="font-display text-lg font-bold text-primary-deep">MindGod</span>
           </Link>
           <div className="flex items-center gap-4">

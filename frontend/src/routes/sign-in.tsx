@@ -1,17 +1,46 @@
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { SignIn } from "@clerk/clerk-react";
+import logoUrl from "@/assets/logo.png";
+import API from "@/lib/api";
 
 export const Route = createFileRoute("/sign-in")({ component: SignInPage });
 
 function SignInPage() {
+  const [isHealthy, setIsHealthy] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    API.health()
+      .then(() => setIsHealthy(true))
+      .catch(() => setIsHealthy(false));
+  }, []);
+
+  if (isHealthy === null) {
+    return (
+      <div className="min-h-screen bg-canvas-gradient flex items-center justify-center px-4">
+        <div className="size-12 rounded-full bg-warm-gradient animate-pulse" />
+      </div>
+    );
+  }
+
+  if (isHealthy === false) {
+    return (
+      <div className="min-h-screen bg-canvas-gradient flex flex-col items-center justify-center px-4 text-center">
+        <img src={logoUrl} alt="MindGod Logo" className="size-20 mb-6 object-contain opacity-50 grayscale" />
+        <h1 className="font-display text-3xl font-bold text-primary-deep mb-2">Service Unavailable</h1>
+        <p className="text-muted-foreground max-w-sm">
+          MindGod is currently undergoing maintenance. Please try again in a few minutes.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-canvas-gradient flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center space-y-2">
-          <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-warm-gradient shadow-lg">
-            <span className="font-black text-2xl text-white">M</span>
-          </div>
+          <img src={logoUrl} alt="MindGod Logo" className="mx-auto size-16 object-contain" />
           <h1 className="font-display text-3xl font-bold text-primary-deep">MindGod</h1>
           <p className="text-muted-foreground text-sm">Apna Dil Kholo</p>
         </div>

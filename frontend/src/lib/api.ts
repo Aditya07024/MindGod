@@ -39,6 +39,7 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 const API = {
+  health: () => apiCall<{ ok: boolean }>("/api/health"),
   auth: {
     me: () => apiCall<any>("/api/auth/me"),
     setRole: (role: string) => apiCall<any>("/api/auth/role", { method: "PATCH", body: JSON.stringify({ role }) }),
