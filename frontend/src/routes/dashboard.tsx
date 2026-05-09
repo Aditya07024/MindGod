@@ -42,18 +42,7 @@ function Dashboard() {
     API.auth.me().then(async (me: any) => {
       let role = me?.role ?? 'user';
 
-      const intendedRole = localStorage.getItem('mindgod_intent_role');
-      if (intendedRole && intendedRole !== 'user' && intendedRole !== role) {
-        // Assign the role they clicked on the landing page!
-        try {
-          const res = await API.auth.setRole(intendedRole);
-          role = res.user.role;
-        } catch (err) {
-          console.error("Failed to set intent role:", err);
-        } finally {
-          localStorage.removeItem('mindgod_intent_role');
-        }
-      }
+      localStorage.removeItem('mindgod_intent_role');
 
       if (role === 'therapist') nav({ to: '/therapist/dashboard', replace: true });
       else if (role === 'org_admin') nav({ to: '/org/dashboard', replace: true });
