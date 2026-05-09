@@ -35,7 +35,7 @@ function MoodPage() {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const ds = d.toISOString().slice(0, 10);
-    const m = moods.find((x: any) => x.createdAt && new Date(x.createdAt).toISOString().slice(0, 10) === ds);
+    const m = moods.find((x: any) => (x.date || x.createdAt) && new Date(x.date || x.createdAt).toISOString().slice(0, 10) === ds);
     days.push({ date: ds, score: m?.score });
   }
 
@@ -45,7 +45,7 @@ function MoodPage() {
   }));
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const todayEntry = moods.find((x: any) => x.createdAt && new Date(x.createdAt).toISOString().slice(0, 10) === todayStr);
+  const todayEntry = moods.find((x: any) => (x.date || x.createdAt) && new Date(x.date || x.createdAt).toISOString().slice(0, 10) === todayStr);
   const todayScore = todayEntry?.score ?? null;
 
   const recentScores = moods.slice(0, 14).map((m: any) => m.score);

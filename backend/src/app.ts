@@ -20,7 +20,7 @@ export async function createApp() {
       origin: (origin, cb) => {
         // Allow any localhost in dev; in production restrict to CLIENT_ORIGIN
         if (!origin) return cb(null, true); // allow non-browser requests (curl, Postman)
-        if (env.NODE_ENV !== "production" && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+        if (env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
           return cb(null, true);
         }
         if (origin === env.CLIENT_ORIGIN) return cb(null, true);
