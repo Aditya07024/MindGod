@@ -170,6 +170,11 @@ function SubscriptionPage() {
                       ✓ Active
                     </div>
                   )}
+                  {subscription?.subscription?.status === 'pending' && subscription?.subscription?.plan === tier.name && (
+                    <div className="absolute -top-3 right-4 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      Payment Pending
+                    </div>
+                  )}
 
                   <div className="flex items-start justify-between mb-4">
                     <div>

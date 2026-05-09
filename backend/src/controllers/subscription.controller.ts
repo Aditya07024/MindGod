@@ -18,9 +18,9 @@ export class SubscriptionController {
       const user = await User.findById(req.user!.sub).lean();
       if (!user) throw new AppError("User not found", 404);
 
-      const activeSub = await Subscription.findOne({
+      const sub = await Subscription.findOne({
         userId: req.user!.sub,
-        status: "active",
+        status: { $in: ["active", "pending"] },
         plan: { $ne: "free" },
       })
         .sort({ createdAt: -1 })
@@ -43,14 +43,14 @@ export class SubscriptionController {
       res.json({
         tier: user.tier,
         tierLabel: TIER_LABELS[user.tier] ?? user.tier,
-        subscription: activeSub
+        subscription: sub
           ? {
-              id: activeSub._id,
-              plan: activeSub.plan,
-              status: activeSub.status,
-              startDate: activeSub.startDate,
-              endDate: activeSub.endDate,
-              razorpaySubscriptionId: activeSub.razorpaySubscriptionId,
+              id: sub._id,
+              plan: sub.plan,
+              status: sub.status,
+              startDate: sub.startDate,
+              endDate: sub.endDate,
+              razorpaySubscriptionId: sub.razorpaySubscriptionId,
             }
           : null,
         usage: {
@@ -106,19 +106,13 @@ export class SubscriptionController {
       await Subscription.create({
         userId: req.user!.sub,
         plan: planName,
-        status: "active", // Will be validated by webhook in production
+        status: "pending", // Will be activated via webhook
         razorpaySubscriptionId: razorpaySub.subscriptionId,
         startDate: new Date(),
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       });
 
-      // Optimistically update user tier (webhook will confirm)
-      // For dynamic plans, we just leave user.tier as is or set it if we want.
-      // But user.tier enum restricts to 'free' | 'mann_shanti' | 'apna_therapist'
-      // Therapists just check Subscription collection anyway
-      if (["mann_shanti", "apna_therapist"].includes(tier)) {
-        await User.findByIdAndUpdate(req.user!.sub, { tier });
-      }
+      // Webhook will update user tier upon successful payment confirmation
 
       res.json({
         subscriptionId: razorpaySub.subscriptionId,

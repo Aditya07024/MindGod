@@ -102,6 +102,7 @@ export class PaymentController {
       }
 
       booking.payment.paid = true;
+      booking.payment.razorpayPaymentId = paymentId;
       booking.status = "confirmed";
       await booking.save();
 
@@ -178,6 +179,7 @@ export class PaymentController {
         const booking = await TherapistBooking.findById(bookingId);
         if (booking && !booking.payment.paid) {
           booking.payment.paid = true;
+          booking.payment.razorpayPaymentId = paymentId;
           booking.status = "confirmed";
           await booking.save();
         }

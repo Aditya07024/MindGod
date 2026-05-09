@@ -77,7 +77,7 @@ export class BookingController {
         userId: new mongoose.Types.ObjectId(req.user!.sub),
         therapistId: new mongoose.Types.ObjectId(therapistId),
         slot: slotDate,
-        status: "confirmed",
+        status: "pending",
         payment: {
           amount: therapist.therapistProfile.sessionFee ?? 0,
           paid: false,

@@ -21,7 +21,8 @@ function statusBadge(status: string) {
   return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>;
 }
 
-function canJoin(slot: string) {
+function canJoin(slot: string, status: string) {
+  if (status !== 'confirmed') return false;
   const diff = new Date(slot).getTime() - Date.now();
   return diff <= 15 * 60 * 1000 && diff > -2 * 60 * 60 * 1000;
 }
@@ -107,14 +108,14 @@ function MyBookings() {
                     {statusBadge(b.status)}
                   </div>
                   <div className="flex gap-2 mt-4">
-                    {canJoin(b.slot) ? (
+                    {canJoin(b.slot, b.status) ? (
                       <Button size="sm" className="flex-1 gap-2 rounded-xl"
                         onClick={() => navigate({ to: `/session/${b.id}` })}>
                         <Video className="size-4" /> Join Session
                       </Button>
                     ) : (
                       <div className="flex-1 text-center text-xs text-muted-foreground py-2 bg-muted rounded-xl">
-                        Available 15 min before
+                        {b.status === 'pending' ? 'Payment Pending' : 'Available 15 min before'}
                       </div>
                     )}
                     {b.status === 'confirmed' && (

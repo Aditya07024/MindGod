@@ -3,7 +3,7 @@ import mongoose, { Schema, type Document, type Types } from "mongoose";
 export interface ISubscription extends Document {
   userId: Types.ObjectId;
   plan: "free" | "mann_shanti" | "apna_therapist";
-  status: "active" | "cancelled" | "expired";
+  status: "pending" | "active" | "cancelled" | "expired";
   razorpaySubscriptionId?: string;
   startDate: Date;
   endDate?: Date;
@@ -20,8 +20,8 @@ const SubscriptionSchema = new Schema<ISubscription>(
     },
     status: {
       type: String,
-      enum: ["active", "cancelled", "expired"],
-      default: "active"
+      enum: ["pending", "active", "cancelled", "expired"],
+      default: "pending"
     },
     razorpaySubscriptionId: { type: String },
     startDate: { type: Date, default: Date.now },

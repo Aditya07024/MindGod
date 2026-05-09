@@ -2,6 +2,7 @@ import mongoose, { Schema, type Document, type Types } from "mongoose";
 
 interface IPayment {
   razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   amount: number;
   paid: boolean;
 }
@@ -31,6 +32,7 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
     },
     payment: {
       razorpayOrderId: { type: String },
+      razorpayPaymentId: { type: String },
       amount: { type: Number, required: true },
       paid: { type: Boolean, default: false }
     },
