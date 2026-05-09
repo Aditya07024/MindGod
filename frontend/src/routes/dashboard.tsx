@@ -35,6 +35,7 @@ function Dashboard() {
   const { user: clerkUser } = useUser();
   const displayName = clerkUser?.firstName ?? clerkUser?.username ?? 'friend';
   const [crisisMode, setCrisisMode] = useState(false);
+  const [isCheckingRole, setIsCheckingRole] = useState(true);
 
   // Auto-redirect therapists and admins based on intent or existing role
   useEffect(() => {
@@ -57,37 +58,45 @@ function Dashboard() {
       if (role === 'therapist') nav({ to: '/therapist/dashboard', replace: true });
       else if (role === 'org_admin') nav({ to: '/org/dashboard', replace: true });
       else if (role === 'super_admin') nav({ to: '/admin/dashboard', replace: true });
-    }).catch(() => {});
+      else setIsCheckingRole(false);
+    }).catch(() => {
+      setIsCheckingRole(false);
+    });
   }, [nav]);
 
   const { data: bookingsData } = useQuery({
     queryKey: ['bookings'],
     queryFn: () => API.booking.list(),
     retry: false,
+    enabled: !isCheckingRole,
   });
 
   const { data: subscription } = useQuery({
     queryKey: ['subscription'],
     queryFn: () => API.subscription.get(),
     retry: false,
+    enabled: !isCheckingRole,
   });
 
   const { data: userStats, refetch: refetchStats } = useQuery({
     queryKey: ['userStats'],
     queryFn: () => API.user.stats(),
     retry: false,
+    enabled: !isCheckingRole,
   });
 
   const { data: journalPrompt } = useQuery({
     queryKey: ['journalPrompt'],
     queryFn: () => API.journal.get('prompt').catch(() => ({ prompt: 'What is one thing you can control right now?' })),
     retry: false,
+    enabled: !isCheckingRole,
   });
 
   const { data: recentChat } = useQuery({
     queryKey: ['recentChat'],
     queryFn: () => API.chat.getMessages('latest').catch(() => ({ messages: [] })),
     retry: false,
+    enabled: !isCheckingRole,
   });
 
   const submitMoodMutation = useMutation({
@@ -113,6 +122,14 @@ function Dashboard() {
 
   const tier = subscription?.tier ?? 'free';
   const tierLabel = subscription?.tierLabel ?? 'Free';
+
+  if (isCheckingRole) {
+    return (
+      <div className="min-h-screen bg-canvas-gradient flex items-center justify-center px-4">
+        <div className="size-12 rounded-full bg-warm-gradient animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <AppShell>
