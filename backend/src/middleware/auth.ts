@@ -47,11 +47,22 @@ export async function requireAuth(
         .join(" ");
 
       try {
+        // Detect intended role from header or Clerk metadata
+        let intentRole = (req.headers["x-intent-role"] as string) || (clerkUser.publicMetadata?.role as string);
+        
+        // Normalize role
+        if (intentRole === "super admin" || intentRole === "super-admin") intentRole = "super_admin";
+        if (intentRole === "org admin" || intentRole === "org-admin") intentRole = "org_admin";
+
+        const validRoles = ["user", "therapist", "org_admin", "super_admin"];
+        const roleToAssign = validRoles.includes(intentRole) ? intentRole : "user";
+
         const created = await User.create({
           clerkId: clerkUserId,
           phoneHash: clerkUserId, // use clerkId as unique key
           phoneMasked: email || clerkUserId.slice(-8),
           fullName: fullName || undefined,
+          role: roleToAssign,
           isAnonymous: false,
           onboarding: { concerns: [] },
         });

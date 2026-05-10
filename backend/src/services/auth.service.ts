@@ -67,7 +67,7 @@ export class AuthService {
     return this.findOrCreateUser(normalizedPhone);
   }
 
-  static async findOrCreateUser(phone: string): Promise<IUser> {
+  static async findOrCreateUser(phone: string, role: string = "user"): Promise<IUser> {
     const phoneHash = this.hashPhone(phone);
     let user = await User.findOne({ phoneHash });
 
@@ -75,7 +75,7 @@ export class AuthService {
       user = await User.create({
         phoneHash,
         phoneMasked: this.maskPhone(phone),
-        role: "user",
+        role: role as any,
         tier: "free",
         isAnonymous: true,
         verifiedPhoneAt: new Date(),
