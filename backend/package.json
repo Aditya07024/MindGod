@@ -38,7 +38,5 @@
     "typescript": "^5.5.4",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
-  },
-  "devDependencies": {
   }
 }

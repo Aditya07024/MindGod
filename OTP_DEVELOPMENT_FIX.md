@@ -1,12 +1,15 @@
 # OTP Development Environment Fix
 
 ## Problem
+
 OTP was working on localhost but failing in development (Render.com) with the error:
+
 ```
 [EMAIL] Failed to send email via Nodemailer: Error: connect ENETUNREACH 2607:f8b0:400e:c00::6d:587
 ```
 
 ## Root Cause
+
 Render.com's **free tier blocks outbound SMTP connections** (port 587). This prevents the backend from connecting to Gmail's SMTP server to send verification emails. However, the OTP was still being generated and stored—it just couldn't be transmitted via email.
 
 ## Solution Implemented
@@ -25,11 +28,13 @@ Modified `/backend/src/controllers/org.controller.ts` to:
 ### Backend API Response
 
 **Before:**
+
 ```json
 { "message": "OTP sent successfully to official email" }
 ```
 
 **After (Development/Fallback):**
+
 ```json
 {
   "message": "OTP sent successfully to official email",
@@ -39,27 +44,33 @@ Modified `/backend/src/controllers/org.controller.ts` to:
 }
 ```
 
-**Production Mode:** 
+**Production Mode:**
+
 - If `NODE_ENV=production` and email sends successfully, OTP is NOT included in response
 - OTP is only sent via email
 
 ## How to Use
 
 ### For Development (Localhost)
+
 ```bash
 NODE_ENV=development npm run dev
 ```
+
 - OTP will be returned in the API response
 - OTP will also be logged to console as `[MOCK EMAIL]`
 
 ### For Production (Render)
+
 You have two options:
 
 **Option 1: Configure proper SMTP**
+
 - Set up `SMTP_USER` and `SMTP_PASS` with a service that Render can access (e.g., SendGrid, Mailgun, AWS SES)
 - OTP will be sent via email only
 
-**Option 2: Use MSG91 API** 
+**Option 2: Use MSG91 API**
+
 - Existing OTPService uses MSG91 which works reliably on Render
 - Switch to using that for email OTP verification
 

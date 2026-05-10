@@ -12,13 +12,13 @@ const CRISIS_KEYWORDS = [
   "end my life",
   "suicide",
   "can't go on",
-  "hurt myself"
+  "hurt myself",
 ];
 
 const PLAN_LIMITS: Record<IUser["tier"], number> = {
   free: 7,
   mann_shanti: 100,
-  apna_therapist: Number.POSITIVE_INFINITY
+  apna_therapist: Number.POSITIVE_INFINITY,
 };
 
 const MANAS_SYSTEM_PROMPT = `You are Manas, MindGod's AI wellness companion for India.
@@ -28,7 +28,7 @@ const MANAS_SYSTEM_PROMPT = `You are Manas, MindGod's AI wellness companion for 
 - Use warm, empathetic, and culturally fluent language for India. Reference the Indian context naturally when appropriate (e.g., family pressure, academic anxiety, career stress).
 - Use gentle CBT and mindfulness reflections to help users notice and reframe automatic thoughts.
 - End with exactly one thoughtful follow-up question.
-- If the user sounds unsafe, prioritize safety and direct them to the crisis line 9152987821.`;
+- If the user sounds unsafe, prioritize safety and direct them to the crisis line 14416 / 1800891446.`;
 
 export class AIService {
   static detectCrisis(text: string): boolean {
@@ -49,11 +49,12 @@ export class AIService {
 
     const conversation = await Conversation.findOne({
       userId,
-      createdAt: { $gte: since }
+      createdAt: { $gte: since },
     }).sort({ createdAt: -1 });
 
     const userMessagesToday =
-      conversation?.messages.filter((message) => message.role === "user").length ?? 0;
+      conversation?.messages.filter((message) => message.role === "user")
+        .length ?? 0;
 
     const limit = this.getDailyMessageLimit(user.tier);
     if (userMessagesToday >= limit) {
@@ -62,18 +63,22 @@ export class AIService {
 
     return {
       user,
-      remaining: Number.isFinite(limit) ? Math.max(limit - userMessagesToday, 0) : null
+      remaining: Number.isFinite(limit)
+        ? Math.max(limit - userMessagesToday, 0)
+        : null,
     };
   }
 
   static async getOrCreateConversation(userId: string) {
-    let conversation = await Conversation.findOne({ userId }).sort({ updatedAt: -1 });
+    let conversation = await Conversation.findOne({ userId }).sort({
+      updatedAt: -1,
+    });
 
     if (!conversation) {
       conversation = await Conversation.create({
         userId,
         sessionId: crypto.randomUUID(),
-        messages: []
+        messages: [],
       });
     }
 
@@ -87,7 +92,7 @@ export class AIService {
     conversation.messages.push({
       role: "user",
       content: message,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     if (crisis) {
@@ -99,11 +104,14 @@ export class AIService {
     return { conversation, crisis };
   }
 
-  static async createAssistantReply(message: string, history: { role: string; content: string }[]) {
+  static async createAssistantReply(
+    message: string,
+    history: { role: string; content: string }[],
+  ) {
     const crisis = this.detectCrisis(message);
 
     if (crisis) {
-      return "I’m really glad you said that. If you may be in immediate danger or feel like you might act on this, call or text iCall at 9152987821 right now. Can you tell me if you are safe in this moment?";
+      return "I’m really glad you said that. If you may be in immediate danger or feel like you might act on this, call or text MANAS at 14416 / 1800891446 right now. Can you tell me if you are safe in this moment?";
     }
 
     const groqReply = await this.tryGroq(history);
@@ -119,18 +127,21 @@ export class AIService {
     return "I’m here with you. I’m having technical trouble right now, but we can slow this down together. What feels heaviest in this moment?";
   }
 
-  static async *streamReply(userId: string, message: string): AsyncGenerator<string> {
+  static async *streamReply(
+    userId: string,
+    message: string,
+  ): AsyncGenerator<string> {
     const { conversation } = await this.appendUserMessage(userId, message);
     const history = conversation.messages.map((entry) => ({
       role: entry.role,
-      content: entry.content
+      content: entry.content,
     }));
     const reply = await this.createAssistantReply(message, history);
 
     conversation.messages.push({
       role: "assistant",
       content: reply,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     await conversation.save();
@@ -141,16 +152,23 @@ export class AIService {
   }
 
   static async getConversationHistory(userId: string) {
-    const conversation = await Conversation.findOne({ userId }).sort({ updatedAt: -1 });
+    const conversation = await Conversation.findOne({ userId }).sort({
+      updatedAt: -1,
+    });
     if (!conversation) {
-      return { sessionId: null, riskLevel: "low", escalated: false, messages: [] };
+      return {
+        sessionId: null,
+        riskLevel: "low",
+        escalated: false,
+        messages: [],
+      };
     }
 
     return {
       sessionId: conversation.sessionId,
       riskLevel: conversation.riskLevel,
       escalated: conversation.escalated,
-      messages: conversation.messages
+      messages: conversation.messages,
     };
   }
 
@@ -163,14 +181,17 @@ export class AIService {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         temperature: 0.6,
         max_tokens: 220,
-        messages: [{ role: "system", content: MANAS_SYSTEM_PROMPT }, ...history]
-      })
+        messages: [
+          { role: "system", content: MANAS_SYSTEM_PROMPT },
+          ...history,
+        ],
+      }),
     });
 
     if (!response.ok) {
@@ -189,24 +210,27 @@ export class AIService {
       return null;
     }
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `${MANAS_SYSTEM_PROMPT}\n\n${history
-                  .map((entry) => `${entry.role}: ${entry.content}`)
-                  .join("\n")}`
-              }
-            ]
-          }
-        ]
-      })
-    });
+    const response = await fetch(
+      `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `${MANAS_SYSTEM_PROMPT}\n\n${history
+                    .map((entry) => `${entry.role}: ${entry.content}`)
+                    .join("\n")}`,
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    );
 
     if (!response.ok) {
       return null;

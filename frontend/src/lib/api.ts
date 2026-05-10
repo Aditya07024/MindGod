@@ -42,37 +42,62 @@ const API = {
   health: () => apiCall<{ ok: boolean }>("/api/health"),
   auth: {
     me: () => apiCall<any>("/api/auth/me"),
-    setRole: (role: string) => apiCall<any>("/api/auth/role", { method: "PATCH", body: JSON.stringify({ role }) }),
-    updateOnboarding: (data: any) => apiCall<any>("/api/auth/onboarding", { method: "PATCH", body: JSON.stringify(data) }),
-    updateProfile: (data: any) => apiCall<any>("/api/auth/profile", { method: "PATCH", body: JSON.stringify(data) }),
-    therapistOnboarding: (data: any) => apiCall<any>("/api/auth/therapist/onboarding", { method: "POST", body: JSON.stringify(data) }),
+    setRole: (role: string) =>
+      apiCall<any>("/api/auth/role", { method: "PATCH", body: JSON.stringify({ role }) }),
+    updateOnboarding: (data: any) =>
+      apiCall<any>("/api/auth/onboarding", { method: "PATCH", body: JSON.stringify(data) }),
+    updateProfile: (data: any) =>
+      apiCall<any>("/api/auth/profile", { method: "PATCH", body: JSON.stringify(data) }),
+    therapistOnboarding: (data: any) =>
+      apiCall<any>("/api/auth/therapist/onboarding", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
 
   admin: {
     pendingTherapists: () => apiCall<any>("/api/admin/pending-therapists"),
-    verifyTherapist: (id: string, data: { verified: boolean, password?: string }) => 
-      apiCall<any>(`/api/admin/therapist/${id}/verify`, { method: "PATCH", body: JSON.stringify(data) }),
+    verifyTherapist: (id: string, data: { verified: boolean; password?: string }) =>
+      apiCall<any>(`/api/admin/therapist/${id}/verify`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     pendingOrgs: () => apiCall<any>("/api/admin/pending-orgs"),
-    verifyOrg: (id: string, data: { verified: boolean, password?: string }) => 
+    verifyOrg: (id: string, data: { verified: boolean; password?: string }) =>
       apiCall<any>(`/api/admin/org/${id}/verify`, { method: "PATCH", body: JSON.stringify(data) }),
-    createPlan: (data: any) => apiCall<any>("/api/admin/plans", { method: "POST", body: JSON.stringify(data) }),
-    updatePlan: (id: string, data: any) => apiCall<any>(`/api/admin/plans/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    deletePlan: (id: string, data: any) => apiCall<any>(`/api/admin/plans/${id}`, { method: "DELETE", body: JSON.stringify(data) }),
+    createPlan: (data: any) =>
+      apiCall<any>("/api/admin/plans", { method: "POST", body: JSON.stringify(data) }),
+    updatePlan: (id: string, data: any) =>
+      apiCall<any>(`/api/admin/plans/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    deletePlan: (id: string, data: any) =>
+      apiCall<any>(`/api/admin/plans/${id}`, { method: "DELETE", body: JSON.stringify(data) }),
   },
 
   org: {
     me: () => apiCall<any>("/api/org/me"),
     verifiedOrgs: () => apiCall<any>("/api/org/verified"),
-    sendOtp: (data: { email: string }) => apiCall<any>("/api/org/send-otp", { method: "POST", body: JSON.stringify(data) }),
-    verifyOtp: (data: { email: string, otp: string }) => apiCall<any>("/api/org/verify-otp", { method: "POST", body: JSON.stringify(data) }),
-    onboarding: (data: any) => apiCall<any>("/api/org/onboarding", { method: "POST", body: JSON.stringify(data) }),
+    onboarding: (data: any) =>
+      apiCall<any>("/api/org/onboarding", { method: "POST", body: JSON.stringify(data) }),
     pendingTherapists: () => apiCall<any>("/api/org/pending-therapists"),
-    verifyTherapist: (id: string, data: { verified: boolean }) => apiCall<any>(`/api/org/therapist/${id}/verify`, { method: "PATCH", body: JSON.stringify(data) }),
+    verifyTherapist: (id: string, data: { verified: boolean }) =>
+      apiCall<any>(`/api/org/therapist/${id}/verify`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     // Join request flow
-    requestJoin: (data: { orgId: string, email?: string }) => apiCall<any>("/api/org/request-join", { method: "POST", body: JSON.stringify(data) }),
+    requestJoin: (data: { orgId: string; email?: string }) =>
+      apiCall<any>("/api/org/request-join", { method: "POST", body: JSON.stringify(data) }),
     joinRequests: () => apiCall<any>("/api/org/join-requests"),
-    approveJoinRequest: (userId: string) => apiCall<any>(`/api/org/join-request/${userId}/approve`, { method: "PATCH", body: JSON.stringify({}) }),
-    rejectJoinRequest: (userId: string) => apiCall<any>(`/api/org/join-request/${userId}/reject`, { method: "PATCH", body: JSON.stringify({}) }),
+    approveJoinRequest: (userId: string) =>
+      apiCall<any>(`/api/org/join-request/${userId}/approve`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      }),
+    rejectJoinRequest: (userId: string) =>
+      apiCall<any>(`/api/org/join-request/${userId}/reject`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      }),
     // Excel email whitelist
     uploadEmails: async (file: File) => {
       const headers: Record<string, string> = {};
@@ -82,8 +107,15 @@ const API = {
       }
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch(`${API_BASE_URL}/api/org/upload-emails`, { method: "POST", headers, body: formData });
-      if (!response.ok) { const err = await response.json().catch(() => ({ message: "Upload failed" })); throw new Error(err.message); }
+      const response = await fetch(`${API_BASE_URL}/api/org/upload-emails`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(err.message);
+      }
       return response.json();
     },
     // Member data
@@ -93,12 +125,14 @@ const API = {
   },
 
   plan: {
-    getAll: (audience?: string) => apiCall<any>(`/api/plans${audience ? `?audience=${audience}` : ''}`),
+    getAll: (audience?: string) =>
+      apiCall<any>(`/api/plans${audience ? `?audience=${audience}` : ""}`),
   },
 
   user: {
     stats: () => apiCall<any>("/api/user/stats"),
-    update: (data: any) => apiCall<any>("/api/user/profile", { method: "PUT", body: JSON.stringify(data) }),
+    update: (data: any) =>
+      apiCall<any>("/api/user/profile", { method: "PUT", body: JSON.stringify(data) }),
     profile: () => apiCall<any>("/api/user/profile"),
   },
 
@@ -107,7 +141,7 @@ const API = {
       const params = new URLSearchParams();
       if (query) {
         Object.entries(query).forEach(([k, v]) => {
-          if (v !== undefined && v !== null && v !== '') params.append(k, String(v));
+          if (v !== undefined && v !== null && v !== "") params.append(k, String(v));
         });
       }
       return apiCall<any>(`/api/therapists?${params.toString()}`);
@@ -115,15 +149,18 @@ const API = {
     get: (id: string) => apiCall<any>(`/api/therapists/${id}`),
     availability: (id: string, query?: { date?: string }) => {
       const params = new URLSearchParams();
-      if (query?.date) params.append('date', query.date);
+      if (query?.date) params.append("date", query.date);
       return apiCall<any>(`/api/therapists/${id}/availability?${params.toString()}`);
     },
-    meStats: () => apiCall<any>('/api/therapists/me/stats'),
-    meBookings: () => apiCall<any>('/api/therapists/me/bookings'),
+    meStats: () => apiCall<any>("/api/therapists/me/stats"),
+    meBookings: () => apiCall<any>("/api/therapists/me/bookings"),
     updateAvailability: (data: { availability: { day: number; slots: string[] }[] }) =>
-      apiCall<any>('/api/therapists/me/availability', { method: 'PATCH', body: JSON.stringify(data) }),
+      apiCall<any>("/api/therapists/me/availability", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     updateProfile: (data: any) =>
-      apiCall<any>('/api/therapists/me/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+      apiCall<any>("/api/therapists/me/profile", { method: "PATCH", body: JSON.stringify(data) }),
   },
 
   booking: {
@@ -134,7 +171,7 @@ const API = {
     cancel: (id: string) => apiCall<any>(`/api/bookings/${id}/cancel`, { method: "DELETE" }),
     getVideoToken: (id: string) => apiCall<any>(`/api/bookings/${id}/video-token`),
     rate: (id: string, data: { rating: number; feedback?: string }) =>
-      apiCall<any>(`/api/bookings/${id}/rate`, { method: 'POST', body: JSON.stringify(data) }),
+      apiCall<any>(`/api/bookings/${id}/rate`, { method: "POST", body: JSON.stringify(data) }),
     getAiBrief: (id: string) => apiCall<any>(`/api/bookings/${id}/ai-brief`),
   },
 
@@ -156,13 +193,15 @@ const API = {
 
   mood: {
     list: () => apiCall<any>("/api/mood/history"),
-    create: (data: any) => apiCall<any>("/api/mood", { method: "POST", body: JSON.stringify(data) }),
+    create: (data: any) =>
+      apiCall<any>("/api/mood", { method: "POST", body: JSON.stringify(data) }),
     get: (id: string) => apiCall<any>(`/api/mood/${id}`),
   },
 
   journal: {
     list: () => apiCall<any>("/api/journal"),
-    create: (data: any) => apiCall<any>("/api/journal", { method: "POST", body: JSON.stringify(data) }),
+    create: (data: any) =>
+      apiCall<any>("/api/journal", { method: "POST", body: JSON.stringify(data) }),
     get: (id: string) => apiCall<any>(`/api/journal/${id}`),
   },
 

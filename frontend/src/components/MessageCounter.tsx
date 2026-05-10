@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Phone, AlertCircle, Sparkles } from "lucide-react";
+import { AlertTriangle, Phone, AlertCircle, Sparkles, ArrowLeft } from "lucide-react";
 import API from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
@@ -157,32 +157,41 @@ export function CrisisMode({ active, onClose }: CrisisModeProps) {
 
               {/* Helpline Numbers */}
               <div className="space-y-3 pt-4 border-t border-slate-200">
-                <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
-                  <Phone className="w-6 h-6 text-red-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <p className="text-xs text-slate-600">AASRA Crisis Helpline</p>
-                    <p className="text-lg font-bold text-red-600">9820466726</p>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
                   <Phone className="w-6 h-6 text-orange-600 flex-shrink-0" />
                   <div className="text-left">
-                    <p className="text-xs text-slate-600">iCall Helpline</p>
-                    <p className="text-lg font-bold text-orange-600">9152987821</p>
+                    <p className="text-xs text-slate-600">MANAS</p>
+                    <p className="text-lg font-bold text-orange-600">14416 / 1800891446</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
+                  <Phone className="w-6 h-6 text-red-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <p className="text-xs text-slate-600">KIRAN Rehabilitation Helpline</p>
+                    <p className="text-lg font-bold text-red-600">18005990019</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                   <Phone className="w-6 h-6 text-blue-600 flex-shrink-0" />
                   <div className="text-left">
-                    <p className="text-xs text-slate-600">Vandrevala Foundation</p>
-                    <p className="text-lg font-bold text-blue-600">9999 77 6555</p>
+                    <p className="text-xs text-slate-600">NIMHANS</p>
+                    <p className="text-lg font-bold text-blue-600">08046110007</p>
                   </div>
                 </div>
               </div>
 
               {/* Emergency Text */}
+              <div className="absolute left-4 top-4">
+                <button
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-100"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+              </div>
               <div className="text-xs text-slate-500 italic">
                 If you're in immediate danger, please call 112 (emergency)
               </div>

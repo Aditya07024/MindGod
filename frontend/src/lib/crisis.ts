@@ -1,14 +1,14 @@
 export const CRISIS_KEYWORDS = [
-  'want to die',
-  'kill myself',
-  'end my life',
-  'suicide',
+  "want to die",
+  "kill myself",
+  "end my life",
+  "suicide",
   "can't go on",
-  'cant go on',
-  'hurt myself',
-  'self harm',
-  'self-harm',
-  'no reason to live',
+  "cant go on",
+  "hurt myself",
+  "self harm",
+  "self-harm",
+  "no reason to live",
 ];
 
 export function detectCrisis(text: string): boolean {
@@ -17,7 +17,7 @@ export function detectCrisis(text: string): boolean {
 }
 
 export const CRISIS_HELPLINES = [
-  { name: 'iCall', phone: '9152987821', hours: 'Mon-Sat 8am-10pm' },
-  { name: 'Vandrevala Foundation', phone: '1860-2662-345', hours: '24/7' },
-  { name: 'AASRA', phone: '9820466726', hours: '24/7' },
+  { name: "MANAS", phone: "14416 / 1800891446", hours: "24/7" },
+  { name: "KIRAN Rehabilitation Helpline", phone: "18005990019", hours: "24/7" },
+  { name: "NIMHANS", phone: "08046110007", hours: "24/7" },
 ];

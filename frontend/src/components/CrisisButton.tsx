@@ -1,11 +1,26 @@
-import { useState } from 'react';
-import { Phone, AlertTriangle, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import { Phone, AlertTriangle, X, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const HELPLINES = [
-  { name: 'iCall', number: '9152987821', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  { name: 'AASRA', number: '9820466626', color: 'bg-red-50 text-red-700 border-red-200' },
-  { name: 'Vandrevala', number: '1860-2662-345', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  {
+    name: "MANAS",
+    display: "14416 / 1800891446",
+    href: "tel:+911800891446",
+    color: "bg-orange-50 text-orange-700 border-orange-200",
+  },
+  {
+    name: "KIRAN Rehabilitation Helpline",
+    display: "18005990019",
+    href: "tel:+9118005990019",
+    color: "bg-red-50 text-red-700 border-red-200",
+  },
+  {
+    name: "NIMHANS",
+    display: "08046110007",
+    href: "tel:+918046110007",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
 ];
 
 /* ─── Controlled overlay — used by chat.tsx ─── */
@@ -14,20 +29,37 @@ export function CrisisOverlay({ open, onClose }: { open: boolean; onClose: () =>
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm px-4"
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 60, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden mb-4 md:mb-0"
           >
             <div className="bg-red-500 p-6 text-center text-white relative">
-              <button onClick={onClose} className="absolute right-4 top-4 text-red-200 hover:text-white">
+              <button
+                onClick={onClose}
+                className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20"
+              >
+                <ArrowLeft className="size-4" />
+                Back
+              </button>
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-4 text-red-200 hover:text-white"
+              >
                 <X className="size-5" />
               </button>
-              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+              <motion.div
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
                 <AlertTriangle className="size-12 mx-auto" />
               </motion.div>
               <h2 className="mt-3 font-display text-xl font-bold">You're Not Alone</h2>
@@ -35,20 +67,27 @@ export function CrisisOverlay({ open, onClose }: { open: boolean; onClose: () =>
             </div>
             <div className="p-4 space-y-3">
               {HELPLINES.map((h) => (
-                <a key={h.name} href={`tel:${h.number}`}
-                  className={`flex items-center gap-3 rounded-xl border p-3.5 ${h.color} hover:opacity-90 transition`}>
+                <a
+                  key={h.name}
+                  href={h.href}
+                  className={`flex items-center gap-3 rounded-xl border p-3.5 ${h.color} hover:opacity-90 transition`}
+                >
                   <Phone className="size-5 flex-shrink-0" />
                   <div>
                     <p className="font-bold text-sm">{h.name}</p>
-                    <p className="text-sm font-mono">{h.number}</p>
+                    <p className="text-sm font-mono">{h.display}</p>
                   </div>
                 </a>
               ))}
-              <p className="text-center text-xs text-slate-400 pt-1">Emergency? Call <strong>112</strong></p>
+              <p className="text-center text-xs text-slate-400 pt-1">
+                Emergency? Call <strong>112</strong>
+              </p>
             </div>
             <div className="px-4 pb-4">
-              <button onClick={onClose}
-                className="w-full py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition">
+              <button
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition"
+              >
                 I'm safe, close this
               </button>
             </div>
