@@ -9,12 +9,12 @@ import * as XLSX from "xlsx";
 const otpStore = new Map<string, { otp: string; expires: number }>();
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === "true",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
