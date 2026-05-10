@@ -223,9 +223,12 @@ function OrgOnboarding() {
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-2 space-y-3">
                     {debugOtp && (
                       <div className="bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl">
-                        <p className="text-xs font-semibold text-amber-700 uppercase mb-2">Development Mode - Your OTP:</p>
-                        <div className="flex items-center justify-between">
-                          <code className="text-2xl font-bold tracking-widest">{debugOtp}</code>
+                        <p className="text-xs font-semibold text-amber-700 uppercase mb-2">Email delivery blocked — fallback OTP</p>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm text-amber-800 mb-1">Use this OTP to continue in development mode.</p>
+                            <code className="text-2xl font-bold tracking-widest">{debugOtp}</code>
+                          </div>
                           <button
                             type="button"
                             onClick={() => {
@@ -237,7 +240,7 @@ function OrgOnboarding() {
                             Copy & Fill
                           </button>
                         </div>
-                        <p className="text-xs text-amber-700 mt-2">This OTP expires in 10 minutes</p>
+                        <p className="text-xs text-amber-700 mt-2">This OTP expires in 10 minutes.</p>
                       </div>
                     )}
                     <label className="text-xs font-semibold text-slate-500 uppercase">Enter OTP</label>

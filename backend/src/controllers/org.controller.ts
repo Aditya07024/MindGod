@@ -72,6 +72,8 @@ export class OrgController {
     console.log(`=========================================\n`);
 
     let emailSent = false;
+    let emailSendError: string | null = null;
+
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       try {
         await transporter.sendMail({
@@ -87,9 +89,10 @@ export class OrgController {
         });
         console.log(`[EMAIL] OTP successfully sent to ${email} via Nodemailer`);
         emailSent = true;
-      } catch (err) {
+      } catch (err: any) {
+        emailSendError = err.message || String(err);
         console.error("[EMAIL] Failed to send email via Nodemailer:", err);
-        console.log(`[EMAIL] Falling back to development mode - OTP available via response`);
+        console.log(`[EMAIL] Falling back to development/test mode - OTP available via response`);
       }
     } else {
       console.log(`[EMAIL] Missing SMTP_USER or SMTP_PASS. Email not sent via Nodemailer.`);
@@ -97,12 +100,18 @@ export class OrgController {
 
     // In development or when email fails, include OTP in response for testing
     const isProduction = process.env.NODE_ENV === 'production';
-    const response: any = { message: "OTP sent successfully to official email" };
-    
+    const response: any = {
+      message: emailSent
+        ? "OTP sent successfully to official email"
+        : "Email delivery failed; OTP returned in response for testing",
+      emailSent,
+    };
+
     if (!isProduction || !emailSent) {
       response.otp = otp;
       response.debug = true;
       response.expiresIn = "10 minutes";
+      response.emailSendError = emailSendError;
       console.log(`[DEBUG] OTP provided in response for testing: ${otp}`);
     }
 
