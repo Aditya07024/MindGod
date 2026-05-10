@@ -1,10 +1,19 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+let _razorpay: Razorpay | null = null;
+function getRazorpay() {
+  if (_razorpay) return _razorpay;
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  
+  if (!key_id || !key_secret) {
+    throw new Error("Razorpay keys are missing. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in environment variables.");
+  }
+  
+  _razorpay = new Razorpay({ key_id, key_secret });
+  return _razorpay;
+}
 
 // In-memory cache of plan IDs (seeded from env or created on first use)
 const PLAN_CACHE: Record<string, string | undefined> = {
@@ -23,7 +32,7 @@ export class SubscriptionService {
     if (PLAN_CACHE[tier]) return PLAN_CACHE[tier]!;
 
     const cfg = PLAN_CONFIG[tier];
-    const plan = await razorpay.plans.create({
+    const plan = await getRazorpay().plans.create({
       period: cfg.period,
       interval: cfg.interval,
       item: {
@@ -54,7 +63,7 @@ export class SubscriptionService {
     }
 
     try {
-      const subscription = await razorpay.subscriptions.create({
+      const subscription = await getRazorpay().subscriptions.create({
         plan_id: razorpayPlanId,
         total_count: 12, // 12 billing cycles = 1 year
         quantity: 1,
@@ -92,7 +101,7 @@ export class SubscriptionService {
     }
 
     try {
-      const subscription = await razorpay.subscriptions.create({
+      const subscription = await getRazorpay().subscriptions.create({
         plan_id: planId,
         total_count: 12, // 12 billing cycles = 1 year
         quantity: 1,
@@ -116,7 +125,7 @@ export class SubscriptionService {
 
   /** Create a Razorpay Plan dynamically */
   static async createRazorpayPlan(name: string, amount: number) {
-    const plan = await razorpay.plans.create({
+    const plan = await getRazorpay().plans.create({
       period: "monthly",
       interval: 1,
       item: {
@@ -131,7 +140,7 @@ export class SubscriptionService {
 
   /** Cancel an active Razorpay subscription */
   static async cancelSubscription(razorpaySubId: string) {
-    await razorpay.subscriptions.cancel(razorpaySubId);
+    await getRazorpay().subscriptions.cancel(razorpaySubId);
   }
 
   /** Verify webhook signature from Razorpay */

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Zap, Crown, Loader, AlertCircle } from "lucide-react";
+import { Check, Zap, Crown, Loader, AlertCircle, Sparkles } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -77,7 +77,12 @@ type TierId = typeof TIERS[number]["id"];
 
 function SubscriptionPage() {
   const qc = useQueryClient();
-  const [upgrading, setUpgrading] = useState<TierId | null>(null);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+
+  const { data: user } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => API.auth.me(),
+  });
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["subscription"],
@@ -85,14 +90,33 @@ function SubscriptionPage() {
     retry: false,
   });
 
+  const { data: dynamicPlansData } = useQuery({
+    queryKey: ['subscription-plans', 'user'],
+    queryFn: () => API.plan.getAll('user'),
+  });
+
+  const dynamicPlans = (dynamicPlansData?.plans || []).map((p: any) => ({
+    id: p._id,
+    name: p.name,
+    price: p.price,
+    period: "/mo",
+    description: "Custom wellness plan",
+    icon: Sparkles,
+    features: p.features.map((f: string) => ({ text: f, included: true })),
+    cta: "Upgrade Now",
+    recommended: false,
+  }));
+
+  const allTiers = [...TIERS, ...dynamicPlans];
+
+
   const upgradeMutation = useMutation({
-    mutationFn: (tier: "mann_shanti" | "apna_therapist") =>
-      API.subscription.upgrade({ tier }),
-    onSuccess: (data, tier) => {
+    mutationFn: (tier: string) =>
+      API.subscription.upgrade({ tier: tier as any }),
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["subscription"] });
       setUpgrading(null);
       if (data.shortUrl) {
-        // Open Razorpay hosted page for subscription payment
         window.open(data.shortUrl, "_blank");
         toast.success("Redirecting to payment…");
       } else {
@@ -116,10 +140,10 @@ function SubscriptionPage() {
 
   const currentTier = subscription?.tier ?? "free";
 
-  const handleUpgrade = (tier: TierId) => {
-    if (tier === "free" || tier === currentTier) return;
-    setUpgrading(tier);
-    upgradeMutation.mutate(tier as "mann_shanti" | "apna_therapist");
+  const handleUpgrade = (tierId: string) => {
+    if (tierId === "free" || tierId === currentTier) return;
+    setUpgrading(tierId);
+    upgradeMutation.mutate(tierId);
   };
 
   return (
@@ -149,7 +173,7 @@ function SubscriptionPage() {
 
         {/* Pricing Cards */}
         <div className="space-y-4">
-          {TIERS.map((tier, idx) => {
+          {allTiers.map((tier: any, idx: number) => {
             const isCurrent = currentTier === tier.id;
             const isUpgrading = upgrading === tier.id && upgradeMutation.isPending;
 
@@ -216,7 +240,7 @@ function SubscriptionPage() {
                   {isCurrent ? (
                     <div className="space-y-2">
                       <Button disabled variant="outline" className="w-full rounded-xl">✓ Current Plan</Button>
-                      {currentTier !== "free" && (
+                      {currentTier !== "free" && !subscription?.subscription?.isOrganization && (
                         <button onClick={() => cancelMutation.mutate()}
                           disabled={cancelMutation.isPending}
                           className="w-full text-xs text-muted-foreground hover:text-destructive transition text-center py-1">
@@ -227,9 +251,10 @@ function SubscriptionPage() {
                   ) : tier.id === "free" ? (
                     <Button disabled variant="outline" className="w-full rounded-xl">Downgrade to Free</Button>
                   ) : (
-                    <Button onClick={() => handleUpgrade(tier.id)} disabled={isUpgrading}
+                    <Button onClick={() => { setUpgrading(tier.id); upgradeMutation.mutate(tier.id); }} 
+                      disabled={upgrading === tier.id && upgradeMutation.isPending}
                       className={`w-full rounded-xl ${tier.recommended ? "" : "bg-primary/80 hover:bg-primary"}`}>
-                      {isUpgrading ? (
+                      {upgrading === tier.id && upgradeMutation.isPending ? (
                         <><Loader className="size-4 mr-2 animate-spin" /> Creating subscription…</>
                       ) : tier.cta}
                     </Button>

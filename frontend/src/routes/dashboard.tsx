@@ -37,24 +37,27 @@ function Dashboard() {
   const [crisisMode, setCrisisMode] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
 
-  // Auto-redirect therapists and admins based on intent or existing role
+  // Auto-redirect therapists and admins based on existing role
   useEffect(() => {
     API.auth.me().then(async (me: any) => {
       let role = me?.role ?? 'user';
-
       const intentRole = localStorage.getItem('mindgod_intent_role');
-      if (intentRole) {
-        localStorage.removeItem('mindgod_intent_role');
-        if (intentRole !== role) {
-          try {
-            await API.auth.setRole(intentRole);
-            role = intentRole;
-          } catch (err) {
-            console.error('Failed to set intended role:', err);
-          }
+      
+      // Clean up intent immediately
+      if (intentRole) localStorage.removeItem('mindgod_intent_role');
+
+      // Only attempt to set a role if they are currently a basic 'user'
+      // This prevents an existing Org Admin from being redirected or changed if they click the wrong link
+      if (role === 'user' && intentRole && intentRole !== 'user') {
+        try {
+          const res = await API.auth.setRole(intentRole);
+          role = res.user?.role ?? intentRole;
+        } catch (err) {
+          console.error('Failed to set intended role:', err);
         }
       }
 
+      // Final redirection based on confirmed role
       if (role === 'therapist') return nav({ to: '/therapist/dashboard', replace: true });
       if (role === 'org_admin') return nav({ to: '/org/dashboard', replace: true });
       if (role === 'super_admin') return nav({ to: '/admin/dashboard', replace: true });

@@ -6,6 +6,12 @@ export interface ISubscriptionPlan extends Document {
   features: string[];
   audience: "therapist" | "user" | "organization";
   isActive: boolean;
+  config: {
+    dailyChatLimit: number | null; // null for unlimited
+    hasPriorityBooking: boolean;
+    therapistDiscount: number; // percentage
+    hasUnlimitedJournal: boolean;
+  };
   razorpayPlanId?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -22,6 +28,12 @@ const SubscriptionPlanSchema = new Schema<ISubscriptionPlan>(
       required: true
     },
     isActive: { type: Boolean, default: true },
+    config: {
+      dailyChatLimit: { type: Number, default: 7 },
+      hasPriorityBooking: { type: Boolean, default: false },
+      therapistDiscount: { type: Number, default: 0 },
+      hasUnlimitedJournal: { type: Boolean, default: false }
+    },
     razorpayPlanId: { type: String }
   },
   { timestamps: true }

@@ -20,7 +20,7 @@ export class PlanController {
 
   /** POST /admin/plans — Create a new plan */
   static createPlan = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const { name, price, features, audience, password } = req.body;
+    const { name, price, features, audience, config, password } = req.body;
 
     if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
@@ -35,6 +35,12 @@ export class PlanController {
       price,
       features: features || [],
       audience,
+      config: config || {
+        dailyChatLimit: 7,
+        hasPriorityBooking: false,
+        therapistDiscount: 0,
+        hasUnlimitedJournal: false
+      },
       isActive: true
     });
 
@@ -45,7 +51,7 @@ export class PlanController {
   /** PUT /admin/plans/:id — Update an existing plan */
   static updatePlan = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
-    const { name, price, features, audience, isActive, password } = req.body;
+    const { name, price, features, audience, config, isActive, password } = req.body;
 
     if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
@@ -58,6 +64,7 @@ export class PlanController {
         ...(typeof price === 'number' && { price }),
         ...(features && { features }),
         ...(audience && { audience }),
+        ...(config && { config }),
         ...(typeof isActive === 'boolean' && { isActive })
       },
       { new: true }

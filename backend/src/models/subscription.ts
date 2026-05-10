@@ -1,8 +1,10 @@
 import mongoose, { Schema, type Document, type Types } from "mongoose";
 
 export interface ISubscription extends Document {
-  userId: Types.ObjectId;
-  plan: "free" | "mann_shanti" | "apna_therapist";
+  userId?: Types.ObjectId;
+  orgId?: Types.ObjectId;
+  planId?: Types.ObjectId; // Link to SubscriptionPlan
+  plan: string; // Plan name (historical record)
   status: "pending" | "active" | "cancelled" | "expired";
   razorpaySubscriptionId?: string;
   startDate: Date;
@@ -13,7 +15,9 @@ export interface ISubscription extends Document {
 
 const SubscriptionSchema = new Schema<ISubscription>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    orgId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
+    planId: { type: Schema.Types.ObjectId, ref: "SubscriptionPlan" },
     plan: {
       type: String,
       required: true

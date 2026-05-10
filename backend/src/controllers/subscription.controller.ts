@@ -18,13 +18,26 @@ export class SubscriptionController {
       const user = await User.findById(req.user!.sub).lean();
       if (!user) throw new AppError("User not found", 404);
 
-      const sub = await Subscription.findOne({
+      let sub = await Subscription.findOne({
         userId: req.user!.sub,
         status: { $in: ["active", "pending"] },
-        plan: { $ne: "free" },
       })
         .sort({ createdAt: -1 })
         .lean();
+
+      // If no personal active/pending sub, check for an active organization-level sub
+      if ((!sub || sub.status !== 'active') && user.orgId) {
+        const orgSub = await Subscription.findOne({
+          orgId: user.orgId,
+          status: "active",
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+        
+        if (orgSub) {
+          sub = orgSub;
+        }
+      }
 
       // Calculate messages used today
       const today = new Date();
@@ -37,12 +50,35 @@ export class SubscriptionController {
       const messagesUsedToday =
         conv?.messages.filter((m) => m.role === "user").length ?? 0;
 
-      const dailyLimit =
-        user.tier === "free" ? 7 : user.tier === "mann_shanti" ? 100 : Infinity;
+      // Fetch plan config if available
+      let planConfig = {
+        dailyChatLimit: 7,
+        hasPriorityBooking: false,
+        therapistDiscount: 0,
+        hasUnlimitedJournal: false
+      };
+
+      if (sub && sub.planId) {
+        const { SubscriptionPlan } = await import("@/models");
+        const plan = await SubscriptionPlan.findById(sub.planId).lean();
+        if (plan?.config) {
+          planConfig = plan.config;
+        }
+      } else {
+        // Fallback for legacy hardcoded tiers
+        if (effectiveTier === "mann_shanti") {
+          planConfig.dailyChatLimit = 100;
+        } else if (effectiveTier === "apna_therapist" || isOrgSub) {
+          planConfig.dailyChatLimit = null;
+        }
+      }
+
+      const dailyLimit = planConfig.dailyChatLimit ?? Infinity;
 
       res.json({
-        tier: user.tier,
-        tierLabel: TIER_LABELS[user.tier] ?? user.tier,
+        tier: effectiveTier,
+        tierLabel: isOrgSub ? "Organization Premium" : (TIER_LABELS[effectiveTier] ?? effectiveTier),
+        config: planConfig, // Send the dynamic config to frontend
         subscription: sub
           ? {
               id: sub._id,
@@ -51,6 +87,7 @@ export class SubscriptionController {
               startDate: sub.startDate,
               endDate: sub.endDate,
               razorpaySubscriptionId: sub.razorpaySubscriptionId,
+              isOrganization: !!sub.orgId,
             }
           : null,
         usage: {
@@ -68,6 +105,7 @@ export class SubscriptionController {
   static upgradeSubscription = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
       const { tier } = req.body;
+      console.log(`[Upgrade] Initiating upgrade for user ${req.user!.sub} to tier ${tier}`);
       
       const user = await User.findById(req.user!.sub).lean();
       if (!user) throw new AppError("User not found", 404);
@@ -75,6 +113,7 @@ export class SubscriptionController {
       let finalTier = tier;
       let planName = tier;
       let razorpaySub: any;
+      let isOrgPlan = false;
 
       if (["mann_shanti", "apna_therapist"].includes(tier)) {
         if (user.tier === tier) {
@@ -87,10 +126,21 @@ export class SubscriptionController {
         const dynamicPlan = await SubscriptionPlan.findById(tier);
         if (!dynamicPlan) throw new AppError("Invalid tier or plan ID", 400);
 
+        if (dynamicPlan.audience === "organization") {
+          if (user.role !== "org_admin" && user.role !== "super_admin") {
+            throw new AppError("Only organization admins can purchase this plan", 403);
+          }
+          if (!user.orgId) {
+            throw new AppError("User is not associated with any organization", 400);
+          }
+          isOrgPlan = true;
+        }
+
         // Make sure it has a razorpayPlanId
         if (!dynamicPlan.razorpayPlanId) {
+          console.log(`[Upgrade] Creating Razorpay plan for dynamic plan ${dynamicPlan.name}`);
           dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
-          await dynamicPlan.save();
+          await SubscriptionPlan.findByIdAndUpdate(dynamicPlan._id, { razorpayPlanId: dynamicPlan.razorpayPlanId });
         }
 
         finalTier = dynamicPlan._id.toString();
@@ -102,17 +152,19 @@ export class SubscriptionController {
         );
       }
 
+      console.log(`[Upgrade] Razorpay subscription created: ${razorpaySub.subscriptionId}`);
+
       // Save pending subscription record (activated via webhook)
       await Subscription.create({
         userId: req.user!.sub,
+        orgId: isOrgPlan ? user.orgId : undefined,
+        planId: ["mann_shanti", "apna_therapist"].includes(tier) ? undefined : tier,
         plan: planName,
         status: "pending", // Will be activated via webhook
         razorpaySubscriptionId: razorpaySub.subscriptionId,
         startDate: new Date(),
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       });
-
-      // Webhook will update user tier upon successful payment confirmation
 
       res.json({
         subscriptionId: razorpaySub.subscriptionId,
@@ -176,10 +228,15 @@ export class SubscriptionController {
         if (sub) {
           sub.status = "active";
           await sub.save();
-          const tier = SubscriptionService.tierFromPlanId(planId);
-          if (tier) {
-            await User.findByIdAndUpdate(sub.userId, { tier });
+          
+          if (sub.userId) {
+            const tier = SubscriptionService.tierFromPlanId(planId);
+            if (tier) {
+              await User.findByIdAndUpdate(sub.userId, { tier });
+            }
           }
+          // If it's an org sub, we don't update individual user tiers,
+          // getMySubscription handles the benefit lookup.
         }
         break;
       }

@@ -115,19 +115,25 @@ export class AuthController {
       }
 
       const userDoc = await User.findById(req.user!.sub);
-
       if (!userDoc) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      // SECURITY FIX: If the user already has a defined role (other than 'user'), DO NOT allow it to be changed.
+      // This prevents an Org Admin from accidentally becoming a regular user or vice versa if they click the wrong link.
+      if (userDoc.role !== "user" && userDoc.role !== role) {
+        return res.json({
+          message: "Role is already locked for this account.",
+          user: serializeUser(userDoc),
+        });
       }
 
       userDoc.role = role;
       await userDoc.save();
 
-      const user = userDoc.toObject();
-
       res.json({
-        message: `Role updated to ${role}`,
-        user: serializeUser(user),
+        message: `Role confirmed as ${role}`,
+        user: serializeUser(userDoc),
       });
     },
   );

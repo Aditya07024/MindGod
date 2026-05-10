@@ -70,7 +70,7 @@ function TherapistDashboard() {
 
   const { data: plansData } = useQuery({
     queryKey: ['subscription-plans'],
-    queryFn: () => API.plan.getAll(),
+    queryFn: () => API.plan.getAll('therapist'),
   });
   const plans = plansData?.plans || [];
 

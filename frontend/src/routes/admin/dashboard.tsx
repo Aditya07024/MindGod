@@ -23,7 +23,19 @@ function SuperAdminDashboard() {
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
   const [verifyModal, setVerifyModal] = useState<{ open: boolean; id: string; name: string; verify: boolean, type: 'therapist' | 'org' } | null>(null);
   const [planModal, setPlanModal] = useState<{ open: boolean, plan?: any } | null>(null);
-  const [planForm, setPlanForm] = useState({ name: '', price: 0, audience: 'therapist', features: '', isActive: true });
+  const [planForm, setPlanForm] = useState({ 
+    name: '', 
+    price: 0, 
+    audience: 'therapist', 
+    features: '', 
+    isActive: true,
+    config: {
+      dailyChatLimit: 7,
+      hasPriorityBooking: false,
+      therapistDiscount: 0,
+      hasUnlimitedJournal: false
+    }
+  });
   const [adminPassword, setAdminPassword] = useState('');
 
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
@@ -383,11 +395,16 @@ function SuperAdminDashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-white">Subscription Plans</h2>
-              <button onClick={() => {
-                  setPlanForm({ name: '', price: 0, audience: 'therapist', features: '', isActive: true });
+              <button 
+                onClick={() => {
+                  setPlanForm({ 
+                    name: '', price: 0, audience: 'therapist', features: '', isActive: true,
+                    config: { dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false }
+                  });
                   setPlanModal({ open: true });
                 }}
-                className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md transition">
+                className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md transition"
+              >
                 + Create New Plan
               </button>
             </div>
@@ -414,7 +431,14 @@ function SuperAdminDashboard() {
                   </ul>
                   <div className="flex gap-2">
                     <button onClick={() => {
-                        setPlanForm({ name: p.name, price: p.price, audience: p.audience, features: p.features.join('\n'), isActive: p.isActive });
+                        setPlanForm({ 
+                          name: p.name, 
+                          price: p.price, 
+                          audience: p.audience, 
+                          features: p.features.join('\n'), 
+                          isActive: p.isActive,
+                          config: p.config || { dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false }
+                        });
                         setPlanModal({ open: true, plan: p });
                       }}
                       className="flex-1 border border-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition">
@@ -565,10 +589,110 @@ function SuperAdminDashboard() {
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
                 </div>
 
-                <div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={planForm.isActive} onChange={e => setPlanForm({...planForm, isActive: e.target.checked})} />
-                    <span className="text-sm text-white font-medium">Plan is Active (visible to users)</span>
+                <div className="space-y-4 pt-4 border-t border-slate-800">
+                  <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">
+                    Plan Capabilities ({planForm.audience} focus)
+                  </p>
+                  
+                  {/* USER PLAN OPTIONS */}
+                  {planForm.audience === 'user' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Daily AI Messages</label>
+                          <input type="number" 
+                            value={planForm.config.dailyChatLimit === null ? '' : planForm.config.dailyChatLimit} 
+                            onChange={e => setPlanForm({
+                              ...planForm, 
+                              config: { ...planForm.config, dailyChatLimit: e.target.value === '' ? null : Number(e.target.value) }
+                            })}
+                            placeholder="Unlimited"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Therapist Discount %</label>
+                          <input type="number" 
+                            value={planForm.config.therapistDiscount} 
+                            onChange={e => setPlanForm({
+                              ...planForm, 
+                              config: { ...planForm.config, therapistDiscount: Number(e.target.value) }
+                            })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.hasUnlimitedJournal} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, hasUnlimitedJournal: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Unlimited CBT Journaling</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.hasPriorityBooking} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, hasPriorityBooking: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Priority Booking Access</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* THERAPIST PLAN OPTIONS */}
+                  {planForm.audience === 'therapist' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Platform Fee %</label>
+                          <input type="number" 
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Monthly Bookings</label>
+                          <input type="number" placeholder="Unlimited"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" defaultChecked />
+                          <span className="text-sm text-slate-300">Premium Profile Badge</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" defaultChecked />
+                          <span className="text-sm text-slate-300">Priority Search Ranking</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ORGANIZATION PLAN OPTIONS */}
+                  {planForm.audience === 'organization' && (
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" defaultChecked />
+                          <span className="text-sm text-slate-300">Cover ALL Employees (Bulk)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" defaultChecked />
+                          <span className="text-sm text-slate-300">Advanced Analytics Dashboard</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" defaultChecked />
+                          <span className="text-sm text-slate-300">Custom Wellness Workshops</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" defaultChecked />
+                          <span className="text-sm text-slate-300">Unlimited AI for Staff</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-slate-800">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked={planForm.isActive} onChange={e => setPlanForm({...planForm, isActive: e.target.checked})}
+                      className="rounded border-slate-700 bg-slate-950 text-violet-600 focus:ring-violet-500" />
+                    <span className="text-sm text-slate-200 group-hover:text-white transition font-bold">Plan is Active (visible to users)</span>
                   </label>
                 </div>
 

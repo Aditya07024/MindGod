@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Users, BarChart2, Shield, Building2, TrendingUp, AlertTriangle, Download,
-  CheckCircle, Clock, UserCheck, UserX, Upload, X, Loader2, ChevronRight
+  CheckCircle, Clock, UserCheck, UserX, Upload, X, Loader2, ChevronRight,
+  CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import API from '@/lib/api';
 import { UserButton, useClerk } from '@clerk/clerk-react';
@@ -124,7 +125,7 @@ function OrgDashboard() {
   const qc = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
   const [orgData, setOrgData] = useState<any>(null);
-  const [tab, setTab] = useState<'overview' | 'therapists' | 'requests' | 'members'>('overview');
+  const [tab, setTab] = useState<'overview' | 'therapists' | 'requests' | 'members' | 'subscriptions'>('overview');
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   // Excel upload modal
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -134,6 +135,7 @@ function OrgDashboard() {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [memberDetail, setMemberDetail] = useState<any>(null);
   const [memberLoading, setMemberLoading] = useState(false);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
 
   // Verification Gate
   useEffect(() => {
@@ -188,17 +190,39 @@ function OrgDashboard() {
     }
   };
 
-  const handleJoinAction = async (userId: string, approve: boolean) => {
-    try {
-      if (approve) await API.org.approveJoinRequest(userId);
-      else await API.org.rejectJoinRequest(userId);
-      toast.success(approve ? 'User approved and linked' : 'Request rejected');
-      refetchJoinReqs();
-      refetchMembers();
-    } catch (e: any) {
-      toast.error(e.message || 'Action failed');
-    }
-  };
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => API.subscription.get(),
+    retry: false,
+  });
+
+  const { data: orgPlans, isLoading: plansLoading, error: plansError } = useQuery({
+    queryKey: ['plans', 'organization'],
+    queryFn: async () => {
+      const res = await API.plan.getAll('organization');
+      console.log('[DEBUG] Org Plans fetched:', res);
+      return res;
+    },
+    enabled: tab === 'subscriptions',
+  });
+
+  const upgradeMutation = useMutation({
+    mutationFn: (tier: string) => API.subscription.upgrade({ tier: tier as any }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['subscription'] });
+      setUpgrading(null);
+      if (data.shortUrl) {
+        window.open(data.shortUrl, '_blank');
+        toast.success('Redirecting to payment…');
+      } else {
+        toast.success('Subscription activated!');
+      }
+    },
+    onError: (e: Error) => {
+      setUpgrading(null);
+      toast.error(e.message);
+    },
+  });
 
   const handleUploadEmails = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -329,6 +353,15 @@ function OrgDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <button 
+              onClick={() => setTab('subscriptions')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm font-semibold ${
+                tab === 'subscriptions' ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <CreditCard className="size-4" />
+              {subscription?.subscription?.status === 'active' ? 'Active Plan' : 'Manage Plan'}
+            </button>
+            <button 
               onClick={handleDownloadPdf}
               disabled={isExporting}
               className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition disabled:opacity-50"
@@ -368,6 +401,10 @@ function OrgDashboard() {
           <button onClick={() => setTab('members')}
             className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'members' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
             Members
+          </button>
+          <button onClick={() => setTab('subscriptions')}
+            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'subscriptions' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            Subscriptions
           </button>
         </div>
       </div>
@@ -689,6 +726,124 @@ function OrgDashboard() {
                   <p>Select a member from the list to view their wellness engagement.</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+        {tab === 'subscriptions' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-bold text-slate-900">Organization Subscriptions</h2>
+                <p className="text-slate-500">Unlock premium AI benefits for all your verified therapists.</p>
+              </div>
+
+              {subscription?.subscription?.isOrganization && subscription?.subscription?.status === 'active' && (
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                  <ShieldCheck className="size-5 text-green-600" />
+                  <div>
+                    <p className="text-[10px] font-bold text-green-800 uppercase tracking-wider">Active Organization Plan</p>
+                    <p className="text-sm font-semibold text-green-700">{subscription.tierLabel}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plansLoading ? (
+                [1, 2].map((i) => (
+                  <div key={i} className="h-80 rounded-2xl bg-white border border-slate-200 animate-pulse" />
+                ))
+              ) : orgPlans?.plans && orgPlans.plans.length > 0 ? (
+                orgPlans.plans.map((plan: any, idx: number) => {
+                  const isCurrent = subscription?.subscription?.plan === plan.name && subscription?.subscription?.status === 'active';
+                  const isUpgrading = upgrading === plan._id && upgradeMutation.isPending;
+
+                  return (
+                    <motion.div
+                      key={plan._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="h-full"
+                    >
+                      <div className={`relative h-full p-8 rounded-2xl bg-white flex flex-col transition-all border ${
+                        isCurrent ? "ring-2 ring-blue-600 border-blue-600 shadow-lg" : "border-slate-200 hover:shadow-xl hover:-translate-y-1"
+                      }`}>
+                        {isCurrent && (
+                          <div className="absolute -top-3 right-6 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                            Current Active
+                          </div>
+                        )}
+
+                        <div className="mb-6">
+                          <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
+                          <div className="mt-2 flex items-baseline gap-1">
+                            <span className="text-4xl font-black text-slate-900">₹{plan.price}</span>
+                            <span className="text-slate-500 text-sm font-medium">/month</span>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 space-y-4 mb-8">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Features Included:</p>
+                          <ul className="space-y-3">
+                            {plan.features?.map((f: string, i: number) => (
+                              <li key={i} className="flex items-start gap-3">
+                                <Check className="size-4 text-green-500 shrink-0 mt-0.5" />
+                                <span className="text-sm text-slate-600 font-medium">{f}</span>
+                              </li>
+                            ))}
+                            <li className="flex items-start gap-3 pt-3 border-t border-slate-100 mt-2">
+                              <Building2 className="size-4 text-blue-500 shrink-0 mt-0.5" />
+                              <p className="text-xs text-blue-700 font-semibold leading-tight">
+                                Benefits apply to all verified therapists in your organization automatically.
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setUpgrading(plan._id);
+                            upgradeMutation.mutate(plan._id);
+                          }}
+                          disabled={isUpgrading || isCurrent}
+                          className={`w-full py-4 rounded-xl font-bold text-sm transition-all ${
+                            isCurrent 
+                              ? "bg-green-100 text-green-700 cursor-default" 
+                              : "bg-slate-900 text-white hover:bg-slate-800 shadow-md shadow-slate-200"
+                          }`}
+                        >
+                          {isCurrent ? "Active Plan" : isUpgrading ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <Loader2 className="size-4 animate-spin" /> Processing...
+                            </span>
+                          ) : (
+                            "Upgrade Organization"
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                  <Building2 className="size-12 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-slate-400">No Organization Plans Available</h3>
+                  <p className="text-slate-500 mt-2">Please contact the Super Admin to create a bulk plan for your organization.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 flex items-start gap-4">
+              <div className="size-10 rounded-xl bg-white shadow-sm border border-blue-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="size-5 text-blue-600" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-blue-900">Billing Information</h4>
+                <p className="text-xs text-blue-700 leading-relaxed opacity-80">
+                  Organization plans are recurring and billed monthly via Razorpay. Benefits are automatically enabled for therapists linked to your organization ID once they are verified. You can switch plans or cancel any time from this dashboard.
+                </p>
+              </div>
             </div>
           </div>
         )}

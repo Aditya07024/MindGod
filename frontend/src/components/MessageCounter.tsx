@@ -17,16 +17,15 @@ export function MessageCounter({ onCrisisMode }: MessageCounterProps) {
     queryFn: () => API.subscription.get(),
   });
 
-  const tier = subscription?.tier || "free";
-  const isFree = tier === "free";
-  const dailyLimit = isFree ? FREE_DAILY_LIMIT : 100; // Free: 7, Mann Shanti: 100
+  const dailyLimit = subscription?.usage?.dailyLimit ?? 7;
+  const isUnlimited = subscription?.usage?.dailyLimit === null;
   const messagesUsed = subscription?.usage?.messagesUsedToday || 0;
-  const messagesRemaining = dailyLimit - messagesUsed;
-  const percentageUsed = (messagesUsed / dailyLimit) * 100;
-  const isAtLimit = messagesRemaining === 0;
+  const messagesRemaining = isUnlimited ? null : dailyLimit - messagesUsed;
+  const percentageUsed = isUnlimited ? 0 : (messagesUsed / dailyLimit) * 100;
+  const isAtLimit = !isUnlimited && messagesRemaining === 0;
 
-  if (!isFree) {
-    return null; // Hide counter for premium users
+  if (isUnlimited) {
+    return null; // Hide counter for unlimited plans
   }
 
   return (
