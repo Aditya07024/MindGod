@@ -39,6 +39,9 @@ export class SubscriptionController {
         }
       }
 
+      const isOrgSub = !!(sub && sub.orgId);
+      const effectiveTier = sub ? sub.plan : (user.tier || "free");
+
       // Calculate messages used today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -51,7 +54,12 @@ export class SubscriptionController {
         conv?.messages.filter((m) => m.role === "user").length ?? 0;
 
       // Fetch plan config if available
-      let planConfig = {
+      let planConfig: {
+        dailyChatLimit: number | null;
+        hasPriorityBooking: boolean;
+        therapistDiscount: number;
+        hasUnlimitedJournal: boolean;
+      } = {
         dailyChatLimit: 7,
         hasPriorityBooking: false,
         therapistDiscount: 0,
