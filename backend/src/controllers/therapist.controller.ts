@@ -110,6 +110,10 @@ export class TherapistController {
       .populate("userId", "fullName")
       .lean();
 
+    if (!therapist || !therapist.therapistProfile) {
+      throw new AppError("Therapist not found", 404);
+    }
+
     res.json({
       id: therapist._id,
       name: therapist.therapistProfile.name || "Therapist",
