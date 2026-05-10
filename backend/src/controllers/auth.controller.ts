@@ -100,19 +100,30 @@ export class AuthController {
   );
   static setRole = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      const { role } = req.body;
+      let { role } = req.body;
+
+      // Normalize frontend role values
+      if (role === "super admin") role = "super_admin";
+      if (role === "super-admin") role = "super_admin";
+      if (role === "org admin") role = "org_admin";
+      if (role === "org-admin") role = "org_admin";
+
       const validRoles = ["user", "therapist", "org_admin", "super_admin"];
+
       if (!validRoles.includes(role)) {
         return res.status(400).json({ error: "Invalid role" });
       }
 
-      const user = await User.findByIdAndUpdate(
-        req.user!.sub,
-        { role },
-        { new: true },
-      ).lean();
+      const userDoc = await User.findById(req.user!.sub);
 
-      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!userDoc) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      userDoc.role = role;
+      await userDoc.save();
+
+      const user = userDoc.toObject();
 
       res.json({
         message: `Role updated to ${role}`,

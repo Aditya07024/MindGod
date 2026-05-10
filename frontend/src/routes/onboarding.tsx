@@ -56,11 +56,23 @@ function Onboarding() {
   // Auto-redirect therapists/admins
   useEffect(() => {
     API.auth.me().then(async (me: any) => {
-      const role = me?.role ?? 'user';
+      let role = me?.role ?? 'user';
       const intendedRole = localStorage.getItem('mindgod_intent_role');
-      if (intendedRole) localStorage.removeItem('mindgod_intent_role');
-      if (role === 'therapist') nav({ to: '/therapist/dashboard', replace: true });
-      else if (role === 'org_admin') nav({ to: '/org/dashboard', replace: true });
+
+      if (intendedRole) {
+        localStorage.removeItem('mindgod_intent_role');
+        if (intendedRole !== role) {
+          try {
+            await API.auth.setRole(intendedRole);
+            role = intendedRole;
+          } catch (err) {
+            console.error('Failed to set intended role:', err);
+          }
+        }
+      }
+
+      if (role === 'therapist') nav({ to: '/therapist/onboarding', replace: true });
+      else if (role === 'org_admin') nav({ to: '/org/onboarding', replace: true });
       else if (role === 'super_admin') nav({ to: '/admin/dashboard', replace: true });
       else if (me?.onboarding?.completedAt) nav({ to: '/dashboard', replace: true });
     }).catch(() => {});

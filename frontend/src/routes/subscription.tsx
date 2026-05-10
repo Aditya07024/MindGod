@@ -22,8 +22,8 @@ const TIERS = [
     description: "Start your mental wellness journey",
     icon: null,
     features: [
-      { text: "3 AI messages per day", included: true },
-      { text: "3 CBT journal entries/week", included: true },
+      { text: "7 AI messages per day", included: true },
+      { text: "7 CBT journal entries/week", included: true },
       { text: "7-day mood calendar", included: true },
       { text: "All 5 breathing exercises", included: true },
       { text: "10% therapist discount", included: false },

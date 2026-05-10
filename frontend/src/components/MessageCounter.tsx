@@ -4,6 +4,7 @@ import { AlertTriangle, Phone, AlertCircle, Sparkles, ArrowLeft } from "lucide-r
 import API from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
+import { FREE_DAILY_LIMIT } from "@/lib/store";
 
 interface MessageCounterProps {
   onCrisisMode?: (active: boolean) => void;
@@ -18,8 +19,8 @@ export function MessageCounter({ onCrisisMode }: MessageCounterProps) {
 
   const tier = subscription?.tier || "free";
   const isFree = tier === "free";
-  const dailyLimit = isFree ? 3 : 100; // Free: 3, Mann Shanti: 100
-  const messagesUsed = subscription?.messagesUsedToday || 0;
+  const dailyLimit = isFree ? FREE_DAILY_LIMIT : 100; // Free: 7, Mann Shanti: 100
+  const messagesUsed = subscription?.usage?.messagesUsedToday || 0;
   const messagesRemaining = dailyLimit - messagesUsed;
   const percentageUsed = (messagesUsed / dailyLimit) * 100;
   const isAtLimit = messagesRemaining === 0;

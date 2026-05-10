@@ -267,20 +267,9 @@ function TherapistDashboard() {
         {/* SCHEDULE TAB */}
         {tab === 'schedule' && (
           <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className="space-y-6">
-            <div className="bg-gradient-to-r from-teal-50 to-white border border-teal-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition">
-              <div className="flex items-center gap-4">
-                <div className="bg-white p-3 rounded-2xl text-teal-600 shadow-sm border border-teal-50">
-                  <MessageCircle className="size-6" />
-                </div>
-                <div>
-                  <p className="font-display font-bold text-teal-900 text-lg">3 unread messages</p>
-                  <p className="text-sm font-medium text-teal-700/80 mt-0.5">from past clients</p>
-                </div>
-              </div>
-              <Button variant="outline" className="text-teal-700 border-teal-200 hover:bg-teal-100 rounded-xl h-10 px-5 font-semibold">View Inbox</Button>
-            </div>
+            
 
-            <div className="bg-gradient-to-r from-indigo-50 to-white border border-indigo-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition">
+            {/* <div className="bg-gradient-to-r from-indigo-50 to-white border border-indigo-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition">
               <div className="flex items-center gap-4">
                 <div className="bg-white p-3 rounded-2xl text-indigo-600 shadow-sm border border-indigo-50">
                   <Video className="size-6" />
@@ -293,7 +282,7 @@ function TherapistDashboard() {
               <Link to="/session/demo-room" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md transition">
                 Join Demo
               </Link>
-            </div>
+            </div> */}
 
             <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Upcoming Sessions</h2>
             {bookingsLoading && <div className="h-32 rounded-3xl bg-slate-200 animate-pulse border border-slate-100" />}

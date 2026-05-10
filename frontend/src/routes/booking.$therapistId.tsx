@@ -2,7 +2,7 @@ import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router"
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Calendar, Clock, AlertCircle } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, AlertCircle, Star } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -129,12 +129,43 @@ function BookingFlow() {
                     <span className="text-lg font-bold text-slate-900">
                       ₹{therapist.sessionFee}/session
                     </span>
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-700 text-sm font-bold">
+                      <Star className="size-4 fill-amber-500 text-amber-500" />
+                      {therapist.rating?.toFixed(1) || '5.0'}
+                    </div>
                     <span className="text-sm text-slate-500">
-                      {therapist.sessionCount} sessions completed
+                      {therapist.sessionCount} sessions
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* Reviews Section */}
+              {therapist.reviews?.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-slate-100">
+                  <h3 className="font-display font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    Recent Reviews
+                  </h3>
+                  <div className="space-y-4">
+                    {therapist.reviews.map((rev: any) => (
+                      <div key={rev.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-sm text-slate-900">{rev.userName}</span>
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`size-3 ${i < rev.rating ? "fill-amber-500 text-amber-500" : "text-slate-300"}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-600 leading-relaxed italic">"{rev.review}"</p>
+                        <p className="text-[10px] text-slate-400 mt-2">
+                          {new Date(rev.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           </motion.div>
 

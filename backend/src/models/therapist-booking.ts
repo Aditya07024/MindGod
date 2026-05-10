@@ -15,6 +15,8 @@ export interface ITherapistBooking extends Document {
   payment: IPayment;
   videoRoomId?: string;
   therapistNotes?: string;
+  rating?: number;
+  review?: string;
   aiBrief?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +40,8 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
     },
     videoRoomId: { type: String },
     therapistNotes: { type: String },
+    rating: { type: Number, min: 1, max: 5 },
+    review: { type: String },
     aiBrief: { type: String }
   },
   { timestamps: true }

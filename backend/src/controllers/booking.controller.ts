@@ -269,24 +269,22 @@ export class BookingController {
       if (!booking) throw new AppError("Booking not found", 404);
 
       booking.status = "completed";
-      if (feedback) booking.therapistNotes = `[USER_RATING:${rating}] ${feedback}`;
+      booking.rating = rating;
+      if (feedback) booking.review = feedback;
       await booking.save();
-
+      
       // Update therapist's average rating
       const allRated = await TherapistBooking.find({
         therapistId: booking.therapistId,
         status: "completed",
-        therapistNotes: /^\[USER_RATING:/,
+        rating: { $exists: true },
       }).lean();
 
       if (allRated.length > 0) {
         const ratings = allRated
-          .map((b) => {
-            const m = b.therapistNotes?.match(/^\[USER_RATING:(\d+)\]/);
-            return m ? parseInt(m[1]) : null;
-          })
-          .filter((r): r is number => r !== null);
-
+          .map((b) => b.rating)
+          .filter((r): r is number => r !== undefined && r !== null);
+ 
         if (ratings.length > 0) {
           const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
           await User.findByIdAndUpdate(booking.therapistId, {

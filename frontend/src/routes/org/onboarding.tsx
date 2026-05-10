@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, FileText, CheckCircle, ArrowRight } from "lucide-react";
+import { Building2, FileText, CheckCircle, ArrowRight, Mail } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import API from "@/lib/api";
 
@@ -38,6 +38,22 @@ function OrgOnboarding() {
     }
   }, [user]);
 
+  const publicEmailDomains = [
+    "gmail.com",
+    "yahoo.com",
+    "outlook.com",
+    "hotmail.com",
+    "icloud.com",
+    "aol.com",
+    "proton.me",
+    "protonmail.com",
+    "live.com",
+  ];
+
+  const emailDomain = formData.officialEmail.split("@")[1]?.toLowerCase() || "";
+
+  const isPublicEmail = publicEmailDomains.includes(emailDomain);
+
   useEffect(() => {
     // If the user already has an org and it's verified or pending, redirect
     API.org
@@ -59,13 +75,29 @@ function OrgOnboarding() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const SUBMIT_GUARD_KEY = "mindgod_org_onboarding_submit_v1";
+
   const submitOnboarding = async () => {
+    // Prevent double-submit on refresh/back-forward while request is in-flight.
+    const guard = sessionStorage.getItem(SUBMIT_GUARD_KEY);
+    if (guard === "in_progress") return;
+    if (guard === "done") {
+      // If we already submitted in this tab/session, just continue UI.
+      setStep(4);
+      return;
+    }
+
+    sessionStorage.setItem(SUBMIT_GUARD_KEY, "in_progress");
+
     setLoading(true);
     setError("");
     try {
       await API.org.onboarding(formData);
-      setStep(3);
-    } catch (err: any) {
+      sessionStorage.setItem(SUBMIT_GUARD_KEY, "done");
+      setStep(4);
+    } catch (err) {
+      // allow retry if it failed
+      sessionStorage.removeItem(SUBMIT_GUARD_KEY);
       setError(err.message || "Failed to submit application");
     } finally {
       setLoading(false);

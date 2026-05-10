@@ -99,9 +99,16 @@ export class TherapistController {
       .select("therapistProfile phoneMasked createdAt")
       .lean();
 
-    if (!therapist || !therapist.therapistProfile) {
-      throw new AppError("Therapist not found", 404);
-    }
+    // Fetch reviews
+    const reviews = await TherapistBooking.find({
+      therapistId: id,
+      status: "completed",
+      rating: { $exists: true },
+    })
+      .sort({ updatedAt: -1 })
+      .limit(10)
+      .populate("userId", "fullName")
+      .lean();
 
     res.json({
       id: therapist._id,
@@ -116,6 +123,13 @@ export class TherapistController {
       bio: therapist.therapistProfile.bio,
       introVideoUrl: therapist.therapistProfile.introVideoUrl,
       availability: therapist.therapistProfile.availability,
+      reviews: reviews.map((r) => ({
+        id: r._id,
+        userName: (r.userId as any)?.fullName ?? "Anonymous",
+        rating: r.rating,
+        review: r.review,
+        date: r.updatedAt,
+      })),
     });
   });
 

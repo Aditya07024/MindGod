@@ -48,7 +48,11 @@ function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, streaming]);
 
-  const usedToday = messages.filter((m: any) => m.role === 'user' && new Date(m.timestamp || m.createdAt).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10)).length || 0;
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  const usedToday = messages.filter((m: any) => 
+    m.role === 'user' && 
+    new Date(m.timestamp || m.createdAt).toLocaleDateString('en-CA') === todayStr
+  ).length || 0;
   const remaining = Math.max(0, FREE_DAILY_LIMIT - usedToday);
   const limitHit = remaining === 0;
 
@@ -131,7 +135,7 @@ function Chat() {
             </div>
           </div>
           <div className={`rounded-full px-3 py-1 text-xs font-medium ${limitHit ? 'bg-crisis/10 text-crisis' : 'bg-primary-soft text-primary'}`}>
-            {remaining} of {FREE_DAILY_LIMIT} left today
+            {remaining} of {FREE_DAILY_LIMIT} messages remaining
           </div>
         </div>
 

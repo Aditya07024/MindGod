@@ -54,6 +54,29 @@ export class OrgController {
       const user = await User.findById(req.user!.sub);
       if (!user) return res.status(404).json({ error: "User not found" });
 
+      // Idempotency/refresh guard:
+      // If the user already has an org (pending or verified), do not re-create org + role.
+      if (user.orgId) {
+        const existingOrg = await Organization.findById(user.orgId).lean();
+        if (
+          existingOrg &&
+          (existingOrg.verificationStatus === "pending" ||
+            existingOrg.verificationStatus === "verified")
+        ) {
+          // Ensure role is consistent
+          if (user.role !== "org_admin") {
+            user.role = "org_admin";
+            await user.save();
+          }
+
+          return res.json({
+            message: "Organization already submitted. Please wait for review.",
+            org: existingOrg,
+            idempotent: true,
+          });
+        }
+      }
+
       // Create the organization
       const org = new Organization({
         name,
@@ -143,11 +166,9 @@ export class OrgController {
         role: "therapist",
       });
       if (!therapist) {
-        return res
-          .status(404)
-          .json({
-            error: "Therapist not found or not part of this organization",
-          });
+        return res.status(404).json({
+          error: "Therapist not found or not part of this organization",
+        });
       }
 
       if (!therapist.therapistProfile) {
@@ -539,11 +560,9 @@ export class OrgController {
       const uniqueEmails = [...new Set(emails)];
 
       if (uniqueEmails.length === 0) {
-        return res
-          .status(400)
-          .json({
-            error: "No valid email addresses found in the uploaded file",
-          });
+        return res.status(400).json({
+          error: "No valid email addresses found in the uploaded file",
+        });
       }
 
       // Update org's allowed emails (merge, no duplicates)
