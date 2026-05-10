@@ -13,14 +13,7 @@ import { toast } from 'sonner';
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
-async function adminFetch(path: string, opts: RequestInit = {}) {
-  const r = await fetch(`${API_BASE}${path}`, { ...opts, credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...opts.headers } });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-}
+// Using centralized API from @/lib/api which handles Clerk tokens automatically
 
 function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -35,35 +28,32 @@ function SuperAdminDashboard() {
 
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
     queryKey: ['admin-therapists'],
-    queryFn: () => adminFetch('/api/admin/therapists'),
+    queryFn: () => API.admin.pendingTherapists(),
   });
 
   const { data: subsData } = useQuery({
     queryKey: ['admin-subscriptions'],
-    queryFn: () => adminFetch('/api/subscription/admin/all'),
+    queryFn: () => API.subscription.admin.all(),
     enabled: tab === 'subscriptions',
   });
 
   const { data: orgsData, isLoading: orgsLoading } = useQuery({
     queryKey: ['admin-orgs'],
-    queryFn: () => adminFetch('/api/admin/pending-orgs'),
+    queryFn: () => API.admin.pendingOrgs(),
     enabled: tab === 'organizations' || tab === 'overview',
   });
 
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['admin-plans'],
-    queryFn: () => adminFetch('/api/plans'),
+    queryFn: () => API.plan.getAll(),
     enabled: tab === 'plans',
   });
 
   const verifyMutation = useMutation({
     mutationFn: ({ id, verified, password, type }: { id: string; verified: boolean; password?: string, type: 'therapist' | 'org' }) => {
-      const endpoint = type === 'therapist' 
-        ? `/api/admin/therapist/${id}/verify`
-        : `/api/admin/org/${id}/verify`;
-      return adminFetch(endpoint, {
-        method: 'PATCH', body: JSON.stringify({ verified, password })
-      });
+      return type === 'therapist' 
+        ? API.admin.verifyTherapist(id, { verified, password })
+        : API.admin.verifyOrg(id, { verified, password });
     },
     onSuccess: (_, { verified, type }) => {
       setVerifyModal(null);
@@ -76,9 +66,9 @@ function SuperAdminDashboard() {
 
   const planMutation = useMutation({
     mutationFn: ({ id, data, isDelete }: { id?: string, data?: any, isDelete?: boolean }) => {
-      if (isDelete) return adminFetch(`/api/admin/plans/${id}`, { method: 'DELETE', body: JSON.stringify({ password: adminPassword }) });
-      if (id) return adminFetch(`/api/admin/plans/${id}`, { method: 'PUT', body: JSON.stringify({ ...data, password: adminPassword }) });
-      return adminFetch('/api/admin/plans', { method: 'POST', body: JSON.stringify({ ...data, password: adminPassword }) });
+      if (isDelete) return API.admin.deletePlan(id!, { password: adminPassword });
+      if (id) return API.admin.updatePlan(id, { ...data, password: adminPassword });
+      return API.admin.createPlan({ ...data, password: adminPassword });
     },
     onSuccess: (_, { isDelete }) => {
       setPlanModal(null);
