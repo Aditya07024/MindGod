@@ -42,6 +42,11 @@ export class AdminController {
       $or: [{ orgId: null }, { orgId: { $exists: false } }]
     }).select("therapistProfile phoneMasked").lean();
 
+    const pendingOrgs = await Organization.find({
+      verificationStatus: "pending",
+      deletedAt: null
+    }).lean();
+
     res.json({
       users: userCount,
       therapists: therapistCount,
@@ -53,6 +58,15 @@ export class AdminController {
         rciNumber: t.therapistProfile?.rciNumber ?? "",
         verified: t.therapistProfile?.verified ?? false,
         verificationStatus: t.therapistProfile?.verificationStatus ?? "pending"
+      })),
+      pendingOrganizations: pendingOrgs.map(org => ({
+        id: org._id,
+        name: org.name,
+        type: org.type,
+        officialEmail: org.officialEmail,
+        contactPerson: org.contactPerson,
+        verificationStatus: org.verificationStatus,
+        createdAt: org.createdAt
       }))
     });
   });

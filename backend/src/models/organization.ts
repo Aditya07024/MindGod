@@ -43,6 +43,7 @@ export interface IOrganization extends Document {
   allowedEmails: string[];
   /** Join requests from users wanting to link with this org */
   pendingJoinRequests: IJoinRequest[];
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -90,7 +91,8 @@ const OrganizationSchema = new Schema<IOrganization>(
         autoApproved: { type: Boolean, default: false },
         requestedAt: { type: Date, default: Date.now }
       }
-    ]
+    ],
+    deletedAt: { type: Date }
   },
   { timestamps: true }
 );
