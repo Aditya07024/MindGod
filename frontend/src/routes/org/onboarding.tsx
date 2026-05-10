@@ -30,6 +30,7 @@ function OrgOnboarding() {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [debugOtp, setDebugOtp] = useState(''); // For development mode
 
   useEffect(() => {
     // If the user already has an org and it's verified or pending, redirect
@@ -53,8 +54,12 @@ function OrgOnboarding() {
     setLoading(true);
     setError('');
     try {
-      await API.org.sendOtp({ email: formData.officialEmail });
+      const response = await API.org.sendOtp({ email: formData.officialEmail });
       setOtpSent(true);
+      // If in development mode, display the OTP
+      if (response?.debug && response?.otp) {
+        setDebugOtp(response.otp);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to send OTP');
     } finally {
@@ -215,7 +220,26 @@ function OrgOnboarding() {
                 </div>
 
                 {otpSent && !emailVerified && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-2">
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-2 space-y-3">
+                    {debugOtp && (
+                      <div className="bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl">
+                        <p className="text-xs font-semibold text-amber-700 uppercase mb-2">Development Mode - Your OTP:</p>
+                        <div className="flex items-center justify-between">
+                          <code className="text-2xl font-bold tracking-widest">{debugOtp}</code>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(debugOtp);
+                              setOtp(debugOtp);
+                            }}
+                            className="rounded-lg bg-amber-200 hover:bg-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-900"
+                          >
+                            Copy & Fill
+                          </button>
+                        </div>
+                        <p className="text-xs text-amber-700 mt-2">This OTP expires in 10 minutes</p>
+                      </div>
+                    )}
                     <label className="text-xs font-semibold text-slate-500 uppercase">Enter OTP</label>
                     <div className="flex gap-2 mt-1">
                       <input
