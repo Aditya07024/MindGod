@@ -45,24 +45,35 @@ export class SubscriptionService {
     tierName: string,
     userPhone: string,
   ) {
-    const subscription = await razorpay.subscriptions.create({
-      plan_id: razorpayPlanId,
-      total_count: 12, // 12 billing cycles = 1 year
-      quantity: 1,
-      notify_info: {
-        notify_phone: userPhone,
-      },
-      notes: {
-        tier: tierName,
-        source: "mindgod_app",
-      },
-    });
+    const isEmail = userPhone.includes("@");
+    const notify_info: any = {};
+    if (isEmail) {
+      notify_info.notify_email = userPhone;
+    } else {
+      notify_info.notify_phone = userPhone;
+    }
 
-    return {
-      subscriptionId: subscription.id,
-      shortUrl: (subscription as any).short_url ?? null,
-      status: subscription.status,
-    };
+    try {
+      const subscription = await razorpay.subscriptions.create({
+        plan_id: razorpayPlanId,
+        total_count: 12, // 12 billing cycles = 1 year
+        quantity: 1,
+        notify_info,
+        notes: {
+          tier: tierName,
+          source: "mindgod_app",
+        },
+      });
+
+      return {
+        subscriptionId: subscription.id,
+        shortUrl: (subscription as any).short_url ?? null,
+        status: subscription.status,
+      };
+    } catch (error) {
+      console.error("[SubscriptionService] createDynamicSubscription failed:", error);
+      throw error;
+    }
   }
 
   /** Create a Razorpay subscription for a user */
@@ -72,24 +83,35 @@ export class SubscriptionService {
   ) {
     const planId = await this.getOrCreatePlanId(tier);
 
-    const subscription = await razorpay.subscriptions.create({
-      plan_id: planId,
-      total_count: 12, // 12 billing cycles = 1 year
-      quantity: 1,
-      notify_info: {
-        notify_phone: userPhone,
-      },
-      notes: {
-        tier,
-        source: "mindgod_app",
-      },
-    });
+    const isEmail = userPhone.includes("@");
+    const notify_info: any = {};
+    if (isEmail) {
+      notify_info.notify_email = userPhone;
+    } else {
+      notify_info.notify_phone = userPhone;
+    }
 
-    return {
-      subscriptionId: subscription.id,
-      shortUrl: (subscription as any).short_url ?? null,
-      status: subscription.status,
-    };
+    try {
+      const subscription = await razorpay.subscriptions.create({
+        plan_id: planId,
+        total_count: 12, // 12 billing cycles = 1 year
+        quantity: 1,
+        notify_info,
+        notes: {
+          tier,
+          source: "mindgod_app",
+        },
+      });
+
+      return {
+        subscriptionId: subscription.id,
+        shortUrl: (subscription as any).short_url ?? null,
+        status: subscription.status,
+      };
+    } catch (error) {
+      console.error("[SubscriptionService] createSubscription failed:", error);
+      throw error;
+    }
   }
 
   /** Create a Razorpay Plan dynamically */
