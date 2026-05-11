@@ -207,9 +207,10 @@ const API = {
 
   subscription: {
     get: () => apiCall<any>("/api/subscription"),
-    upgrade: (data: { tier: "mann_shanti" | "apna_therapist" }) =>
+    upgrade: (data: { tier: string }) =>
       apiCall<any>("/api/subscription/upgrade", { method: "POST", body: JSON.stringify(data) }),
     cancel: () => apiCall<any>("/api/subscription/cancel", { method: "POST" }),
+    demoActivate: () => apiCall<any>("/api/subscription/demo-activate", { method: "POST" }),
     admin: { all: () => apiCall<any>("/api/subscription/admin/all") },
   },
 };

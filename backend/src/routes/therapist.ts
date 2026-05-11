@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "@/middleware/auth";
+import { requireSubscription } from "@/middleware/subscription";
 import { TherapistController } from "@/controllers/therapist.controller";
 
 const router = Router();
@@ -14,16 +15,18 @@ router.get("/:id", TherapistController.getDetail);
 router.get("/:id/availability", TherapistController.getAvailability);
 
 // Therapist's own portal data (authenticated)
-router.get("/me/stats", requireAuth, TherapistController.myStats);
-router.get("/me/bookings", requireAuth, TherapistController.myBookings);
+router.get("/me/stats", requireAuth, requireSubscription, TherapistController.myStats);
+router.get("/me/bookings", requireAuth, requireSubscription, TherapistController.myBookings);
 router.patch(
   "/me/availability",
   requireAuth,
+  requireSubscription,
   TherapistController.updateAvailability,
 );
 router.patch(
   "/me/profile",
   requireAuth,
+  requireSubscription,
   TherapistController.updateProfile,
 );
 

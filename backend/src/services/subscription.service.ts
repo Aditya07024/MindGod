@@ -32,20 +32,25 @@ export class SubscriptionService {
     if (PLAN_CACHE[tier]) return PLAN_CACHE[tier]!;
 
     const cfg = PLAN_CONFIG[tier];
-    const plan = await getRazorpay().plans.create({
-      period: cfg.period,
-      interval: cfg.interval,
-      item: {
-        name: cfg.name,
-        amount: cfg.amount,
-        currency: "INR",
-        description: `MindGod ${cfg.name} subscription`,
-      },
-    });
+    try {
+      const plan = await getRazorpay().plans.create({
+        period: cfg.period,
+        interval: cfg.interval,
+        item: {
+          name: cfg.name,
+          amount: cfg.amount,
+          currency: "INR",
+          description: `MindGod ${cfg.name} subscription`,
+        },
+      });
 
-    PLAN_CACHE[tier] = plan.id;
-    console.log(`[Subscription] Created Razorpay plan ${plan.id} for tier ${tier}`);
-    return plan.id;
+      PLAN_CACHE[tier] = plan.id;
+      console.log(`[Subscription] Created Razorpay plan ${plan.id} for tier ${tier}`);
+      return plan.id;
+    } catch (error) {
+      console.error(`[Subscription] Failed to create Razorpay plan for ${tier}:`, error);
+      throw error;
+    }
   }
 
   /** Create a Razorpay subscription for a user using an existing Razorpay Plan ID */
@@ -125,17 +130,23 @@ export class SubscriptionService {
 
   /** Create a Razorpay Plan dynamically */
   static async createRazorpayPlan(name: string, amount: number) {
-    const plan = await getRazorpay().plans.create({
-      period: "monthly",
-      interval: 1,
-      item: {
-        name: name,
-        amount: amount * 100, // Convert to paise
-        currency: "INR",
-        description: `MindGod ${name} subscription`,
-      },
-    });
-    return plan.id;
+    try {
+      const plan = await getRazorpay().plans.create({
+        period: "monthly",
+        interval: 1,
+        item: {
+          name: name,
+          amount: amount * 100, // Convert to paise
+          currency: "INR",
+          description: `MindGod ${name} subscription`,
+        },
+      });
+      console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name}`);
+      return plan.id;
+    } catch (error) {
+      console.error(`[Subscription] Failed to create dynamic Razorpay plan for ${name}:`, error);
+      throw error;
+    }
   }
 
   /** Cancel an active Razorpay subscription */

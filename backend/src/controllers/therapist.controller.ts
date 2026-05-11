@@ -56,13 +56,59 @@ export class TherapistController {
       filter["therapistProfile.rating"] = { $gte: Number(rating) };
     }
 
-    const therapists = await User.find(filter)
-      .select("therapistProfile phoneMasked createdAt")
-      .limit(Number(limit))
-      .skip(Number(skip))
-      .lean();
+    // Filter by subscription status
+    // 1. Independent therapists must have tier != free
+    // 2. Attached therapists must belong to an organization with an active subscription
+    const pipeline: any[] = [
+      { $match: filter },
+      // Join with organization to check its subscription status if therapist is attached
+      {
+        $lookup: {
+          from: "subscriptions",
+          let: { orgId: "$orgId", userId: "$_id", userTier: "$tier" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $and: [{ $eq: ["$orgId", "$$orgId"] }, { $eq: ["$status", "active"] }] },
+                    { $and: [{ $eq: ["$userId", "$$userId"] }, { $eq: ["$status", "active"] }] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "activeSubs"
+        }
+      },
+      // Keep if (independent AND tier != free) OR has active subscription record
+      {
+        $match: {
+          $or: [
+            { activeSubs: { $not: { $size: 0 } } },
+            { $and: [{ orgId: null }, { tier: { $ne: "free" } }] }
+          ]
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: Number(skip) },
+      { $limit: Number(limit) },
+      {
+        $project: {
+          therapistProfile: 1,
+          phoneMasked: 1,
+          createdAt: 1
+        }
+      }
+    ];
 
-    const total = await User.countDocuments(filter);
+    const therapists = await User.aggregate(pipeline);
+    
+    // Count total matching (re-run aggregation without skip/limit for total)
+    const countPipeline = pipeline.slice(0, -3); // Remove sort, skip, limit, project
+    countPipeline.push({ $count: "total" });
+    const countResult = await User.aggregate(countPipeline);
+    const total = countResult[0]?.total ?? 0;
 
     res.json({
       therapists: therapists.map((t) => ({

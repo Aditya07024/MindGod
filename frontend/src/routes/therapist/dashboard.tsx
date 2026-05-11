@@ -39,6 +39,20 @@ function TherapistDashboard() {
   );
   const [upgrading, setUpgrading] = useState<string | null>(null);
 
+  const { data: meData } = useQuery({
+    queryKey: ['auth-me'],
+    queryFn: () => API.auth.me(),
+  });
+
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => API.subscription.get(),
+  });
+
+  const hasActiveSub = subscriptionData?.subscription?.status === 'active';
+  const isSuperAdmin = meData?.role === 'super_admin';
+  const subRequired = !isSuperAdmin && !hasActiveSub;
+
   const upgradeMutation = useMutation({
     mutationFn: (planId: string) =>
       API.subscription.upgrade({ tier: planId as "mann_shanti" | "apna_therapist" }),
@@ -61,11 +75,15 @@ function TherapistDashboard() {
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['therapist-stats'],
     queryFn: () => API.therapist.meStats(),
+    enabled: !subRequired,
+    retry: false,
   });
 
   const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
     queryKey: ['therapist-bookings'],
     queryFn: () => API.therapist.meBookings(),
+    enabled: !subRequired,
+    retry: false,
   });
 
   const { data: plansData } = useQuery({
@@ -107,15 +125,16 @@ function TherapistDashboard() {
   });
 
   useEffect(() => {
-    API.auth.me().then((me: any) => {
-      const status = me?.therapistProfile?.verificationStatus;
-      if (!me?.therapistProfile || status !== 'verified') {
+    if (meData) {
+      const status = meData.therapistProfile?.verificationStatus;
+      if (!meData.therapistProfile || status !== 'verified') {
         setVerificationStatus(status || 'not_started');
       } else {
         setVerificationStatus('verified');
       }
-    }).catch(() => setVerificationStatus('not_started'));
-  }, []);
+    }
+  }, [meData]);
+
 
   useEffect(() => {
     if (profile) {
@@ -252,20 +271,43 @@ function TherapistDashboard() {
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 flex gap-2">
-          {(['schedule', 'availability', 'earnings', 'profile', 'subscription'] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition ${
-                tab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}>
-              {t}
-            </button>
-          ))}
+          {(['schedule', 'availability', 'earnings', 'profile', 'subscription'] as const).map((t) => {
+            const disabled = subRequired && t !== 'subscription';
+            return (
+              <button key={t} 
+                onClick={() => !disabled && setTab(t)}
+                disabled={disabled}
+                className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative ${
+                  tab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
+                } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {t}
+                {disabled && (
+                  <Shield className="size-3 absolute top-2 right-2 text-slate-400" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        {/* SCHEDULE TAB */}
-        {tab === 'schedule' && (
+        {subRequired && tab !== 'subscription' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center space-y-4">
+            <div className="grid size-16 place-items-center rounded-2xl bg-amber-100 text-amber-600 mx-auto shadow-sm">
+              <Shield className="size-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-amber-900">Subscription Required</h2>
+            <p className="text-amber-700 max-w-md mx-auto font-medium">
+              As an independent therapist, you need an active subscription to access your schedule, bookings, and profile. 
+              Please choose a plan to continue.
+            </p>
+            <Button onClick={() => setTab('subscription')} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl">
+              View Subscription Plans
+            </Button>
+          </div>
+        )}
+
+        {!subRequired && tab === 'schedule' && (
           <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className="space-y-6">
             
 
@@ -456,34 +498,88 @@ function TherapistDashboard() {
 
         {/* SUBSCRIPTION TAB */}
         {tab === 'subscription' && (
-          <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className="space-y-6">
-            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Subscription Tiers</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {plans.map((plan: any) => {
-                const isUpgrading = upgrading === plan._id && upgradeMutation.isPending;
-                return (
-                  <div key={plan._id} className="bg-white rounded-3xl border-2 border-slate-200 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-                    <h3 className="font-display text-2xl font-bold text-slate-900">{plan.name}</h3>
-                    <div className="mt-3 text-4xl font-bold text-teal-700">₹{plan.price}<span className="text-sm font-bold text-slate-400">/mo</span></div>
-                    <ul className="mt-8 mb-10 space-y-4 flex-1 text-sm font-medium text-slate-600">
-                      {plan.features.map((f: string, i: number) => (
-                          <li key={i} className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> {f}</li>
-                      ))}
-                    </ul>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+            <>
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Your Subscription</h2>
+                <div className="flex items-center gap-3">
+                  {!hasActiveSub && (
                     <Button 
-                      onClick={() => {
-                        setUpgrading(plan._id);
-                        upgradeMutation.mutate(plan._id);
-                      }}
-                      disabled={isUpgrading}
                       variant="outline" 
-                      className="w-full rounded-xl h-12 font-bold border-slate-200 text-slate-700 hover:bg-slate-50">
-                      {isUpgrading ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</> : 'Upgrade'}
+                      size="sm"
+                      className="border-amber-500 text-amber-600 hover:bg-amber-50 rounded-xl font-bold"
+                      onClick={() => {
+                        API.subscription.demoActivate().then(() => {
+                          toast.success("Subscription Activated (Dev Mode)");
+                          qc.invalidateQueries({ queryKey: ['subscription'] });
+                          qc.invalidateQueries({ queryKey: ['auth-me'] });
+                          qc.invalidateQueries({ queryKey: ['therapist-stats'] });
+                          qc.invalidateQueries({ queryKey: ['therapist-bookings'] });
+                        }).catch((e: Error) => toast.error(e.message));
+                      }}
+                    >
+                      Dev: Activate Now
                     </Button>
+                  )}
+                  {subscriptionData?.subscription && (
+                    <div className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 ${
+                      hasActiveSub ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+                    }`}>
+                      {subscriptionData.subscription.plan} — {subscriptionData.subscription.status.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {hasActiveSub ? (
+                <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-[2.5rem] p-10 text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Shield className="size-40" />
                   </div>
-                );
-              })}
-            </div>
+                  <div className="relative z-10">
+                    <h3 className="text-teal-100 font-bold uppercase tracking-widest text-sm mb-2">Active Plan</h3>
+                    <p className="text-4xl font-display font-bold mb-6">{subscriptionData.subscription.plan}</p>
+                    <div className="flex items-center gap-6 text-teal-50 font-medium">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="size-5" />
+                        Expires: {new Date(subscriptionData.subscription.endDate).toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Star className="size-5 text-amber-300 fill-amber-300" />
+                        Premium Features Enabled
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-6">
+                  {plans.map((plan: any) => {
+                    const isUpgrading = upgrading === plan._id && upgradeMutation.isPending;
+                    return (
+                      <div key={plan._id} className="bg-white rounded-3xl border-2 border-slate-200 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                        <h3 className="font-display text-2xl font-bold text-slate-900">{plan.name}</h3>
+                        <div className="mt-3 text-4xl font-bold text-teal-700">₹{plan.price}<span className="text-sm font-bold text-slate-400">/mo</span></div>
+                        <ul className="mt-8 mb-10 space-y-4 flex-1 text-sm font-medium text-slate-600">
+                          {plan.features.map((f: string, i: number) => (
+                              <li key={i} className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> {f}</li>
+                          ))}
+                        </ul>
+                        <Button 
+                          onClick={() => {
+                            setUpgrading(plan._id);
+                            upgradeMutation.mutate(plan._id);
+                          }}
+                          disabled={isUpgrading}
+                          variant="outline" 
+                          className="w-full rounded-xl h-12 font-bold border-slate-200 text-slate-700 hover:bg-slate-50">
+                          {isUpgrading ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</> : 'Upgrade'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           </motion.div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { OrgController } from "@/controllers/org.controller";
 import { requireAuth, requireRole } from "@/middleware/auth";
+import { requireSubscription } from "@/middleware/subscription";
 import multer from "multer";
 
 // Use memory storage so we can parse the buffer directly with xlsx
@@ -39,12 +40,14 @@ router.get(
   "/stats",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.dashboardStats,
 );
 router.get(
   "/users",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.listUsers,
 );
 
@@ -53,6 +56,7 @@ router.get(
   "/join-requests",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.listJoinRequests,
 );
 router.patch(
@@ -73,6 +77,7 @@ router.post(
   "/upload-emails",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   upload.single("file"),
   OrgController.uploadEmails,
 );
@@ -82,6 +87,7 @@ router.get(
   "/members",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.listMembers,
 );
 router.get(

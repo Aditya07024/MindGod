@@ -112,74 +112,100 @@ export class SubscriptionController {
   /** POST /subscription/upgrade — create Razorpay recurring subscription */
   static upgradeSubscription = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      const { tier } = req.body;
-      console.log(`[Upgrade] Initiating upgrade for user ${req.user!.sub} to tier ${tier}`);
-      
-      const user = await User.findById(req.user!.sub).lean();
-      if (!user) throw new AppError("User not found", 404);
+      try {
+        const { tier } = req.body;
+        console.log(`[Upgrade] Initiating upgrade for user ${req.user!.sub} to tier ${tier}`);
+        
+        const user = await User.findById(req.user!.sub).lean();
+        if (!user) throw new AppError("User not found", 404);
 
-      let finalTier = tier;
-      let planName = tier;
-      let razorpaySub: any;
-      let isOrgPlan = false;
+        let finalTier = tier;
+        let planName = tier;
+        let razorpaySub: any;
+        let isOrgPlan = false;
 
-      if (["mann_shanti", "apna_therapist"].includes(tier)) {
-        if (user.tier === tier) {
-          throw new AppError("Already on this plan", 400);
-        }
-        razorpaySub = await SubscriptionService.createSubscription(tier, user.phoneMasked);
-      } else {
-        // Dynamic Plan Support
-        const { SubscriptionPlan } = await import("@/models");
-        const dynamicPlan = await SubscriptionPlan.findById(tier);
-        if (!dynamicPlan) throw new AppError("Invalid tier or plan ID", 400);
-
-        if (dynamicPlan.audience === "organization") {
-          if (user.role !== "org_admin" && user.role !== "super_admin") {
-            throw new AppError("Only organization admins can purchase this plan", 403);
+        if (["mann_shanti", "apna_therapist"].includes(tier)) {
+          if (user.tier === tier) {
+            throw new AppError("Already on this plan", 400);
           }
-          if (!user.orgId) {
-            throw new AppError("User is not associated with any organization", 400);
+          const contactInfo = user.phoneMasked || (req.user as any)?.email || "customer@mindgod.com";
+          razorpaySub = await SubscriptionService.createSubscription(tier, contactInfo);
+        } else {
+          // Dynamic Plan Support
+          const { SubscriptionPlan } = await import("@/models");
+          const dynamicPlan = await SubscriptionPlan.findById(tier);
+          if (!dynamicPlan) throw new AppError("Invalid tier or plan ID", 400);
+
+          if (dynamicPlan.audience === "organization") {
+            if (user.role !== "org_admin" && user.role !== "super_admin") {
+              throw new AppError("Only organization admins can purchase this plan", 403);
+            }
+            if (!user.orgId) {
+              throw new AppError("User is not associated with any organization", 400);
+            }
+            isOrgPlan = true;
           }
-          isOrgPlan = true;
+
+          // Make sure it has a razorpayPlanId
+          if (!dynamicPlan.razorpayPlanId) {
+            console.log(`[Upgrade] Creating Razorpay plan for dynamic plan ${dynamicPlan.name}`);
+            dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
+            await SubscriptionPlan.findByIdAndUpdate(dynamicPlan._id, { razorpayPlanId: dynamicPlan.razorpayPlanId });
+          }
+
+          finalTier = dynamicPlan._id.toString();
+          planName = dynamicPlan.name;
+          // Razorpay requires an email or phone for notifications
+          const contactInfo = user.phoneMasked || (req.user as any)?.email || "customer@mindgod.com";
+
+          try {
+            razorpaySub = await SubscriptionService.createDynamicSubscription(
+              dynamicPlan.razorpayPlanId,
+              dynamicPlan.name,
+              contactInfo
+            );
+          } catch (err: any) {
+            // If the stored plan ID is invalid (e.g. from a different account), clear it and retry once
+            if (err.error?.description?.includes("invalid") || err.error?.code === "BAD_REQUEST_ERROR") {
+              console.log(`[Upgrade] Stale Razorpay Plan ID detected (${dynamicPlan.razorpayPlanId}). Recreating...`);
+              dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
+              await SubscriptionPlan.findByIdAndUpdate(dynamicPlan._id, { razorpayPlanId: dynamicPlan.razorpayPlanId });
+              
+              razorpaySub = await SubscriptionService.createDynamicSubscription(
+                dynamicPlan.razorpayPlanId,
+                dynamicPlan.name,
+                contactInfo
+              );
+            } else {
+              throw err;
+            }
+          }
         }
 
-        // Make sure it has a razorpayPlanId
-        if (!dynamicPlan.razorpayPlanId) {
-          console.log(`[Upgrade] Creating Razorpay plan for dynamic plan ${dynamicPlan.name}`);
-          dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
-          await SubscriptionPlan.findByIdAndUpdate(dynamicPlan._id, { razorpayPlanId: dynamicPlan.razorpayPlanId });
-        }
+        console.log(`[Upgrade] Razorpay subscription created: ${razorpaySub.subscriptionId}`);
 
-        finalTier = dynamicPlan._id.toString();
-        planName = dynamicPlan.name;
-        razorpaySub = await SubscriptionService.createDynamicSubscription(
-          dynamicPlan.razorpayPlanId,
-          dynamicPlan.name,
-          user.phoneMasked
-        );
+        // Save pending subscription record (activated via webhook)
+        await Subscription.create({
+          userId: req.user!.sub,
+          orgId: isOrgPlan ? user.orgId : undefined,
+          planId: ["mann_shanti", "apna_therapist"].includes(tier) ? undefined : tier,
+          plan: planName,
+          status: "pending", // Will be activated via webhook
+          razorpaySubscriptionId: razorpaySub.subscriptionId,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        });
+
+        res.json({
+          subscriptionId: razorpaySub.subscriptionId,
+          shortUrl: razorpaySub.shortUrl,
+          tier: finalTier,
+          message: "Subscription created. Complete payment to activate.",
+        });
+      } catch (error: any) {
+        console.error("[Upgrade Error]", error);
+        throw new AppError(error.message || "Failed to create subscription", 500);
       }
-
-      console.log(`[Upgrade] Razorpay subscription created: ${razorpaySub.subscriptionId}`);
-
-      // Save pending subscription record (activated via webhook)
-      await Subscription.create({
-        userId: req.user!.sub,
-        orgId: isOrgPlan ? user.orgId : undefined,
-        planId: ["mann_shanti", "apna_therapist"].includes(tier) ? undefined : tier,
-        plan: planName,
-        status: "pending", // Will be activated via webhook
-        razorpaySubscriptionId: razorpaySub.subscriptionId,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      });
-
-      res.json({
-        subscriptionId: razorpaySub.subscriptionId,
-        shortUrl: razorpaySub.shortUrl,
-        tier: finalTier,
-        message: "Subscription created. Complete payment to activate.",
-      });
     },
   );
 
@@ -271,6 +297,57 @@ export class SubscriptionController {
 
     res.json({ received: true });
   });
+
+  /** POST /subscription/demo-activate — create & activate a sub instantly (DEV ONLY) */
+  static demoActivate = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      if (process.env.NODE_ENV === "production") {
+        throw new AppError("Not allowed in production", 403);
+      }
+
+      const userId = req.user!.sub;
+      console.log(`[demoActivate] userId=${userId}`);
+
+      // Find any existing pending sub
+      let sub = await Subscription.findOne({ userId, status: "pending" }).sort({ createdAt: -1 });
+      console.log(`[demoActivate] existing pending sub=${sub?._id ?? "NONE"}`);
+
+      if (sub) {
+        sub.status = "active";
+        await sub.save();
+        console.log(`[demoActivate] activated existing pending sub`);
+      } else {
+        // Check if already active
+        const existing = await Subscription.findOne({ userId, status: "active" }).sort({ createdAt: -1 });
+        console.log(`[demoActivate] existing active sub=${existing?._id ?? "NONE"}`);
+        if (existing) {
+          // Already active — just make sure tier is set correctly
+          await User.findByIdAndUpdate(userId, { tier: "apna_therapist" });
+          return res.json({ message: "Already active", status: "active" });
+        }
+
+        // Create a brand new active dev subscription
+        sub = await Subscription.create({
+          userId,
+          plan: "Dev Plan",
+          status: "active",
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        });
+        console.log(`[demoActivate] created new sub=${sub._id}`);
+      }
+
+      // Update user tier to non-free so middleware fallback also passes
+      const updateResult = await User.findByIdAndUpdate(userId, { tier: "apna_therapist" }, { new: true }).select("tier _id");
+      console.log(`[demoActivate] updated user tier: ${updateResult?.tier} for userId=${updateResult?._id}`);
+
+      // Verify it was actually saved
+      const verifySub = await Subscription.findOne({ userId, status: "active" }).lean();
+      console.log(`[demoActivate] verify: activeSub=${verifySub?._id ?? "NONE"} status=${verifySub?.status}`);
+
+      res.json({ message: "Subscription activated (Dev Mode)", status: "active" });
+    },
+  );
 
   /** GET /subscription/admin/all — Super admin: list all subscriptions */
   static adminListAll = asyncHandler(

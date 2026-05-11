@@ -136,6 +136,14 @@ function OrgDashboard() {
   const [memberDetail, setMemberDetail] = useState<any>(null);
   const [memberLoading, setMemberLoading] = useState(false);
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => API.subscription.get(),
+    retry: false,
+  });
+
+  const hasActiveOrgSub = subscription?.subscription?.status === 'active';
+  const orgSubRequired = !hasActiveOrgSub;
 
   // Verification Gate
   useEffect(() => {
@@ -158,26 +166,26 @@ function OrgDashboard() {
   const { data: therapistsData, refetch: refetchTherapists } = useQuery({
     queryKey: ['org-pending-therapists'],
     queryFn: () => API.org.pendingTherapists(),
-    enabled: !!orgData && tab === 'therapists',
+    enabled: !!orgData && tab === 'therapists' && !orgSubRequired,
   });
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['org-stats'],
     queryFn: () => API.org.stats(),
-    enabled: !!orgData && tab === 'overview',
+    enabled: !!orgData && tab === 'overview' && !orgSubRequired,
     refetchInterval: 60000,
   });
 
   const { data: joinReqData, refetch: refetchJoinReqs } = useQuery({
     queryKey: ['org-join-requests'],
     queryFn: () => API.org.joinRequests(),
-    enabled: !!orgData && tab === 'requests',
+    enabled: !!orgData && tab === 'requests' && !orgSubRequired,
   });
 
   const { data: membersData, refetch: refetchMembers } = useQuery({
     queryKey: ['org-members'],
     queryFn: () => API.org.members(),
-    enabled: !!orgData && tab === 'members',
+    enabled: !!orgData && tab === 'members' && !orgSubRequired,
   });
 
   const handleVerifyTherapist = async (id: string, verified: boolean) => {
@@ -190,11 +198,6 @@ function OrgDashboard() {
     }
   };
 
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription'],
-    queryFn: () => API.subscription.get(),
-    retry: false,
-  });
 
   const { data: orgPlans, isLoading: plansLoading, error: plansError } = useQuery({
     queryKey: ['plans', 'organization'],
@@ -328,6 +331,7 @@ function OrgDashboard() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white">
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm print:hidden">
@@ -380,38 +384,46 @@ function OrgDashboard() {
       {/* Tabs */}
       <div className="bg-white border-b border-slate-200 print:hidden">
         <div className="max-w-6xl mx-auto px-4 flex gap-4">
-          <button onClick={() => setTab('overview')}
-            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
-            Overview
-          </button>
-          <button onClick={() => setTab('therapists')}
-            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'therapists' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
-            Pending Therapists
-            {therapistsData?.therapists?.length > 0 && (
-              <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">{therapistsData.therapists.length}</span>
-            )}
-          </button>
-          <button onClick={() => setTab('requests')}
-            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'requests' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
-            Join Requests
-            {joinReqData?.joinRequests?.length > 0 && (
-              <span className="ml-2 bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-xs">{joinReqData.joinRequests.length}</span>
-            )}
-          </button>
-          <button onClick={() => setTab('members')}
-            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'members' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
-            Members
-          </button>
-          <button onClick={() => setTab('subscriptions')}
-            className={`px-1 py-3 text-sm font-semibold border-b-2 transition ${tab === 'subscriptions' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
-            Subscriptions
-          </button>
+          {(['overview', 'therapists', 'requests', 'members', 'subscriptions'] as const).map((t) => {
+            const disabled = orgSubRequired && t !== 'subscriptions';
+            return (
+              <button key={t} 
+                onClick={() => !disabled && setTab(t)}
+                disabled={disabled}
+                className={`px-1 py-3 text-sm font-semibold border-b-2 transition relative ${
+                  tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+                } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {disabled && <Shield className="size-3 absolute top-1 -right-2 text-slate-400" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* The content to be captured in PDF */}
       <div id="dashboard-content" className="max-w-6xl mx-auto px-4 py-8 space-y-8 bg-slate-50">
-        {tab === 'overview' && (
+        {orgSubRequired && tab !== 'subscriptions' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-3xl p-12 text-center space-y-6 shadow-sm">
+            <div className="grid size-20 place-items-center rounded-[2rem] bg-white text-blue-600 mx-auto shadow-md border border-blue-100">
+              <ShieldCheck className="size-10" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-slate-900">Subscription Required</h2>
+              <p className="text-slate-600 max-w-md mx-auto text-lg leading-relaxed">
+                To access employee wellness analytics, manage therapists, and view ESG reports, your organization needs an active subscription.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <button onClick={() => setTab('subscriptions')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95">
+                Choose a Plan
+              </button>
+              <p className="text-sm text-slate-400">Plans start from ₹199/month per employee</p>
+            </div>
+          </div>
+        )}
+
+        {!orgSubRequired && tab === 'overview' && (
           <>
         {/* Burnout Alert Banner */}
         {burnoutDepts.length > 0 && (
@@ -737,15 +749,33 @@ function OrgDashboard() {
                 <p className="text-slate-500">Unlock premium AI benefits for all your verified therapists.</p>
               </div>
 
-              {subscription?.subscription?.isOrganization && subscription?.subscription?.status === 'active' && (
-                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
-                  <ShieldCheck className="size-5 text-green-600" />
-                  <div>
-                    <p className="text-[10px] font-bold text-green-800 uppercase tracking-wider">Active Organization Plan</p>
-                    <p className="text-sm font-semibold text-green-700">{subscription.tierLabel}</p>
+              <div className="flex items-center gap-3">
+                {subscription?.subscription?.status !== 'active' && (
+                  <button 
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow-md transition"
+                    onClick={() => {
+                      API.subscription.demoActivate().then(() => {
+                        toast.success("Organization Subscription Activated!");
+                        qc.invalidateQueries({ queryKey: ['subscription'] });
+                        qc.invalidateQueries({ queryKey: ['org-stats'] });
+                        qc.invalidateQueries({ queryKey: ['org-pending-therapists'] });
+                      }).catch((e: Error) => toast.error(e.message));
+                    }}
+                  >
+                    Dev: Activate Now
+                  </button>
+                )}
+                
+                {subscription?.subscription?.status === 'active' && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                    <ShieldCheck className="size-5 text-green-600" />
+                    <div>
+                      <p className="text-[10px] font-bold text-green-800 uppercase tracking-wider">Active Organization Plan</p>
+                      <p className="text-sm font-semibold text-green-700">{subscription.subscription.plan}</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
