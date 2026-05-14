@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TherapistsRouteImport } from './routes/therapists'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
 import { Route as JournalRouteImport } from './routes/journal'
@@ -19,6 +22,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BreatheRouteImport } from './routes/breathe'
 import { Route as BookingsRouteImport } from './routes/bookings'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TherapistOnboardingRouteImport } from './routes/therapist/onboarding'
 import { Route as TherapistDashboardRouteImport } from './routes/therapist/dashboard'
@@ -34,6 +38,16 @@ const TherapistsRoute = TherapistsRouteImport.update({
   path: '/therapists',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubscriptionRoute = SubscriptionRouteImport.update({
   id: '/subscription',
   path: '/subscription',
@@ -42,6 +56,11 @@ const SubscriptionRoute = SubscriptionRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -77,6 +96,11 @@ const BreatheRoute = BreatheRouteImport.update({
 const BookingsRoute = BookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -127,6 +151,7 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
@@ -134,8 +159,11 @@ export interface FileRoutesByFullPath {
   '/journal': typeof JournalRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/subscription': typeof SubscriptionRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
@@ -148,6 +176,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
@@ -155,8 +184,11 @@ export interface FileRoutesByTo {
   '/journal': typeof JournalRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/subscription': typeof SubscriptionRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
@@ -170,6 +202,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
@@ -177,8 +210,11 @@ export interface FileRoutesById {
   '/journal': typeof JournalRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/subscription': typeof SubscriptionRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
@@ -193,6 +229,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/bookings'
     | '/breathe'
     | '/chat'
@@ -200,8 +237,11 @@ export interface FileRouteTypes {
     | '/journal'
     | '/mood'
     | '/onboarding'
+    | '/privacy'
     | '/sign-in'
     | '/subscription'
+    | '/support'
+    | '/terms'
     | '/therapists'
     | '/admin/dashboard'
     | '/api/chat'
@@ -214,6 +254,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/bookings'
     | '/breathe'
     | '/chat'
@@ -221,8 +262,11 @@ export interface FileRouteTypes {
     | '/journal'
     | '/mood'
     | '/onboarding'
+    | '/privacy'
     | '/sign-in'
     | '/subscription'
+    | '/support'
+    | '/terms'
     | '/therapists'
     | '/admin/dashboard'
     | '/api/chat'
@@ -235,6 +279,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/bookings'
     | '/breathe'
     | '/chat'
@@ -242,8 +287,11 @@ export interface FileRouteTypes {
     | '/journal'
     | '/mood'
     | '/onboarding'
+    | '/privacy'
     | '/sign-in'
     | '/subscription'
+    | '/support'
+    | '/terms'
     | '/therapists'
     | '/admin/dashboard'
     | '/api/chat'
@@ -257,6 +305,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   BookingsRoute: typeof BookingsRoute
   BreatheRoute: typeof BreatheRoute
   ChatRoute: typeof ChatRoute
@@ -264,8 +313,11 @@ export interface RootRouteChildren {
   JournalRoute: typeof JournalRoute
   MoodRoute: typeof MoodRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignInRoute: typeof SignInRoute
   SubscriptionRoute: typeof SubscriptionRoute
+  SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   TherapistsRoute: typeof TherapistsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -286,6 +338,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TherapistsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subscription': {
       id: '/subscription'
       path: '/subscription'
@@ -298,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -347,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/bookings'
       fullPath: '/bookings'
       preLoaderRoute: typeof BookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -417,6 +497,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   BookingsRoute: BookingsRoute,
   BreatheRoute: BreatheRoute,
   ChatRoute: ChatRoute,
@@ -424,8 +505,11 @@ const rootRouteChildren: RootRouteChildren = {
   JournalRoute: JournalRoute,
   MoodRoute: MoodRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacyRoute: PrivacyRoute,
   SignInRoute: SignInRoute,
   SubscriptionRoute: SubscriptionRoute,
+  SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   TherapistsRoute: TherapistsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   ApiChatRoute: ApiChatRoute,

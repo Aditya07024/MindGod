@@ -30,6 +30,7 @@ function TherapistOnboarding() {
     governmentIdUrl: '',
     introVideoUrl: '',
     orgId: '',
+    location: '',
   });
 
   // Check if they are already verified or pending
@@ -151,6 +152,15 @@ function TherapistOnboarding() {
                     ))}
                   </select>
                 </div>
+                
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Location / City</label>
+                  <input
+                    name="location" value={formData.location} onChange={handleChange}
+                    className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
+                    placeholder="e.g. Mumbai, Maharashtra"
+                  />
+                </div>
 
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase">Clinic / Practice Details (If independent)</label>
@@ -162,7 +172,7 @@ function TherapistOnboarding() {
                 </div>
 
                 <button
-                  disabled={!formData.fullName || !formData.qualification || !formData.orgId}
+                  disabled={!formData.fullName || !formData.qualification || !formData.orgId || !formData.location}
                   onClick={() => setStep(2)}
                   className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50 mt-6"
                 >

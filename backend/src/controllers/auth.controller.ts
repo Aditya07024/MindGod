@@ -61,7 +61,8 @@ export class AuthController {
         licenseUrl,
         governmentIdUrl,
         introVideoUrl,
-        orgId
+        orgId,
+        location
       } = req.body;
 
       const user = await User.findById(req.user!.sub);
@@ -69,6 +70,7 @@ export class AuthController {
 
       if (fullName) user.fullName = fullName;
       if (orgId) user.orgId = orgId;
+      if (location) user.location = location;
 
       // Ensure they have the therapist role now, but verification is pending
       user.role = "therapist";

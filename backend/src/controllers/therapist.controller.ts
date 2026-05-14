@@ -14,6 +14,7 @@ export class TherapistController {
       maxFee = 5000,
       verified,
       rating,
+      location,
       limit = 50,
       skip = 0,
     } = req.query;
@@ -55,6 +56,14 @@ export class TherapistController {
     if (rating) {
       filter["therapistProfile.rating"] = { $gte: Number(rating) };
     }
+    
+    // Filter by location
+    if (location) {
+      filter["location"] = {
+        $regex: String(location),
+        $options: "i",
+      };
+    }
 
     // Filter by subscription status
     // 1. Independent therapists must have tier != free
@@ -93,13 +102,14 @@ export class TherapistController {
       { $sort: { createdAt: -1 } },
       { $skip: Number(skip) },
       { $limit: Number(limit) },
-      {
-        $project: {
-          therapistProfile: 1,
-          phoneMasked: 1,
-          createdAt: 1
+        {
+          $project: {
+            therapistProfile: 1,
+            location: 1,
+            phoneMasked: 1,
+            createdAt: 1
+          }
         }
-      }
     ];
 
     const therapists = await User.aggregate(pipeline);
@@ -123,6 +133,7 @@ export class TherapistController {
         bio: t.therapistProfile?.bio ?? "",
         introVideoUrl: t.therapistProfile?.introVideoUrl ?? "",
         availability: t.therapistProfile?.availability ?? [],
+        location: t.location ?? "",
       })),
       pagination: {
         total,

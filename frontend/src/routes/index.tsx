@@ -20,12 +20,62 @@ import {
   Instagram,
   Twitter,
   Linkedin,
+  Check,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
 import logoUrl from "@/assets/logo.png";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const ENTERPRISE_PHONE = import.meta.env.VITE_ENTERPRISE_PHONE || "+91 99999 88888";
+const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "enterprise@mindgod.com";
+
+const PRICING_PLANS = [
+  {
+    name: "Free",
+    price: "₹0",
+    period: "/mo",
+    description: "Perfect for starting your mental wellness journey.",
+    features: ["7 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Therapist Listing"],
+    buttonText: "Get Started",
+    portalId: "user",
+    color: "bg-white",
+  },
+  {
+    name: "Mann Shanti",
+    price: "₹499",
+    period: "/mo",
+    description: "Deepen your healing with extended AI support.",
+    features: ["100 Daily AI Messages", "Advanced Mood Analytics", "Priority Therapist Booking", "Unlimited Digital Journal"],
+    buttonText: "Upgrade Now",
+    portalId: "user",
+    color: "bg-teal-50 border-teal-200",
+    popular: true,
+  },
+  {
+    name: "Therapist Pro",
+    price: "₹999",
+    period: "/mo",
+    description: "Manage your practice with AI-powered insights.",
+    features: ["Live Video Sessions", "AI Pre-Session Briefs", "Earnings Dashboard", "RCI Verified Badge"],
+    buttonText: "Join as Therapist",
+    portalId: "therapist",
+    color: "bg-white",
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    period: "",
+    description: "Scale wellness across your entire organisation.",
+    features: ["Anonymous Team Analytics", "Custom Seat Management", "Crisis Alert System", "Dedicated Support"],
+    buttonText: "Contact Sales",
+    portalId: "org_admin",
+    color: "bg-slate-900 text-white",
+    isEnterprise: true,
+  },
+];
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -146,11 +196,17 @@ function Landing() {
         </div>
 
         <div className="flex items-center gap-3">
-          <a
-            href="#about"
+          <Link
+            to="/about"
             className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
           >
             About
+          </Link>
+          <a
+            href="#pricing"
+            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
+          >
+            Pricing
           </a>
 
           <a
@@ -386,7 +442,8 @@ function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 + i * 0.08 }}
-                  className="rounded-[28px] border border-teal-100 bg-white/70 p-7 shadow-sm backdrop-blur-xl"
+                  onClick={(e) => handlePortalClick(e, 'user', '/sign-in')}
+                  className="rounded-[28px] border border-teal-100 bg-white/70 p-7 shadow-sm backdrop-blur-xl cursor-pointer transition hover:border-teal-300 hover:shadow-lg"
                 >
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
                     <feature.icon className="size-6" />
@@ -424,6 +481,91 @@ function Landing() {
                 </a>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="mt-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-4 py-2 text-sm font-medium text-teal-700 shadow-sm">
+              <Activity className="size-4" />
+              Simple, Transparent Pricing
+            </div>
+
+            <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
+              Choose The Plan That’s
+              <br />
+              Right For You.
+            </h2>
+          </div>
+
+          <div className="mt-14 grid gap-8 lg:grid-cols-4">
+            {PRICING_PLANS.map((plan, i) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className={`relative flex flex-col rounded-[32px] border border-slate-200 p-8 shadow-sm transition-all hover:shadow-xl ${plan.color}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-1 text-xs font-bold text-white shadow-lg">
+                    Most Popular
+                  </div>
+                )}
+
+                <div className="mb-8">
+                  <h3 className={`text-xl font-bold ${plan.isEnterprise ? "text-teal-400" : "text-slate-900"}`}>
+                    {plan.name}
+                  </h3>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                    <span className="text-sm font-medium opacity-60">{plan.period}</span>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed opacity-70">
+                    {plan.description}
+                  </p>
+                </div>
+
+                <ul className="mb-10 flex-1 space-y-4">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3 text-sm">
+                      <Check className={`size-5 shrink-0 ${plan.isEnterprise ? "text-teal-400" : "text-teal-600"}`} />
+                      <span className="opacity-80">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {plan.isEnterprise ? (
+                  <div className="space-y-3 mt-auto">
+                    <div className="flex items-center gap-2 text-xs font-medium text-teal-400">
+                      <Phone className="size-3" /> {ENTERPRISE_PHONE}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-medium text-teal-400">
+                      <Mail className="size-3" /> {ENTERPRISE_EMAIL}
+                    </div>
+                    <button
+                      onClick={(e) => handlePortalClick(e, plan.portalId, "/sign-in")}
+                      className="w-full rounded-2xl bg-teal-500 px-6 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:bg-teal-400"
+                    >
+                      {plan.buttonText}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => handlePortalClick(e, plan.portalId, "/sign-in")}
+                    className={`mt-auto w-full rounded-2xl px-6 py-3 text-sm font-bold shadow-lg transition hover:scale-[1.02] ${
+                      plan.popular 
+                        ? "bg-slate-900 text-white hover:bg-slate-800" 
+                        : "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    {plan.buttonText}
+                  </button>
+                )}
+              </motion.div>
+            ))}
           </div>
         </section>
 
@@ -613,10 +755,10 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600">
-              <p>AI Conversations</p>
-              <p>Mood Tracking</p>
-              <p>Therapist Dashboard</p>
-              <p>Organisation Wellness</p>
+              <button onClick={(e) => handlePortalClick(e, 'user', '/sign-in')} className="block hover:text-teal-600 transition">AI Conversations</button>
+              <button onClick={(e) => handlePortalClick(e, 'user', '/sign-in')} className="block hover:text-teal-600 transition">Mood Tracking</button>
+              <button onClick={(e) => handlePortalClick(e, 'therapist', '/sign-in')} className="block hover:text-teal-600 transition">Therapist Dashboard</button>
+              <button onClick={(e) => handlePortalClick(e, 'org_admin', '/sign-in')} className="block hover:text-teal-600 transition">Organisation Wellness</button>
             </div>
           </div>
 
@@ -626,10 +768,10 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600">
-              <p>About MindGod</p>
-              <p>Privacy Policy</p>
-              <p>Terms & Conditions</p>
-              <p>Support Center</p>
+              <Link to="/about" className="block hover:text-teal-600 transition">About MindGod</Link>
+              <Link to="/privacy" className="block hover:text-teal-600 transition">Privacy Policy</Link>
+              <Link to="/terms" className="block hover:text-teal-600 transition">Terms & Conditions</Link>
+              <Link to="/support" className="block hover:text-teal-600 transition">Support Center</Link>
             </div>
           </div>
 

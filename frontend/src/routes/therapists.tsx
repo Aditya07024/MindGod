@@ -36,6 +36,7 @@ interface TherapistCard {
   verified: boolean;
   bio: string;
   introVideoUrl?: string;
+  location?: string;
   availability: Array<{ day: number; slots: string[] }>;
 }
 
@@ -46,6 +47,7 @@ function TherapistMarketplace() {
   const [language, setLanguage] = useState("");
   const [gender, setGender] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<TherapistCard | null>(null);
@@ -58,7 +60,7 @@ function TherapistMarketplace() {
   } = useQuery({
     queryKey: [
       "therapists",
-      { specialization, language, gender, availability: availabilityFilter, minFee: priceRange[0], maxFee: priceRange[1] },
+      { specialization, language, gender, availability: availabilityFilter, location: locationFilter, minFee: priceRange[0], maxFee: priceRange[1] },
     ],
     queryFn: () =>
       API.therapist.list({
@@ -66,6 +68,7 @@ function TherapistMarketplace() {
         language: language || undefined,
         gender: gender || undefined,
         availability: availabilityFilter || undefined,
+        location: locationFilter || undefined,
         minFee: priceRange[0],
         maxFee: priceRange[1],
       }),
@@ -171,6 +174,17 @@ function TherapistMarketplace() {
                         <SelectItem value="weekends">Weekends</SelectItem>
                       </SelectContent>
                     </Select>
+                    
+                    {/* Location */}
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 text-slate-400 w-4 h-4" />
+                      <Input
+                        placeholder="Filter by city..."
+                        value={locationFilter}
+                        onChange={(e) => setLocationFilter(e.target.value)}
+                        className="pl-9 h-11 rounded-lg"
+                      />
+                    </div>
 
                     {/* Price Range */}
                     <div className="flex gap-2 items-center">
@@ -295,6 +309,10 @@ function TherapistMarketplace() {
                         <MessageCircle className="w-4 h-4" />
                         <span>{therapist.languages[0] || "English"}</span>
                       </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        <span>{therapist.location || "Online"}</span>
+                      </div>
                     </div>
 
                     {/* Fee & CTA */}
@@ -383,6 +401,12 @@ function TherapistMarketplace() {
                         <Star className="w-4 h-4 fill-amber-500" />
                         {selectedTherapist.rating.toFixed(1)} ({selectedTherapist.sessionCount} sessions)
                       </div>
+                      {selectedTherapist.location && (
+                        <div className="flex items-center gap-1 font-semibold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-full">
+                          <MapPin className="size-4" />
+                          {selectedTherapist.location}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">

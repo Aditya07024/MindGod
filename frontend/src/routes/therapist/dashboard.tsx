@@ -51,6 +51,7 @@ function TherapistDashboard() {
 
   const hasActiveSub = subscriptionData?.subscription?.status === 'active';
   const isSuperAdmin = meData?.role === 'super_admin';
+  const isOrgLinked = !!meData?.orgId;
   const subRequired = !isSuperAdmin && !hasActiveSub;
 
   const upgradeMutation = useMutation({
@@ -271,7 +272,9 @@ function TherapistDashboard() {
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 flex gap-2">
-          {(['schedule', 'availability', 'earnings', 'profile', 'subscription'] as const).map((t) => {
+          {(['schedule', 'availability', 'earnings', 'profile', 'subscription'] as const)
+            .filter(t => t !== 'subscription' || !isOrgLinked)
+            .map((t) => {
             const disabled = subRequired && t !== 'subscription';
             return (
               <button key={t} 
@@ -298,12 +301,15 @@ function TherapistDashboard() {
             </div>
             <h2 className="text-2xl font-bold text-amber-900">Subscription Required</h2>
             <p className="text-amber-700 max-w-md mx-auto font-medium">
-              As an independent therapist, you need an active subscription to access your schedule, bookings, and profile. 
-              Please choose a plan to continue.
+              {isOrgLinked 
+                ? "Your organization's subscription is currently inactive. Please contact your organization administrator to restore access."
+                : "As an independent therapist, you need an active subscription to access your schedule, bookings, and profile."}
             </p>
-            <Button onClick={() => setTab('subscription')} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl">
-              View Subscription Plans
-            </Button>
+            {!isOrgLinked && (
+              <Button onClick={() => setTab('subscription')} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl">
+                View Subscription Plans
+              </Button>
+            )}
           </div>
         )}
 
