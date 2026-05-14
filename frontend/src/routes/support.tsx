@@ -7,6 +7,9 @@ export const Route = createFileRoute('/support')({
   component: SupportPage,
 });
 
+const CONTACT_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "support@mindgod.com";
+const CONTACT_PHONE = import.meta.env.VITE_ENTERPRISE_PHONE || "+91 800-MIND-GOD";
+
 function SupportPage() {
   const faqs = [
     {
@@ -58,9 +61,9 @@ function SupportPage() {
 
         <div className="grid gap-8 md:grid-cols-3 mb-20">
           {[
-            { icon: Mail, title: "Email Us", contact: "support@mindgod.com", desc: "Get a response within 24 hours" },
+            { icon: Mail, title: "Email Us", contact: CONTACT_EMAIL, desc: "Get a response within 24 hours" },
             { icon: MessageSquare, title: "Live Chat", contact: "Start Chat", desc: "Available 10 AM - 8 PM IST" },
-            { icon: Phone, title: "Call Support", contact: "+91 800-MIND-GOD", desc: "Priority support for Pro users" }
+            { icon: Phone, title: "Call Support", contact: CONTACT_PHONE, desc: "Priority support for Pro users" }
           ].map((item) => (
             <div key={item.title} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center">
               <div className="size-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-6">
