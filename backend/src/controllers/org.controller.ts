@@ -8,6 +8,7 @@ import {
   Conversation,
   TherapistBooking,
   JournalEntry,
+  TherapistInvitation,
 } from "@/models";
 import * as XLSX from "xlsx";
 
@@ -764,4 +765,74 @@ export class OrgController {
       });
     },
   );
+
+  /** POST /org/invite-therapist — Org admin invites an independent therapist */
+  static inviteTherapist = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const user = await User.findById(req.user!.sub).lean();
+    if (!user || !user.orgId) return res.status(403).json({ error: "Org access required" });
+
+    const org = await Organization.findById(user.orgId);
+    if (!org) return res.status(404).json({ error: "Org not found" });
+
+    if (!org.allowExternalTherapists) {
+      return res.status(403).json({ error: "External therapist invitations are not allowed for this organization" });
+    }
+
+    const { therapistId } = req.body;
+    if (!therapistId) return res.status(400).json({ error: "therapistId is required" });
+
+    const therapist = await User.findOne({ _id: therapistId, role: "therapist", deletedAt: null });
+    if (!therapist) return res.status(404).json({ error: "Therapist not found" });
+
+    if (therapist.orgId) {
+      return res.status(400).json({ error: "Therapist is already part of an organization" });
+    }
+
+    // Check if invitation already exists
+    const existing = await TherapistInvitation.findOne({
+      orgId: org._id,
+      therapistId,
+      status: "pending"
+    });
+    if (existing) return res.status(400).json({ error: "Invitation already pending" });
+
+    const invitation = new TherapistInvitation({
+      orgId: org._id,
+      therapistId,
+      status: "pending"
+    });
+    await invitation.save();
+
+    res.json({ message: "Invitation sent successfully", invitation });
+  });
+
+  /** GET /org/invitations — Org admin lists sent invitations */
+  static listInvitations = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const user = await User.findById(req.user!.sub).lean();
+    if (!user || !user.orgId) return res.status(403).json({ error: "Org access required" });
+
+    const invitations = await TherapistInvitation.find({ orgId: user.orgId })
+      .populate("therapistId", "fullName therapistProfile")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ invitations });
+  });
+
+  /** DELETE /org/invitation/:id — Org admin cancels an invitation */
+  static cancelInvitation = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const user = await User.findById(req.user!.sub).lean();
+    if (!user || !user.orgId) return res.status(403).json({ error: "Org access required" });
+
+    const { id } = req.params;
+    const invitation = await TherapistInvitation.findOneAndDelete({
+      _id: id,
+      orgId: user.orgId,
+      status: "pending"
+    });
+
+    if (!invitation) return res.status(404).json({ error: "Pending invitation not found" });
+
+    res.json({ message: "Invitation cancelled" });
+  });
 }

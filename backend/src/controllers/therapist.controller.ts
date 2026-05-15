@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
-import { User, TherapistBooking } from "@/models";
+import { User, TherapistBooking, TherapistInvitation } from "@/models";
 import { AppError } from "@/lib/app-error";
 
 export class TherapistController {
@@ -401,4 +401,54 @@ export class TherapistController {
       res.json({ message: "Profile updated" });
     },
   );
+
+  /** GET /therapists/me/invitations — Therapist lists received invitations */
+  static listInvitations = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const userId = req.user!.sub;
+
+    const invitations = await TherapistInvitation.find({
+      therapistId: userId,
+      status: "pending"
+    })
+      .populate("orgId", "name officialEmail type verificationStatus")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ invitations });
+  });
+
+  /** PATCH /therapists/me/invitations/:id/respond — Therapist accepts or rejects */
+  static respondToInvitation = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const userId = req.user!.sub;
+    const { id } = req.params;
+    const { action } = req.body as { action: "accepted" | "rejected" };
+
+    if (!["accepted", "rejected"].includes(action)) {
+      return res.status(400).json({ error: "Invalid action. Use 'accepted' or 'rejected'." });
+    }
+
+    const invitation = await TherapistInvitation.findOne({
+      _id: id,
+      therapistId: userId,
+      status: "pending"
+    });
+
+    if (!invitation) return res.status(404).json({ error: "Pending invitation not found" });
+
+    invitation.status = action;
+    await invitation.save();
+
+    if (action === "accepted") {
+      // Link therapist to org
+      await User.findByIdAndUpdate(userId, { orgId: invitation.orgId });
+      
+      // Reject all other pending invitations for this therapist
+      await TherapistInvitation.updateMany(
+        { therapistId: userId, status: "pending", _id: { $ne: invitation._id } },
+        { status: "rejected" }
+      );
+    }
+
+    res.json({ message: `Invitation ${action}`, status: action });
+  });
 }

@@ -86,7 +86,7 @@ router.post(
 router.get(
   "/members",
   requireAuth,
-  requireRole(["org_admin"]),
+  requireRole(["org_admin", "therapist"]),
   requireSubscription,
   OrgController.listMembers,
 );
@@ -95,6 +95,26 @@ router.get(
   requireAuth,
   requireRole(["org_admin"]),
   OrgController.getUserData,
+);
+
+// ── EXTERNAL THERAPIST INVITATIONS ──
+router.post(
+  "/invite-therapist",
+  requireAuth,
+  requireRole(["org_admin"]),
+  OrgController.inviteTherapist,
+);
+router.get(
+  "/invitations",
+  requireAuth,
+  requireRole(["org_admin"]),
+  OrgController.listInvitations,
+);
+router.delete(
+  "/invitation/:id",
+  requireAuth,
+  requireRole(["org_admin"]),
+  OrgController.cancelInvitation,
 );
 
 export default router;

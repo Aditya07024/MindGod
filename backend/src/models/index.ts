@@ -6,3 +6,4 @@ export { TherapistBooking, type ITherapistBooking } from "./therapist-booking";
 export { Organization, type IOrganization } from "./organization";
 export { Subscription, type ISubscription } from "./subscription";
 export { SubscriptionPlan, type ISubscriptionPlan } from "./subscription-plan";
+export { TherapistInvitation, type ITherapistInvitation } from "./therapist-invitation";

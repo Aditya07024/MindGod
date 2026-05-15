@@ -65,6 +65,11 @@ const API = {
     pendingOrgs: () => apiCall<any>("/api/admin/pending-orgs"),
     verifyOrg: (id: string, data: { verified: boolean; password?: string }) =>
       apiCall<any>(`/api/admin/org/${id}/verify`, { method: "PATCH", body: JSON.stringify(data) }),
+    toggleExternalTherapists: (id: string, data: { allow: boolean; password?: string }) =>
+      apiCall<any>(`/api/admin/org/${id}/toggle-external-therapists`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     createPlan: (data: any) =>
       apiCall<any>("/api/admin/plans", { method: "POST", body: JSON.stringify(data) }),
     updatePlan: (id: string, data: any) =>
@@ -98,6 +103,12 @@ const API = {
         method: "PATCH",
         body: JSON.stringify({}),
       }),
+    // External therapist invitations
+    inviteTherapist: (data: { therapistId: string }) =>
+      apiCall<any>("/api/org/invite-therapist", { method: "POST", body: JSON.stringify(data) }),
+    invitations: () => apiCall<any>("/api/org/invitations"),
+    cancelInvitation: (id: string) =>
+      apiCall<any>(`/api/org/invitation/${id}`, { method: "DELETE" }),
     // Excel email whitelist
     uploadEmails: async (file: File) => {
       const headers: Record<string, string> = {};
@@ -110,6 +121,7 @@ const API = {
       const response = await fetch(`${API_BASE_URL}/api/org/upload-emails`, {
         method: "POST",
         headers,
+        body: formData,
         body: formData,
       });
       if (!response.ok) {
@@ -161,6 +173,12 @@ const API = {
       }),
     updateProfile: (data: any) =>
       apiCall<any>("/api/therapists/me/profile", { method: "PATCH", body: JSON.stringify(data) }),
+    invitations: () => apiCall<any>("/api/therapists/me/invitations"),
+    respondToInvitation: (id: string, data: { action: "accepted" | "rejected" }) =>
+      apiCall<any>(`/api/therapists/me/invitations/${id}/respond`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
   },
 
   booking: {

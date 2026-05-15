@@ -43,6 +43,7 @@ export interface IOrganization extends Document {
   allowedEmails: string[];
   /** Join requests from users wanting to link with this org */
   pendingJoinRequests: IJoinRequest[];
+  allowExternalTherapists: boolean;
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -92,6 +93,7 @@ const OrganizationSchema = new Schema<IOrganization>(
         requestedAt: { type: Date, default: Date.now }
       }
     ],
+    allowExternalTherapists: { type: Boolean, default: false },
     deletedAt: { type: Date }
   },
   { timestamps: true }

@@ -125,7 +125,7 @@ function OrgDashboard() {
   const qc = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
   const [orgData, setOrgData] = useState<any>(null);
-  const [tab, setTab] = useState<'overview' | 'therapists' | 'requests' | 'members' | 'subscriptions'>('overview');
+  const [tab, setTab] = useState<'overview' | 'therapists' | 'external-therapists' | 'requests' | 'members' | 'subscriptions'>('overview');
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   // Excel upload modal
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -141,6 +141,47 @@ function OrgDashboard() {
     queryFn: () => API.subscription.get(),
     retry: false,
   });
+  const [extSearch, setExtSearch] = useState('');
+  const [extTherapists, setExtTherapists] = useState<any[]>([]);
+  const [isExtSearching, setIsExtSearching] = useState(false);
+
+  const { data: extInvitationsData, refetch: refetchExtInvitations } = useQuery({
+    queryKey: ['org-external-invitations'],
+    queryFn: () => API.org.invitations(),
+    enabled: !!orgData && tab === 'external-therapists' && !orgSubRequired,
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: (therapistId: string) => API.org.inviteTherapist({ therapistId }),
+    onSuccess: () => {
+      toast.success('Invitation sent');
+      refetchExtInvitations();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cancelInviteMutation = useMutation({
+    mutationFn: (id: string) => API.org.cancelInvitation(id),
+    onSuccess: () => {
+      toast.success('Invitation cancelled');
+      refetchExtInvitations();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const searchExternalTherapists = async () => {
+    if (!extSearch.trim()) return;
+    setIsExtSearching(true);
+    try {
+      const res = await API.therapist.list({ search: extSearch });
+      // Filter out therapists already in an org (if possible, though backend checks too)
+      setExtTherapists(res.therapists || []);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsExtSearching(false);
+    }
+  };
 
   const hasActiveOrgSub = subscription?.subscription?.status === 'active';
   const orgSubRequired = !hasActiveOrgSub;
@@ -383,17 +424,23 @@ function OrgDashboard() {
 
       {/* Tabs */}
       <div className="bg-white border-b border-slate-200 print:hidden">
-        <div className="max-w-6xl mx-auto px-4 flex gap-4">
-          {(['overview', 'therapists', 'requests', 'members', 'subscriptions'] as const).map((t) => {
+        <div className="max-w-6xl mx-auto px-4 flex gap-4 overflow-x-auto">
+          {(['overview', 'therapists', 'external-therapists', 'requests', 'members', 'subscriptions'] as const).map((t) => {
             const disabled = orgSubRequired && t !== 'subscriptions';
+            if (t === 'external-therapists' && !orgData?.allowExternalTherapists) return null;
+            
+            const labels: Record<string, string> = {
+              'external-therapists': 'Invite External'
+            };
+
             return (
               <button key={t} 
                 onClick={() => !disabled && setTab(t)}
                 disabled={disabled}
-                className={`px-1 py-3 text-sm font-semibold border-b-2 transition relative ${
+                className={`px-1 py-3 text-sm font-semibold border-b-2 transition relative whitespace-nowrap ${
                   tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
                 } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {labels[t] || (t.charAt(0).toUpperCase() + t.slice(1))}
                 {disabled && <Shield className="size-3 absolute top-1 -right-2 text-slate-400" />}
               </button>
             );
@@ -589,7 +636,91 @@ function OrgDashboard() {
           </div>
         )}
 
-        {/* ── NEW TABS ── */}
+        {tab === 'external-therapists' && (
+          <div className="space-y-8">
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <h2 className="font-bold text-slate-900 text-xl mb-2">Invite Independent Therapists</h2>
+              <p className="text-sm text-slate-500 mb-6">Search for therapists on the MindGod platform and invite them to join your organization.</p>
+              
+              <div className="flex gap-3 max-w-xl">
+                <input 
+                  value={extSearch}
+                  onChange={(e) => setExtSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchExternalTherapists()}
+                  placeholder="Search by name, qualification, or RCI..."
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
+                />
+                <button 
+                  onClick={searchExternalTherapists}
+                  disabled={isExtSearching}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md transition disabled:opacity-50"
+                >
+                  {isExtSearching ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+
+              {extTherapists.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Search Results</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {extTherapists.map((t) => (
+                      <div key={t.id} className="bg-slate-50 rounded-xl border border-slate-100 p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-slate-900">{t.name}</p>
+                          <p className="text-xs text-slate-500">{t.qualification} · {t.experienceYears} yrs exp</p>
+                        </div>
+                        <button 
+                          onClick={() => inviteMutation.mutate(t.id)}
+                          disabled={inviteMutation.isPending || !!t.orgId}
+                          className="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 transition disabled:opacity-50"
+                        >
+                          {t.orgId ? 'Already Linked' : 'Send Invite'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="font-bold text-slate-900 text-xl">Sent Invitations</h2>
+              {(!extInvitationsData?.invitations || extInvitationsData.invitations.length === 0) ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-500">
+                  No invitations sent yet.
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {extInvitationsData.invitations.map((inv: any) => (
+                    <div key={inv._id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-slate-900">{inv.therapistId?.fullName || 'Therapist'}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                            inv.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                            inv.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {inv.status}
+                          </span>
+                          <p className="text-[10px] text-slate-400">Sent: {new Date(inv.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      {inv.status === 'pending' && (
+                        <button 
+                          onClick={() => cancelInviteMutation.mutate(inv._id)}
+                          disabled={cancelInviteMutation.isPending}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold transition flex items-center gap-1"
+                        >
+                          <X className="size-3" /> Cancel
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         
         {tab === 'requests' && (
           <div className="space-y-4">

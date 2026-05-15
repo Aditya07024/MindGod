@@ -31,7 +31,7 @@ function TherapistDashboard() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription'>('schedule');
+  const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization'>('schedule');
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [availability, setAvailability] = useState<{ day: number; slots: string[] }[]>(
@@ -113,6 +113,47 @@ function TherapistDashboard() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const { data: invData, refetch: refetchInvitations } = useQuery({
+    queryKey: ['therapist-invitations'],
+    queryFn: () => API.therapist.invitations(),
+    enabled: tab === 'invitations',
+  });
+
+  const respondMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'accepted' | 'rejected' }) =>
+      API.therapist.respondToInvitation(id, { action }),
+    onSuccess: (_, { action }) => {
+      toast.success(`Invitation ${action}`);
+      refetchInvitations();
+      qc.invalidateQueries({ queryKey: ['auth-me'] });
+      if (action === 'accepted') setTab('organization');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const { data: membersData } = useQuery({
+    queryKey: ['org-members'],
+    queryFn: () => API.org.members(),
+    enabled: tab === 'organization' && isOrgLinked,
+  });
+
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [memberDetail, setMemberDetail] = useState<any>(null);
+  const [memberLoading, setMemberLoading] = useState(false);
+
+  const handleViewMember = async (member: any) => {
+    setSelectedMember(member);
+    setMemberLoading(true);
+    try {
+      const res = await API.org.userDataForOrg(member.id);
+      setMemberDetail(res);
+    } catch {
+      setMemberDetail(null);
+    } finally {
+      setMemberLoading(false);
+    }
+  };
 
   const profile = statsData?.profile;
   const stats = statsData?.stats;
@@ -271,16 +312,16 @@ function TherapistDashboard() {
 
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 flex gap-2">
-          {(['schedule', 'availability', 'earnings', 'profile', 'subscription'] as const)
-            .filter(t => t !== 'subscription' || !isOrgLinked)
+        <div className="max-w-5xl mx-auto px-4 flex gap-2 overflow-x-auto">
+          {(['schedule', 'availability', 'earnings', 'profile', 'subscription', 'invitations', 'organization'] as const)
+            .filter(t => (t !== 'subscription' || !isOrgLinked) && (t !== 'organization' || isOrgLinked))
             .map((t) => {
-            const disabled = subRequired && t !== 'subscription';
+            const disabled = subRequired && t !== 'subscription' && t !== 'invitations' && t !== 'profile';
             return (
               <button key={t} 
                 onClick={() => !disabled && setTab(t)}
                 disabled={disabled}
-                className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative ${
+                className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative whitespace-nowrap ${
                   tab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
                 } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 {t}
@@ -586,6 +627,138 @@ function TherapistDashboard() {
                 </div>
               )}
             </>
+          </motion.div>
+        )}
+
+        {tab === 'invitations' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Organization Invitations</h2>
+            {invData?.invitations?.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-500">
+                <Shield className="size-12 mx-auto mb-4 text-slate-200" />
+                <p className="font-medium">No pending invitations from organizations.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {invData?.invitations?.map((inv: any) => (
+                  <div key={inv._id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-lg">{inv.orgId?.name}</h3>
+                        <p className="text-sm text-slate-500">{inv.orgId?.officialEmail}</p>
+                        <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">{inv.orgId?.type}</p>
+                      </div>
+                      <div className="bg-teal-50 text-teal-600 p-2 rounded-xl">
+                        <Building2 className="size-5" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => respondMutation.mutate({ id: inv._id, action: 'accepted' })}
+                        disabled={respondMutation.isPending}
+                        className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold"
+                      >
+                        Accept
+                      </Button>
+                      <Button 
+                        onClick={() => respondMutation.mutate({ id: inv._id, action: 'rejected' })}
+                        disabled={respondMutation.isPending}
+                        variant="outline"
+                        className="flex-1 border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold"
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {tab === 'organization' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 h-[600px] flex flex-col">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Linked Organization Members</h2>
+            <div className="flex gap-6 flex-1 overflow-hidden">
+              {/* Left side list */}
+              <div className="w-1/3 bg-white rounded-3xl border border-slate-200 flex flex-col shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-200 font-bold text-slate-900 flex items-center justify-between">
+                  <span>Members ({membersData?.members?.length || 0})</span>
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {membersData?.members?.map((m: any) => (
+                    <button key={m.id} onClick={() => handleViewMember(m)}
+                      className={`w-full text-left p-4 border-b border-slate-100 transition hover:bg-slate-50 flex items-center justify-between ${selectedMember?.id === m.id ? 'bg-teal-50 border-teal-100' : ''}`}>
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm">{m.name}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{m.department}</p>
+                      </div>
+                      <ChevronRight className={`size-4 ${selectedMember?.id === m.id ? 'text-teal-600' : 'text-slate-400'}`} />
+                    </button>
+                  ))}
+                  {(!membersData?.members || membersData.members.length === 0) && (
+                    <div className="p-8 text-center text-sm text-slate-500">No members found in your organization.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right side detail panel */}
+              <div className="flex-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-8 overflow-y-auto">
+                {memberLoading ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                    <Loader2 className="size-8 animate-spin mb-4 text-teal-600" /> Loading member data...
+                  </div>
+                ) : memberDetail ? (
+                  <div className="space-y-8">
+                    <div>
+                      <h2 className="text-3xl font-display font-bold text-slate-900">{memberDetail.user.name}</h2>
+                      <p className="text-slate-500 mt-1 font-medium">Department: {memberDetail.user.department}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Avg Mood</p>
+                        <p className="text-3xl font-bold text-teal-700">{memberDetail.wellness.avgMood ?? '—'}</p>
+                      </div>
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Sessions</p>
+                        <p className="text-3xl font-bold text-teal-700">{memberDetail.wellness.sessionCount}</p>
+                      </div>
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Journals</p>
+                        <p className="text-3xl font-bold text-teal-700">{memberDetail.wellness.journalCount}</p>
+                      </div>
+                    </div>
+
+                    {memberDetail.wellness.moodHistory.length > 0 && (
+                      <div>
+                        <h3 className="font-display font-bold text-slate-900 mb-4">Recent Mood Check-ins</h3>
+                        <div className="space-y-3">
+                          {memberDetail.wellness.moodHistory.slice(0, 5).map((m: any, i: number) => (
+                            <div key={i} className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                              <div className="size-12 rounded-2xl flex items-center justify-center text-xl font-bold bg-teal-50 text-teal-700 border border-teal-100">
+                                {m.score}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-slate-800">{m.note || 'No note provided'}</p>
+                                <p className="text-xs text-slate-400 mt-0.5">{new Date(m.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-500 text-center space-y-4">
+                    <div className="size-20 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100 shadow-inner">
+                      <Users className="size-10" />
+                    </div>
+                    <p className="font-medium max-w-xs">Select a member from the list to view their wellness engagement overview.</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </div>

@@ -205,5 +205,30 @@ export class AdminController {
       message: verified ? "Organization verified successfully" : "Verification revoked",
     });
   });
+
+  /** PATCH /admin/org/:id/toggle-external-therapists — Super admin: toggle external therapist invitation feature */
+  static toggleExternalTherapists = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { allow, password } = req.body as { allow: boolean, password?: string };
+
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    const org = await Organization.findByIdAndUpdate(
+      id,
+      { allowExternalTherapists: allow },
+      { new: true }
+    ).lean();
+
+    if (!org) throw new Error("Organization not found");
+
+    res.json({
+      id,
+      allowExternalTherapists: org.allowExternalTherapists,
+      name: org.name,
+      message: allow ? "External therapists allowed" : "External therapists disallowed",
+    });
+  });
 }
 

@@ -30,4 +30,7 @@ router.patch(
   TherapistController.updateProfile,
 );
 
+router.get("/me/invitations", requireAuth, TherapistController.listInvitations);
+router.patch("/me/invitations/:id/respond", requireAuth, TherapistController.respondToInvitation);
+
 export default router;
