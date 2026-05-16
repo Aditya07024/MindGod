@@ -23,6 +23,7 @@ export function MessageCounter({ onCrisisMode }: MessageCounterProps) {
   const messagesRemaining = isUnlimited ? null : dailyLimit - messagesUsed;
   const percentageUsed = isUnlimited ? 0 : (messagesUsed / dailyLimit) * 100;
   const isAtLimit = !isUnlimited && messagesRemaining === 0;
+  const isFree = !subscription?.tier || subscription?.tier === "free";
 
   if (isUnlimited) {
     return null; // Hide counter for unlimited plans
