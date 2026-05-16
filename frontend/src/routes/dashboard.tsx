@@ -206,7 +206,7 @@ function Dashboard() {
         )}
 
         {/* Demo Video Session Button */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-indigo-50 border border-indigo-100 p-5 shadow-sm">
+        {/* <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-indigo-50 border border-indigo-100 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
@@ -221,7 +221,7 @@ function Dashboard() {
               Join Demo
             </Link>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Mood check-in */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-card p-5 shadow-sm">
