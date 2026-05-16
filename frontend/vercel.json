@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "functions": {
+    "start.js": {
+      "includeFiles": "dist/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/assets/(.*)",
