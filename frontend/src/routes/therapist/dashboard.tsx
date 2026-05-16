@@ -550,24 +550,6 @@ function TherapistDashboard() {
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Your Subscription</h2>
                 <div className="flex items-center gap-3">
-                  {!hasActiveSub && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="border-amber-500 text-amber-600 hover:bg-amber-50 rounded-xl font-bold"
-                      onClick={() => {
-                        API.subscription.demoActivate().then(() => {
-                          toast.success("Subscription Activated (Dev Mode)");
-                          qc.invalidateQueries({ queryKey: ['subscription'] });
-                          qc.invalidateQueries({ queryKey: ['auth-me'] });
-                          qc.invalidateQueries({ queryKey: ['therapist-stats'] });
-                          qc.invalidateQueries({ queryKey: ['therapist-bookings'] });
-                        }).catch((e: Error) => toast.error(e.message));
-                      }}
-                    >
-                      Dev: Activate Now
-                    </Button>
-                  )}
                   {subscriptionData?.subscription && (
                     <div className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 ${
                       hasActiveSub ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-amber-50 border-amber-200 text-amber-700'
