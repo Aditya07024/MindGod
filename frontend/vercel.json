@@ -2,14 +2,11 @@
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": "dist/**"
+      "includeFiles": "dist/**",
+      "maxDuration": 30
     }
   },
   "rewrites": [
-    {
-      "source": "/assets/(.*)",
-      "destination": "/dist/client/assets/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/api/index.js"

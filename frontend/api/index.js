@@ -1,3 +1,29 @@
+import { readFileSync, existsSync } from "node:fs";
+import { join, extname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = join(fileURLToPath(import.meta.url), "..");
+const CLIENT_DIR = join(__dirname, "..", "dist", "client");
+
+const MIME_TYPES = {
+  ".js": "application/javascript",
+  ".mjs": "application/javascript",
+  ".css": "text/css",
+  ".html": "text/html",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".json": "application/json",
+  ".txt": "text/plain",
+};
+
 let app;
 
 async function getApp() {
@@ -10,14 +36,27 @@ async function getApp() {
 
 export default async function handler(req, res) {
   try {
+    // Try to serve static files from dist/client
+    const url = new URL(req.url, "http://localhost");
+    const staticPath = join(CLIENT_DIR, url.pathname);
+
+    // Security: ensure the resolved path is within CLIENT_DIR
+    if (staticPath.startsWith(CLIENT_DIR) && existsSync(staticPath) && !staticPath.endsWith("/")) {
+      const ext = extname(staticPath);
+      const mime = MIME_TYPES[ext] || "application/octet-stream";
+      const content = readFileSync(staticPath);
+      res.setHeader("Content-Type", mime);
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      return res.end(content);
+    }
+
+    // Otherwise, handle SSR via TanStack Start
     const server = await getApp();
 
-    // Build the full URL
     const protocol = req.headers["x-forwarded-proto"] || "https";
     const host = req.headers["x-forwarded-host"] || req.headers.host;
-    const url = new URL(req.url, `${protocol}://${host}`);
+    const fullUrl = new URL(req.url, `${protocol}://${host}`);
 
-    // Convert Node.js headers to fetch Headers
     const headers = new Headers();
     for (const [key, value] of Object.entries(req.headers)) {
       if (value) {
@@ -29,7 +68,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Read body for non-GET/HEAD requests
     let body = null;
     if (req.method !== "GET" && req.method !== "HEAD") {
       body = await new Promise((resolve) => {
@@ -39,17 +77,14 @@ export default async function handler(req, res) {
       });
     }
 
-    // Create a standard fetch Request
-    const fetchRequest = new Request(url.toString(), {
+    const fetchRequest = new Request(fullUrl.toString(), {
       method: req.method,
       headers,
       body,
     });
 
-    // Call the TanStack Start server's fetch handler
     const response = await server.fetch(fetchRequest, process.env, {});
 
-    // Convert fetch Response back to Node.js res
     const responseHeaders = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
