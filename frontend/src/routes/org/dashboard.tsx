@@ -881,22 +881,6 @@ function OrgDashboard() {
               </div>
 
               <div className="flex items-center gap-3">
-                {subscription?.subscription?.status !== 'active' && (
-                  <button 
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow-md transition"
-                    onClick={() => {
-                      API.subscription.demoActivate().then(() => {
-                        toast.success("Organization Subscription Activated!");
-                        qc.invalidateQueries({ queryKey: ['subscription'] });
-                        qc.invalidateQueries({ queryKey: ['org-stats'] });
-                        qc.invalidateQueries({ queryKey: ['org-pending-therapists'] });
-                      }).catch((e: Error) => toast.error(e.message));
-                    }}
-                  >
-                    Dev: Activate Now
-                  </button>
-                )}
-                
                 {subscription?.subscription?.status === 'active' && (
                   <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
                     <ShieldCheck className="size-5 text-green-600" />
