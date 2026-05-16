@@ -792,6 +792,13 @@ function Landing() {
               >
                 <Linkedin className="size-5" />
               </a>
+
+              <a 
+                href={`mailto:${ENTERPRISE_EMAIL}`}
+                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
+              >
+                <Mail className="size-5" />
+              </a>
             </div>
 
             <p className="mt-6 text-sm text-slate-500">© 2026 Mindsyncpro. All rights reserved.</p>
