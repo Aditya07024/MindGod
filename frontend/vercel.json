@@ -1,7 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "start.js": {
+    "api/index.js": {
       "includeFiles": "dist/**"
     }
   },
@@ -12,7 +12,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/start.js"
+      "destination": "/api/index.js"
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { handle } from "@hono/node-server/vercel";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
-import app from "./dist/server/server.js";
+import app from "../dist/server/server.js";
 
 const server = new Hono();
 
