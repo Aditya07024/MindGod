@@ -1,20 +1,13 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "start.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "dest": "/dist/client/assets/$1",
-      "continue": true
+      "source": "/assets/(.*)",
+      "destination": "/dist/client/assets/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "start.js"
+      "source": "/(.*)",
+      "destination": "/start.js"
     }
   ]
 }
