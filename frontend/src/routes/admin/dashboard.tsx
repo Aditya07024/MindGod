@@ -122,7 +122,7 @@ function SuperAdminDashboard() {
   const platformStats = {
     totalTherapists: therapists.length,
     verified: therapists.filter((t) => t.verified).length,
-    pending: therapists.filter((t) => !t.verified).length + orgs.length,
+    pending: therapists.filter((t) => !t.verified).length + orgs.filter((o) => o.verificationStatus !== 'verified').length,
     paidSubs: subscriptions.filter((s) => s.status === 'active').length,
   };
 
