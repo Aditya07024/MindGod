@@ -16,15 +16,21 @@ export async function createApp() {
   const app = express();
   app.set("trust proxy", 1);
   app.use(helmet());
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://mindsyncpro.online",
+    "https://www.mindsyncpro.online",
+    "https://mindsync-frontend-delta.vercel.app",
+    env.CLIENT_ORIGIN, // keep any custom override from .env
+  ];
+
   app.use(
     cors({
       origin: (origin, cb) => {
-        // Allow any localhost in dev; in production restrict to CLIENT_ORIGIN
-        if (!origin) return cb(null, true); // allow non-browser requests (curl, Postman)
-        if (env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-          return cb(null, true);
-        }
-        if (origin === env.CLIENT_ORIGIN) return cb(null, true);
+        // Allow non-browser requests (curl, Postman, health-checks)
+        if (!origin) return cb(null, true);
+        if (allowedOrigins.includes(origin)) return cb(null, true);
         cb(new Error(`CORS: origin ${origin} not allowed`));
       },
       credentials: true,
