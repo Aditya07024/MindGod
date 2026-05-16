@@ -1,4 +1,4 @@
-# MindGod: Complete Integration Setup Guide
+# Mindsyncpro: Complete Integration Setup Guide
 
 ## What We've Built
 

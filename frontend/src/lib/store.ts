@@ -42,7 +42,7 @@ export const useStore = create<State>()(
           need: null,
         }),
     }),
-    { name: 'mindgod-store' }
+    { name: 'Mindsyncpro-store' }
   )
 );
 

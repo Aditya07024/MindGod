@@ -13,10 +13,10 @@ function AboutPage() {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg overflow-hidden">
-              <img src={logoUrl} alt="Logo" className="size-full object-cover" />
+            <div className="size-10 rounded-md bg-white shadow-lg overflow-hidden">
+              <img src={logoUrl} alt="Logo" className="size-full object-cover scale-125" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">MindGod</span>
+            <span className="font-display font-bold text-xl tracking-tight">Mindsyncpro</span>
           </Link>
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-teal-600 transition">
             <ArrowLeft className="size-4" /> Back to Home
@@ -38,7 +38,7 @@ function AboutPage() {
             Healing Through <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">Honest Conversations</span>
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            MindGod was born from a simple idea: everyone deserves a safe space to be heard, 
+            Mindsyncpro was born from a simple idea: everyone deserves a safe space to be heard, 
             without judgment, at any time of the day.
           </p>
         </motion.div>
@@ -49,7 +49,7 @@ function AboutPage() {
             <p className="text-slate-600 leading-relaxed">
               We are a team of technologists, psychologists, and dreamers dedicated to 
               democratizing mental wellness. In a world that's increasingly connected 
-              yet emotionally isolated, MindGod acts as a bridge between technology 
+              yet emotionally isolated, Mindsyncpro acts as a bridge between technology 
               and human empathy.
             </p>
             <p className="text-slate-600 leading-relaxed">
@@ -88,16 +88,16 @@ function AboutPage() {
           <h2 className="text-3xl font-bold mb-6">Join the Wellness Revolution</h2>
           <p className="text-slate-400 mb-10 max-w-2xl mx-auto">
             Whether you're a student looking for support or a therapist wanting to help, 
-            MindGod has a place for you.
+            Mindsyncpro has a place for you.
           </p>
           <Link to="/" className="inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-sm font-bold text-slate-900 shadow-xl transition hover:scale-105">
-            Get Started with MindGod
+            Get Started with Mindsyncpro
           </Link>
         </section>
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 MindGod. All rights reserved.
+        © 2026 Mindsyncpro. All rights reserved.
       </footer>
     </div>
   );

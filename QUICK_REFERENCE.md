@@ -1,4 +1,4 @@
-# 🚀 MindGod Frontend-Backend Integration - Quick Reference
+# 🚀 Mindsyncpro Frontend-Backend Integration - Quick Reference
 
 ## Frontend Routes (TanStack Router)
 

@@ -40,8 +40,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logoUrl} alt="MindGod Logo" className="size-8 object-contain" />
-            <span className="font-display text-lg font-bold text-primary-deep">MindGod</span>
+            <img src={logoUrl} alt="Mindsyncpro Logo" className="size-8 object-contain" />
+            <span className="font-display text-lg font-bold text-primary-deep">Mindsyncpro</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/subscription" className="text-xs font-semibold text-primary/80 hover:text-primary transition">

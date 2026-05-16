@@ -20,9 +20,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MindGod — Apna Dil Kholo" },
+      { title: "Mindsyncpro — Apna Dil Kholo" },
       { name: "description", content: "India's warm, AI-powered mental wellness companion." },
-      { property: "og:title", content: "MindGod — Apna Dil Kholo" },
+      { property: "og:title", content: "Mindsyncpro — Apna Dil Kholo" },
       { property: "og:description", content: "A safe space, just for you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

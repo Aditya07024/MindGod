@@ -476,7 +476,7 @@ function TherapistDashboard() {
               ))}
             </div>
             <div className="bg-amber-50/50 rounded-2xl border border-amber-200/50 p-5 text-sm font-medium text-amber-800">
-              MindGod retains 15% platform fee. Payouts are processed on the 1st of every month via NEFT.
+              Mindsyncpro retains 15% platform fee. Payouts are processed on the 1st of every month via NEFT.
             </div>
 
             <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden mt-8 shadow-sm">

@@ -29,8 +29,7 @@ import API from "@/lib/api";
 import logoUrl from "@/assets/logo.png";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
-const ENTERPRISE_PHONE = import.meta.env.VITE_ENTERPRISE_PHONE || "+91 99999 88888";
-const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "enterprise@mindgod.com";
+const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "enterprise@Mindsyncpro.com";
 
 const PRICING_PLANS = [
   {
@@ -81,7 +80,7 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "MindGod — Apna Dil Kholo" },
+      { title: "Mindsyncpro — Apna Dil Kholo" },
       { name: "description", content: "India's warm, AI-powered mental wellness companion." },
     ],
   }),
@@ -154,7 +153,7 @@ function Landing() {
     if (portalId === "super_admin") {
       setAdminModalOpen(true);
     } else {
-      localStorage.setItem("mindgod_intent_role", portalId);
+      localStorage.setItem("Mindsyncpro_intent_role", portalId);
       navigate({ to: dest });
     }
   };
@@ -170,7 +169,7 @@ function Landing() {
       });
       if (!r.ok) throw new Error("Invalid password");
 
-      localStorage.setItem("mindgod_intent_role", "super_admin");
+      localStorage.setItem("Mindsyncpro_intent_role", "super_admin");
       navigate({ to: "/sign-in" });
     } catch (err: any) {
       setError(err.message);
@@ -183,15 +182,15 @@ function Landing() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f7fafc] relative text-slate-900">
       {/* Header */}
-      <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-2xl border border-white/30 bg-white/70 px-5 py-3 shadow-xl backdrop-blur-xl">
+      <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-lg border border-white/30 bg-white/70 px-5 py-3 shadow-xl backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg shadow-cyan-500/20 overflow-hidden">
-            <img src={logoUrl} alt="MindGod Logo" className="size-full object-cover" />
+          <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
+            <img src={logoUrl} alt="Mindsyncpro Logo" className="size-full object-cover scale-125" />
           </div>
 
           <div>
-            <p className="font-display text-lg font-bold text-slate-900">MindGod</p>
-            <p className="text-xs text-slate-500">AI Mental Wellness Platform</p>
+            <p className="font-display text-lg font-bold text-slate-900">Mindsyncpro</p>
+
           </div>
         </div>
 
@@ -218,7 +217,7 @@ function Landing() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 pb-24 pt-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-5 pb-5 pt-2 sm:px-6 lg:px-8">
         {/* Hero */}
         <section className="relative grid min-h-[82vh] items-center gap-16 lg:grid-cols-2">
           <div>
@@ -253,7 +252,7 @@ function Landing() {
               transition={{ delay: 0.3, duration: 0.7 }}
               className="mt-7 max-w-xl text-lg leading-relaxed text-slate-600"
             >
-              MindGod combines AI companionship, emotional wellness tools, therapist support, and
+              Mindsyncpro combines AI companionship, emotional wellness tools, therapist support, and
               mental health insights into one calming digital experience.
             </motion.p>
 
@@ -370,7 +369,7 @@ function Landing() {
 
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
                 Whether you need emotional support, therapy tools, organisation wellness insights,
-                or platform administration — MindGod adapts to your role beautifully.
+                or platform administration — Mindsyncpro adapts to your role beautifully.
               </p>
             </motion.div>
 
@@ -468,7 +467,7 @@ function Landing() {
                   </h3>
 
                   <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                    MindGod automatically detects your assigned role after sign-in and routes you to
+                    Mindsyncpro automatically detects your assigned role after sign-in and routes you to
                     the right dashboard experience instantly.
                   </p>
                 </div>
@@ -540,9 +539,6 @@ function Landing() {
                 {plan.isEnterprise ? (
                   <div className="space-y-3 mt-auto">
                     <div className="flex items-center gap-2 text-xs font-medium text-teal-400">
-                      <Phone className="size-3" /> {ENTERPRISE_PHONE}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs font-medium text-teal-400">
                       <Mail className="size-3" /> {ENTERPRISE_EMAIL}
                     </div>
                     <button
@@ -577,7 +573,7 @@ function Landing() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700">
               <Sparkles className="size-4" />
-              About MindGod
+              About Mindsyncpro
             </div>
 
             <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
@@ -585,7 +581,7 @@ function Landing() {
             </h2>
 
             <p className="mt-6 text-base leading-relaxed text-slate-600 sm:text-lg">
-              MindGod is an AI-powered emotional wellness platform designed to help people feel
+              Mindsyncpro is an AI-powered emotional wellness platform designed to help people feel
               heard, supported, and emotionally stronger. The platform combines intelligent AI
               conversations, therapist connectivity, mood tracking, calming experiences, and
               organisation wellness tools into one seamless experience.
@@ -634,7 +630,7 @@ function Landing() {
             </h2>
 
             <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">
-              MindGod is designed to feel emotionally warm, calming, and deeply human.
+              Mindsyncpro is designed to feel emotionally warm, calming, and deeply human.
             </p>
           </div>
 
@@ -642,7 +638,7 @@ function Landing() {
             {[
               {
                 name: "Engineering Student",
-                quote: "MindGod helped me calm my anxiety during stressful exam weeks.",
+                quote: "Mindsyncpro helped me calm my anxiety during stressful exam weeks.",
               },
               {
                 name: "Therapist Portal User",
@@ -667,7 +663,7 @@ function Landing() {
 
                 <div className="mt-6">
                   <p className="font-semibold text-slate-900">{t.name}</p>
-                  <p className="text-xs text-slate-500">MindGod User</p>
+                  <p className="text-xs text-slate-500">Mindsyncpro User</p>
                 </div>
               </div>
             ))}
@@ -721,7 +717,7 @@ function Landing() {
               href="#portals-section"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-semibold text-slate-900 shadow-2xl transition hover:scale-[1.03]"
             >
-              Start With MindGod
+              Start With Mindsyncpro
               <ArrowRight className="size-4" />
             </a>
           </div>
@@ -733,19 +729,17 @@ function Landing() {
         <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:px-6 lg:grid-cols-4 lg:px-8">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg shadow-cyan-500/20 overflow-hidden">
-                <img src={logoUrl} alt="MindGod Logo" className="size-full object-cover" />
+              <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
+                <img src={logoUrl} alt="Mindsyncpro Logo" className="size-full object-cover scale-125" />
               </div>
 
               <div>
-                <p className="font-display text-lg font-bold text-slate-900">MindGod</p>
-                <p className="text-xs text-slate-500">AI Mental Wellness Platform</p>
+                <p className="font-display text-lg font-bold text-slate-900">Mindsyncpro</p>
               </div>
             </div>
 
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-600">
-              Emotion-aware AI wellness platform designed for individuals, therapists,
-              organisations, and emotionally healthier digital experiences.
+              Your Mind. Your Space. Always.
             </p>
           </div>
 
@@ -768,7 +762,7 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600">
-              <Link to="/about" className="block hover:text-teal-600 transition">About MindGod</Link>
+              <Link to="/about" className="block hover:text-teal-600 transition">About Mindsyncpro</Link>
               <Link to="/privacy" className="block hover:text-teal-600 transition">Privacy Policy</Link>
               <Link to="/terms" className="block hover:text-teal-600 transition">Terms & Conditions</Link>
               <Link to="/support" className="block hover:text-teal-600 transition">Support Center</Link>
@@ -781,20 +775,26 @@ function Landing() {
             </h3>
 
             <div className="mt-5 flex items-center gap-3">
-              <button className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600">
+              <a 
+                href="https://www.instagram.com/yourwork2025?igsh=MW5yMTBkdTY0aXUycw==" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
+              >
                 <Instagram className="size-5" />
-              </button>
+              </a>
 
-              <button className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600">
-                <Twitter className="size-5" />
-              </button>
-
-              <button className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600">
+              <a 
+                href="https://www.linkedin.com/company/107088242" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
+              >
                 <Linkedin className="size-5" />
-              </button>
+              </a>
             </div>
 
-            <p className="mt-6 text-sm text-slate-500">© 2026 MindGod. All rights reserved.</p>
+            <p className="mt-6 text-sm text-slate-500">© 2026 Mindsyncpro. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -40,7 +40,7 @@ export class SubscriptionService {
           name: cfg.name,
           amount: cfg.amount,
           currency: "INR",
-          description: `MindGod ${cfg.name} subscription`,
+          description: `Mindsyncpro ${cfg.name} subscription`,
         },
       });
 
@@ -75,7 +75,7 @@ export class SubscriptionService {
         notify_info,
         notes: {
           tier: tierName,
-          source: "mindgod_app",
+          source: "Mindsyncpro_app",
         },
       });
 
@@ -113,7 +113,7 @@ export class SubscriptionService {
         notify_info,
         notes: {
           tier,
-          source: "mindgod_app",
+          source: "Mindsyncpro_app",
         },
       });
 
@@ -138,7 +138,7 @@ export class SubscriptionService {
           name: name,
           amount: amount * 100, // Convert to paise
           currency: "INR",
-          description: `MindGod ${name} subscription`,
+          description: `Mindsyncpro ${name} subscription`,
         },
       });
       console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name}`);

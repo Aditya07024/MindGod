@@ -57,10 +57,10 @@ function Onboarding() {
   useEffect(() => {
     API.auth.me().then(async (me: any) => {
       let role = me?.role ?? 'user';
-      const intendedRole = localStorage.getItem('mindgod_intent_role');
+      const intendedRole = localStorage.getItem('Mindsyncpro_intent_role');
 
       if (intendedRole) {
-        localStorage.removeItem('mindgod_intent_role');
+        localStorage.removeItem('Mindsyncpro_intent_role');
         if (intendedRole !== role) {
           try {
             await API.auth.setRole(intendedRole);
@@ -303,7 +303,7 @@ function Onboarding() {
                   </div>
                   <div>
                     <h2 className="font-display text-xl font-bold text-primary-deep">Find Your Organisation</h2>
-                    <p className="text-xs text-muted-foreground">Search from verified organisations on MindGod</p>
+                    <p className="text-xs text-muted-foreground">Search from verified organisations on Mindsyncpro</p>
                   </div>
                 </div>
 

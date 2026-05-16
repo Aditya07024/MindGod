@@ -7,8 +7,7 @@ export const Route = createFileRoute('/support')({
   component: SupportPage,
 });
 
-const CONTACT_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "support@mindgod.com";
-const CONTACT_PHONE = import.meta.env.VITE_ENTERPRISE_PHONE || "+91 800-MIND-GOD";
+const CONTACT_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "support@Mindsyncpro.com";
 
 function SupportPage() {
   const faqs = [
@@ -18,7 +17,7 @@ function SupportPage() {
     },
     {
       q: "Can I book sessions with real therapists?",
-      a: "Yes! MindGod allows you to browse and book sessions with verified RCI-registered therapists directly through the platform."
+      a: "Yes! Mindsyncpro allows you to browse and book sessions with verified RCI-registered therapists directly through the platform."
     },
     {
       q: "Is my data anonymous in the Organisation portal?",
@@ -35,10 +34,10 @@ function SupportPage() {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg overflow-hidden">
-              <img src={logoUrl} alt="Logo" className="size-full object-cover" />
+            <div className="size-10 rounded-md bg-white shadow-lg overflow-hidden">
+              <img src={logoUrl} alt="Logo" className="size-full object-cover scale-125" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">MindGod</span>
+            <span className="font-display font-bold text-xl tracking-tight">Mindsyncpro</span>
           </Link>
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-teal-600 transition">
             <ArrowLeft className="size-4" /> Back to Home
@@ -59,11 +58,10 @@ function SupportPage() {
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3 mb-20">
+        <div className="grid gap-8 md:grid-cols-2 mb-20">
           {[
             { icon: Mail, title: "Email Us", contact: CONTACT_EMAIL, desc: "Get a response within 24 hours" },
-            { icon: MessageSquare, title: "Live Chat", contact: "Start Chat", desc: "Available 10 AM - 8 PM IST" },
-            { icon: Phone, title: "Call Support", contact: CONTACT_PHONE, desc: "Priority support for Pro users" }
+            { icon: MessageSquare, title: "Live Chat", contact: "Start Chat", desc: "Available 10 AM - 8 PM IST" }
           ].map((item) => (
             <div key={item.title} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center">
               <div className="size-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-6">
@@ -95,7 +93,7 @@ function SupportPage() {
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 MindGod. All rights reserved.
+        © 2026 Mindsyncpro. All rights reserved.
       </footer>
     </div>
   );

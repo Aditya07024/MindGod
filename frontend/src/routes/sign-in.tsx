@@ -22,7 +22,7 @@ function SignInPage() {
       .then(() => setIsHealthy(true))
       .catch(() => setIsHealthy(false));
 
-    const role = localStorage.getItem("mindgod_intent_role");
+    const role = localStorage.getItem("Mindsyncpro_intent_role");
     setPortalRole(role);
   }, []);
 
@@ -39,14 +39,14 @@ function SignInPage() {
       <div className="min-h-screen bg-canvas-gradient flex flex-col items-center justify-center px-4 text-center">
         <img
           src={logoUrl}
-          alt="MindGod Logo"
+          alt="Mindsyncpro Logo"
           className="size-20 mb-6 object-contain opacity-50 grayscale"
         />
         <h1 className="font-display text-3xl font-bold text-primary-deep mb-2">
           Service Unavailable
         </h1>
         <p className="text-muted-foreground max-w-sm">
-          MindGod is currently undergoing maintenance. Please try again in a few minutes.
+          Mindsyncpro is currently undergoing maintenance. Please try again in a few minutes.
         </p>
       </div>
     );
@@ -57,8 +57,8 @@ function SignInPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center space-y-2">
-          <img src={logoUrl} alt="MindGod Logo" className="mx-auto size-16 object-contain" />
-          <h1 className="font-display text-3xl font-bold text-primary-deep">MindGod</h1>
+          <img src={logoUrl} alt="Mindsyncpro Logo" className="mx-auto size-16 object-contain" />
+          <h1 className="font-display text-3xl font-bold text-primary-deep">Mindsyncpro</h1>
           <p className="text-muted-foreground text-sm">Apna Dil Kholo</p>
         </div>
 

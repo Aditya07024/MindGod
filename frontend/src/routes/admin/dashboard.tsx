@@ -138,7 +138,7 @@ function SuperAdminDashboard() {
               <Shield className="size-4 text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-sm">MindGod Super Admin</p>
+              <p className="font-bold text-white text-sm">Mindsyncpro Super Admin</p>
               <p className="text-xs text-slate-400">Ops · Verification · Analytics</p>
             </div>
           </div>

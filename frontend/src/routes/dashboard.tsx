@@ -41,10 +41,10 @@ function Dashboard() {
   useEffect(() => {
     API.auth.me().then(async (me: any) => {
       let role = me?.role ?? 'user';
-      const intentRole = localStorage.getItem('mindgod_intent_role');
+      const intentRole = localStorage.getItem('Mindsyncpro_intent_role');
       
       // Clean up intent immediately
-      if (intentRole) localStorage.removeItem('mindgod_intent_role');
+      if (intentRole) localStorage.removeItem('Mindsyncpro_intent_role');
 
       // Only attempt to set a role if they are currently a basic 'user'
       // This prevents an existing Org Admin from being redirected or changed if they click the wrong link

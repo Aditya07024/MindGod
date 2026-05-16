@@ -128,7 +128,7 @@ export class SubscriptionController {
           if (user.tier === tier) {
             throw new AppError("Already on this plan", 400);
           }
-          const contactInfo = user.phoneMasked || (req.user as any)?.email || "customer@mindgod.com";
+          const contactInfo = user.phoneMasked || (req.user as any)?.email || "customer@Mindsyncpro.com";
           razorpaySub = await SubscriptionService.createSubscription(tier, contactInfo);
         } else {
           // Dynamic Plan Support
@@ -156,7 +156,7 @@ export class SubscriptionController {
           finalTier = dynamicPlan._id.toString();
           planName = dynamicPlan.name;
           // Razorpay requires an email or phone for notifications
-          const contactInfo = user.phoneMasked || (req.user as any)?.email || "customer@mindgod.com";
+          const contactInfo = user.phoneMasked || (req.user as any)?.email || "customer@Mindsyncpro.com";
 
           try {
             razorpaySub = await SubscriptionService.createDynamicSubscription(
