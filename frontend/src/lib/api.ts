@@ -122,7 +122,6 @@ const API = {
         method: "POST",
         headers,
         body: formData,
-        body: formData,
       });
       if (!response.ok) {
         const err = await response.json().catch(() => ({ message: "Upload failed" }));

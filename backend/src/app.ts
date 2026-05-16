@@ -14,6 +14,7 @@ export async function createApp() {
   await mongoose.connect(env.MONGODB_URI);
 
   const app = express();
+  app.set("trust proxy", 1);
   app.use(helmet());
   app.use(
     cors({
