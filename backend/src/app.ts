@@ -19,6 +19,8 @@ export async function createApp() {
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
+    "http://localhost:8081",
+    "http://localhost:8082",
     "https://mindsyncpro.online",
     "https://www.mindsyncpro.online",
     "https://mindsync-frontend-delta.vercel.app",
