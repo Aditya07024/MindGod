@@ -80,8 +80,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "Mindsyncpro — Apna Dil Kholo" },
-      { name: "description", content: "India's warm, AI-powered mental wellness companion." },
+      { title: "MindSyncPro AI Mental Health Platform India" },
+      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and RCI-verified therapists. Private, affordable, and free to start." },
     ],
   }),
 });
@@ -91,7 +91,7 @@ const PORTALS = [
     id: "user",
     icon: MessageCircle,
     title: "I need support",
-    subtitle: "Chat with Manas AI, track mood, book therapists",
+    subtitle: "Chat with Manas AI companion, use CBT tools, track daily mood, book RCI-verified therapists online",
     color: "from-teal-500/10 to-teal-600/5 border-teal-200 hover:border-teal-400",
     iconBg: "bg-teal-100 text-teal-700",
     dest: "/sign-in",
@@ -100,7 +100,7 @@ const PORTALS = [
     id: "therapist",
     icon: Users,
     title: "I am a Therapist",
-    subtitle: "Manage sessions, view AI briefs, join WebRTC calls",
+    subtitle: "Manage online therapy sessions, view AI pre-session briefs, conduct video calls via WebRTC",
     color: "from-blue-500/10 to-blue-600/5 border-blue-200 hover:border-blue-400",
     iconBg: "bg-blue-100 text-blue-700",
     dest: "/sign-in",
@@ -109,7 +109,7 @@ const PORTALS = [
     id: "org_admin",
     icon: Building2,
     title: "Organisation Admin",
-    subtitle: "Anonymous team wellness analytics, seat management",
+    subtitle: "Anonymous employee mental wellness analytics, manage team seats, access wellness reports",
     color: "from-violet-500/10 to-violet-600/5 border-violet-200 hover:border-violet-400",
     iconBg: "bg-violet-100 text-violet-700",
     dest: "/sign-in",
@@ -118,7 +118,7 @@ const PORTALS = [
     id: "super_admin",
     icon: Shield,
     title: "Super Admin",
-    subtitle: "Ops dashboard, therapist verification, platform analytics",
+    subtitle: "Platform operations, therapist verification, and mental health analytics dashboard",
     color: "from-slate-500/10 to-slate-600/5 border-slate-200 hover:border-slate-400",
     iconBg: "bg-slate-100 text-slate-700",
     dest: "/sign-in",
@@ -185,7 +185,7 @@ function Landing() {
       <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-lg border border-white/30 bg-white/70 px-5 py-3 shadow-xl backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
-            <img src={logoUrl} alt="Mindsyncpro Logo" className="size-full object-cover scale-125" />
+            <img src={logoUrl} alt="MindSyncPro AI mental health India" className="size-full object-cover scale-125" />
           </div>
 
           <div>
@@ -237,6 +237,7 @@ function Landing() {
               transition={{ delay: 0.1, duration: 0.8 }}
               className="mt-7 font-display text-5xl font-bold leading-[1.02] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
             >
+              <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium text-slate-600 mb-4">India's AI Mental Health Platform -</span>
               Healing Starts
               <br />
               With Honest
@@ -252,8 +253,7 @@ function Landing() {
               transition={{ delay: 0.3, duration: 0.7 }}
               className="mt-7 max-w-xl text-lg leading-relaxed text-slate-600"
             >
-              Mindsyncpro combines AI companionship, emotional wellness tools, therapist support, and
-              mental health insights into one calming digital experience.
+              MindSyncPro is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and RCI-verified online therapist booking into one private, affordable wellness experience. Starting free.
             </motion.p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -362,9 +362,9 @@ function Landing() {
               </div>
 
               <h2 className="mt-6 font-display text-4xl font-bold leading-tight text-slate-900 sm:text-5xl">
-                One Platform.
+                One AI Mental Health Platform
                 <br />
-                Multiple Wellness Experiences.
+                for Every Role in India
               </h2>
 
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
@@ -492,9 +492,9 @@ function Landing() {
             </div>
 
             <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
-              Choose The Plan That’s
+              Free Mental Health Support
               <br />
-              Right For You.
+              & Affordable Plans
             </h2>
           </div>
 
@@ -577,15 +577,14 @@ function Landing() {
             </div>
 
             <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
-              Built To Support Mental Wellness With AI
+              About MindSyncPro - India's AI Mental Health Platform
             </h2>
 
-            <p className="mt-6 text-base leading-relaxed text-slate-600 sm:text-lg">
-              Mindsyncpro is an AI-powered emotional wellness platform designed to help people feel
-              heard, supported, and emotionally stronger. The platform combines intelligent AI
-              conversations, therapist connectivity, mood tracking, calming experiences, and
-              organisation wellness tools into one seamless experience.
-            </p>
+            <div className="mt-6 space-y-4 text-left text-base leading-relaxed text-slate-600 sm:text-lg">
+              <p>MindSyncPro is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of RCI-verified online therapists.</p>
+              <p>Whether you are a student managing exam stress, a professional dealing with burnout, or an organisation looking to support employee mental health - MindSyncPro offers affordable, private, and always-available mental health support starting at ₹0/month.</p>
+              <p>We are DPDPA-compliant, store all data in India, and your conversations are always private.</p>
+            </div>
 
             <div className="mt-10 grid gap-6 text-left md:grid-cols-3">
               <div className="rounded-3xl border border-teal-100 bg-teal-50/60 p-6">
@@ -624,9 +623,9 @@ function Landing() {
             </div>
 
             <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
-              Loved By Students,
+              Trusted for Employee Mental Wellness
               <br />
-              Therapists & Teams.
+              & Student Support
             </h2>
 
             <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">
@@ -702,9 +701,9 @@ function Landing() {
               </div>
 
               <h2 className="mt-6 font-display text-4xl font-bold leading-tight sm:text-5xl">
-                Your Mental Wellness Journey
+                Online Therapist Booking India
                 <br />
-                Starts Today.
+                & CBT Tools Online
               </h2>
 
               <p className="mt-6 text-base leading-relaxed text-slate-300 sm:text-lg">
@@ -724,13 +723,53 @@ function Landing() {
         </section>
       </main>
 
+      {/* FAQ Section */}
+      <section className="mt-24 mb-24 mx-auto max-w-4xl rounded-[40px] border border-slate-200 bg-white px-8 py-16 shadow-sm sm:px-12 text-left relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700">
+            <MessageCircle className="size-4" />
+            Got Questions?
+          </div>
+          <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
+            Frequently Asked Questions
+          </h2>
+        </div>
+        
+        <div className="space-y-8">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Q: Is MindSyncPro free to use?</h3>
+            <p className="mt-2 text-slate-600 leading-relaxed">A: Yes. MindSyncPro is a free mental health app for students and everyone else, offering a free plan with 7 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking.</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Q: How does Manas AI work?</h3>
+            <p className="mt-2 text-slate-600 leading-relaxed">A: Manas is MindSyncPro's AI mental health companion, trained in Cognitive Behavioural Therapy (CBT). It has emotion-aware conversations, suggests CBT exercises, tracks your mood patterns, and prepares an AI brief for your therapist before each session.</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Q: Are the therapists on MindSyncPro verified?</h3>
+            <p className="mt-2 text-slate-600 leading-relaxed">A: Yes. Every therapist on our platform is verified against RCI (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking.</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Q: Is my data private and safe?</h3>
+            <p className="mt-2 text-slate-600 leading-relaxed">A: Absolutely. Your phone number is hashed - we cannot read it. All data is stored in India on secure servers and we are fully compliant with the Digital Personal Data Protection Act (DPDPA) 2023. We never sell your data.</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Q: Can my college or company use MindSyncPro?</h3>
+            <p className="mt-2 text-slate-600 leading-relaxed">A: Yes. MindSyncPro offers organisation wellness plans for colleges and corporates. Admins get anonymous, aggregate mental wellness dashboards - no individual data is ever visible. Contact us at corporate@mindsyncpro.online.</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">Q: What mental health tools does MindSyncPro offer?</h3>
+            <p className="mt-2 text-slate-600 leading-relaxed">A: MindSyncPro includes 18+ CBT tools for anxiety India including thought records, mood calendar, 4-7-8 breathing, box breathing, 5-4-3-2-1 grounding, body scan, journaling, and a crisis support overlay with icall helpline access.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="mt-24 border-t border-slate-200 bg-white/70 backdrop-blur-xl">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:px-6 lg:grid-cols-4 lg:px-8">
           <div>
             <div className="flex items-center gap-3">
               <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
-                <img src={logoUrl} alt="Mindsyncpro Logo" className="size-full object-cover scale-125" />
+                <img src={logoUrl} alt="MindSyncPro AI mental health India" className="size-full object-cover scale-125" />
               </div>
 
               <div>
@@ -739,7 +778,7 @@ function Landing() {
             </div>
 
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-600">
-              Your Mind. Your Space. Always.
+              MindSyncPro - India's AI-powered mental health platform. Affordable, private, and always available.
             </p>
           </div>
 
@@ -748,11 +787,13 @@ function Landing() {
               Platform
             </h3>
 
-            <div className="mt-5 space-y-3 text-sm text-slate-600">
-              <button onClick={(e) => handlePortalClick(e, 'user', '/sign-in')} className="block hover:text-teal-600 transition">AI Conversations</button>
-              <button onClick={(e) => handlePortalClick(e, 'user', '/sign-in')} className="block hover:text-teal-600 transition">Mood Tracking</button>
-              <button onClick={(e) => handlePortalClick(e, 'therapist', '/sign-in')} className="block hover:text-teal-600 transition">Therapist Dashboard</button>
-              <button onClick={(e) => handlePortalClick(e, 'org_admin', '/sign-in')} className="block hover:text-teal-600 transition">Organisation Wellness</button>
+            <div className="mt-5 space-y-3 text-sm text-slate-600 flex flex-col items-start">
+              <a href="/ai-mental-health-platform-india" className="hover:text-teal-600 transition text-left">Manas AI Companion</a>
+              <a href="/cbt-tools-online" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</a>
+              <a href="/mood-tracking-app" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</a>
+              <a href="/book-therapist-india" className="hover:text-teal-600 transition text-left">Book RCI-Verified Therapist</a>
+              <a href="/employee-wellness-platform" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</a>
+              <a href="/free-mental-health-support" className="hover:text-teal-600 transition text-left">Free Crisis Support India</a>
             </div>
           </div>
 

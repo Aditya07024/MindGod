@@ -358,6 +358,10 @@ export class SubscriptionController {
           select: "fullName role therapistProfile orgId",
           populate: { path: "orgId", select: "name" }
         })
+        .populate({
+          path: "planId",
+          select: "price name config"
+        })
         .sort({ createdAt: -1 })
         .limit(200)
         .lean();

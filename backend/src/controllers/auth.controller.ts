@@ -15,6 +15,7 @@ function serializeUser(user: any) {
     isAnonymous: user.isAnonymous,
     streak: user.streak,
     onboarding: user.onboarding,
+    orgId: user.orgId,
     therapistProfile: user.role === "therapist" ? user.therapistProfile : undefined,
   };
 }

@@ -42,8 +42,34 @@ const API = {
   health: () => apiCall<{ ok: boolean }>("/api/health"),
   auth: {
     me: () => apiCall<any>("/api/auth/me"),
-    setRole: (role: string) =>
-      apiCall<any>("/api/auth/role", { method: "PATCH", body: JSON.stringify({ role }) }),
+    setRole: async (role: string) => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      try {
+        const stashed = localStorage.getItem("Mindsyncpro_intent_role");
+        if (stashed) headers["x-intent-role"] = stashed;
+      } catch (e) {
+        // ignore
+      }
+
+      // Attach Authorization token if available
+      if (_getToken) {
+        const token = await _getToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/role`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ role }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "API Error" }));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return response.json();
+    },
     updateOnboarding: (data: any) =>
       apiCall<any>("/api/auth/onboarding", { method: "PATCH", body: JSON.stringify(data) }),
     updateProfile: (data: any) =>

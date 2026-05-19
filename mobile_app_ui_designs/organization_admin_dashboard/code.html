@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mindsyncpro - Organization Dashboard</title>
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#dadad9",
+                        "primary-fixed-dim": "#93d2c7",
+                        "on-secondary-fixed": "#390b00",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#7e2b0d",
+                        "secondary-container": "#fe8c66",
+                        "secondary-fixed-dim": "#ffb59d",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#271900",
+                        "on-primary-container": "#adeee2",
+                        "inverse-surface": "#2f3130",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdea6",
+                        "surface-bright": "#f9f9f8",
+                        "on-surface": "#1a1c1c",
+                        "surface": "#f9f9f8",
+                        "inverse-primary": "#93d2c7",
+                        "surface-container-low": "#f3f4f3",
+                        "surface-container": "#eeeeed",
+                        "surface-tint": "#286860",
+                        "tertiary": "#644700",
+                        "primary": "#0d564d",
+                        "on-surface-variant": "#3f4947",
+                        "on-secondary-container": "#742406",
+                        "on-primary-fixed-variant": "#035048",
+                        "background": "#f9f9f8",
+                        "primary-container": "#2e6e65",
+                        "tertiary-container": "#825d00",
+                        "on-background": "#1a1c1c",
+                        "surface-container-high": "#e8e8e7",
+                        "outline-variant": "#bfc9c6",
+                        "inverse-on-surface": "#f1f1f0",
+                        "surface-variant": "#e2e2e2",
+                        "secondary-fixed": "#ffdbd0",
+                        "on-tertiary-container": "#ffdc9f",
+                        "on-primary": "#ffffff",
+                        "outline": "#6f7977",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "on-primary-fixed": "#00201c",
+                        "secondary": "#9d4223",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#f1bf5e",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#afefe3",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "xl": "48px",
+                        "lg": "32px",
+                        "gutter": "16px",
+                        "sm": "16px",
+                        "container-margin": "20px",
+                        "base": "4px",
+                        "xs": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Sora"],
+                        "display-md": ["Sora"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "display-lg": ["Sora"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "display-md": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "display-lg": ["32px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f9f9f8; /* background */
+            color: #1a1c1c; /* on-background */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row pb-24 md:pb-0">
+<!-- Mobile Top App Bar -->
+<header class="md:hidden bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md fixed top-0 w-full z-50 shadow-[0px_4px_20px_rgba(46,110,101,0.05)] flex justify-between items-center px-container-margin py-base max-w-full">
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined text-sm">psychiatry</span>
+</div>
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim tracking-tight">Mindsyncpro</h1>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxmlDEr5Sfxx8BObOnK1RNi474oBuxylJkuGA8o2oeFYDmdsQJIUcH02n4ZQTcnY2kUZc_cn6JCxRBNBNVxUyWm6Yjm51t9dpdwWHZvCrJfMjPKf_PpwcLZrNVr56VPyyW28vVZGiT_0T8tP4i37v-gdc328LSRJecgqJfwmkjBiY1tMYYHB5URmw8hgHX3_NkuiBZam0pjfe88ZGBCOIphNzOTcCO7XPbRAZAU1I51LXE-3bm49NlRQSAmvJT3BG65VrfLqXspJgV"/>
+</div>
+</header>
+<!-- Desktop Navigation Drawer (SideNav) -->
+<nav class="hidden md:flex flex-col h-full py-md h-screen sticky top-0 bg-surface-container-lowest dark:bg-inverse-surface shadow-xl h-full w-72 rounded-r-xl z-40">
+<div class="px-container-margin mb-lg flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined">psychiatry</span>
+</div>
+<h1 class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim tracking-tight">Mindsyncpro</h1>
+</div>
+<div class="px-container-margin mb-sm">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Super Admin</h2>
+</div>
+<div class="flex flex-col flex-1 gap-1">
+<a class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md font-medium">Overview</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-md text-body-md">Therapists</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+<span class="font-body-md text-body-md">Organizations</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">subscriptions</span>
+<span class="font-body-md text-body-md">Subscriptions</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Plans</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">flag</span>
+<span class="font-body-md text-body-md">Flags</span>
+</a>
+</div>
+<div class="px-container-margin mt-auto pt-lg border-t border-surface-variant">
+<div class="flex items-center gap-sm cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="Admin Avatar" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAt61nMy0w_JCRhaXshGY1eyFmurYqzpHPEzjL8Pn941DsYd2cG_vp1hRZP4vmh_QTUbxzzneW2AeEvCR8Xc-X1XlBuxcKJWT_9zvn9isjKQkpau-QAnVK0aovxP0RgI_vwT5plbWr4yQd8zEscFjXGYnOdAW9hE0q-4fyeh4yuYwpaoFyMgA9MCVvv4GtP3I8vpmTxsflaaq49CdxYoQqFjyAUtzI_TAQNmJIiQ-d2qAmLWm8XvTY1pR9NyYRuEhqlxbNEC--oydb"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Alex Admin</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Log out</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-7xl mx-auto pt-20 md:pt-8 px-container-margin md:px-lg space-y-lg">
+<!-- Organization Header -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-md pb-md">
+<div class="flex items-start gap-md">
+<div class="w-16 h-16 md:w-20 md:h-20 rounded-[24px] bg-gradient-to-br from-primary-container to-primary flex items-center justify-center text-on-primary shadow-lg flex-shrink-0">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">corporate_fare</span>
+</div>
+<div>
+<div class="flex items-center gap-xs mb-1">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">verified</span> Verified Organization
+                        </span>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-1">Acme Corp</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Enterprise Wellbeing Plan • 450 Seats</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-sm">
+<button class="bg-surface border border-primary text-primary px-6 py-3 rounded-full font-label-md text-label-md hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">description</span> ESG Report
+                </button>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-full font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-colors shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined">settings</span> Manage Plan
+                </button>
+</div>
+</section>
+<!-- Tabs Navigation -->
+<div class="flex overflow-x-auto hide-scrollbar border-b border-surface-variant mb-md pb-2 gap-md">
+<button class="font-label-md text-label-md text-primary border-b-2 border-primary pb-2 px-1 whitespace-nowrap">Overview</button>
+<button class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface pb-2 px-1 whitespace-nowrap transition-colors">Therapists</button>
+<button class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface pb-2 px-1 whitespace-nowrap transition-colors">Members</button>
+<button class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface pb-2 px-1 whitespace-nowrap transition-colors">Subscriptions</button>
+</div>
+<!-- Alert Banner -->
+<div class="bg-secondary-fixed text-on-secondary-fixed-variant rounded-xl p-md flex flex-col md:flex-row items-start md:items-center gap-md shadow-sm">
+<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-sm text-headline-sm mb-1">Elevated Burnout Risk Detected</h3>
+<p class="font-body-md text-body-md">Engineering department showing a 15% drop in avg mood and increased after-hours usage. Consider sending a wellness check-in.</p>
+</div>
+<button class="bg-secondary text-on-secondary px-5 py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity whitespace-nowrap">Take Action</button>
+</div>
+<!-- Metric Cards (Bento Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-sm">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-[24px] p-md shadow-[0px_4px_20px_rgba(46,110,101,0.05)]">
+<div class="flex justify-between items-start mb-lg">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="text-primary font-label-md text-label-md flex items-center"><span class="material-symbols-outlined text-sm">arrow_upward</span> 4%</span>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface-variant mb-1">Active Users (30d)</h4>
+<p class="font-display-md text-display-md text-on-surface">382 <span class="font-body-lg text-body-lg text-on-surface-variant">/ 450</span></p>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-[24px] p-md shadow-[0px_4px_20px_rgba(46,110,101,0.05)]">
+<div class="flex justify-between items-start mb-lg">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined">mood</span>
+</div>
+<span class="text-error font-label-md text-label-md flex items-center"><span class="material-symbols-outlined text-sm">arrow_downward</span> 1.2</span>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface-variant mb-1">Avg Organization Mood</h4>
+<p class="font-display-md text-display-md text-on-surface">6.4 <span class="font-body-lg text-body-lg text-on-surface-variant">/ 10</span></p>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest rounded-[24px] p-md shadow-[0px_4px_20px_rgba(46,110,101,0.05)]">
+<div class="flex justify-between items-start mb-lg">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined">touch_app</span>
+</div>
+<span class="text-primary font-label-md text-label-md flex items-center"><span class="material-symbols-outlined text-sm">arrow_upward</span> 8%</span>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface-variant mb-1">Engagement Rate</h4>
+<p class="font-display-md text-display-md text-on-surface">84%</p>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest rounded-[24px] p-md shadow-[0px_4px_20px_rgba(46,110,101,0.05)] border-l-4 border-error">
+<div class="flex justify-between items-start mb-lg">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined">notifications_active</span>
+</div>
+</div>
+<h4 class="font-body-md text-body-md text-on-surface-variant mb-1">Crisis Alerts Resolved</h4>
+<p class="font-display-md text-display-md text-on-surface">3 <span class="font-body-lg text-body-lg text-on-surface-variant">This Month</span></p>
+</div>
+</div>
+<!-- Main Content Area: Chart and Seats -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-sm pb-xl">
+<!-- Trend Chart Area (Spans 2 cols) -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-[24px] p-md shadow-[0px_4px_20px_rgba(46,110,101,0.05)] flex flex-col">
+<div class="flex justify-between items-center mb-lg">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">30-Day Mood Trend</h3>
+<button class="text-primary font-label-md text-label-md flex items-center gap-1 hover:underline">
+                        Filter <span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+</div>
+<!-- Mock Chart Area -->
+<div class="flex-1 min-h-[250px] relative flex items-end gap-2 px-2 pt-10">
+<!-- Y Axis Labels -->
+<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-on-surface-variant font-label-sm text-label-sm py-4">
+<span>10</span><span>8</span><span>6</span><span>4</span><span>2</span>
+</div>
+<!-- Grid Lines -->
+<div class="absolute inset-0 ml-6 flex flex-col justify-between py-4 pointer-events-none">
+<div class="w-full border-b border-surface-variant border-dashed"></div>
+<div class="w-full border-b border-surface-variant border-dashed"></div>
+<div class="w-full border-b border-surface-variant border-dashed"></div>
+<div class="w-full border-b border-surface-variant border-dashed"></div>
+<div class="w-full border-b border-surface-variant"></div>
+</div>
+<!-- Bars (Mock Data) -->
+<div class="w-full h-full flex items-end justify-between ml-8 relative z-10">
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[60%] hover:bg-primary-container transition-colors relative group"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100">W1</div></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[65%] hover:bg-primary-container transition-colors"></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[70%] hover:bg-primary-container transition-colors"></div>
+<div class="w-[8%] bg-secondary-fixed-dim rounded-t-sm h-[55%] hover:bg-secondary-container transition-colors"></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[62%] hover:bg-primary-container transition-colors"></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[68%] hover:bg-primary-container transition-colors"></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[75%] hover:bg-primary-container transition-colors"></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[72%] hover:bg-primary-container transition-colors"></div>
+<div class="w-[8%] bg-secondary-fixed-dim rounded-t-sm h-[58%] hover:bg-secondary-container transition-colors"></div>
+<div class="w-[8%] bg-primary-fixed-dim rounded-t-sm h-[64%] hover:bg-primary-container transition-colors"></div>
+</div>
+</div>
+</div>
+<!-- Seat Management -->
+<div class="bg-surface-container-lowest rounded-[24px] p-md shadow-[0px_4px_20px_rgba(46,110,101,0.05)] flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-lg">Seat Utilization</h3>
+<div class="relative w-40 h-40 mx-auto mb-lg">
+<!-- Circular Progress Mock -->
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="transparent" r="40" stroke="#f3f4f3" stroke-width="12"></circle>
+<circle class="text-primary" cx="50" cy="50" fill="transparent" r="40" stroke="#0d564d" stroke-dasharray="251" stroke-dashoffset="38" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-md text-display-md text-on-surface">85%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Allocated</span>
+</div>
+</div>
+<div class="space-y-4 flex-1">
+<div class="flex justify-between items-center pb-2 border-b border-surface-variant">
+<span class="font-body-md text-body-md text-on-surface-variant">Total Seats</span>
+<span class="font-label-md text-label-md text-on-surface">450</span>
+</div>
+<div class="flex justify-between items-center pb-2 border-b border-surface-variant">
+<span class="font-body-md text-body-md text-on-surface-variant">Active Invites</span>
+<span class="font-label-md text-label-md text-on-surface">24</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Available Seats</span>
+<span class="font-label-md text-label-md text-primary">68</span>
+</div>
+</div>
+<button class="w-full mt-lg bg-surface border border-primary text-primary py-3 rounded-full font-label-md text-label-md hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">person_add</span> Invite Members
+                </button>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Navigation Bar -->
+<nav class="md:hidden bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-lg fixed bottom-0 left-0 w-full rounded-t-xl z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)] flex justify-around items-center px-4 py-2 pb-safe">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-sm text-label-sm mt-1">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-sm text-label-sm mt-1">Therapists</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+<span class="font-label-sm text-label-sm mt-1">Orgs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">subscriptions</span>
+<span class="font-label-sm text-label-sm mt-1">Subs</span>
+</a>
+</nav>
+</body></html>

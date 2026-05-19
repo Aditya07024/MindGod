@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mindsyncpro Super Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#dadad9",
+                      "primary-fixed-dim": "#93d2c7",
+                      "on-secondary-fixed": "#390b00",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e2e2e2",
+                      "on-secondary-fixed-variant": "#7e2b0d",
+                      "secondary-container": "#fe8c66",
+                      "secondary-fixed-dim": "#ffb59d",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed": "#271900",
+                      "on-primary-container": "#adeee2",
+                      "inverse-surface": "#2f3130",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed": "#ffdea6",
+                      "surface-bright": "#f9f9f8",
+                      "on-surface": "#1a1c1c",
+                      "surface": "#f9f9f8",
+                      "inverse-primary": "#93d2c7",
+                      "surface-container-low": "#f3f4f3",
+                      "surface-container": "#eeeeed",
+                      "surface-tint": "#286860",
+                      "tertiary": "#644700",
+                      "primary": "#0d564d",
+                      "on-surface-variant": "#3f4947",
+                      "on-secondary-container": "#742406",
+                      "on-primary-fixed-variant": "#035048",
+                      "background": "#f9f9f8",
+                      "primary-container": "#2e6e65",
+                      "tertiary-container": "#825d00",
+                      "on-background": "#1a1c1c",
+                      "surface-container-high": "#e8e8e7",
+                      "outline-variant": "#bfc9c6",
+                      "inverse-on-surface": "#f1f1f0",
+                      "surface-variant": "#e2e2e2",
+                      "secondary-fixed": "#ffdbd0",
+                      "on-tertiary-container": "#ffdc9f",
+                      "on-primary": "#ffffff",
+                      "outline": "#6f7977",
+                      "on-tertiary-fixed-variant": "#5d4200",
+                      "on-primary-fixed": "#00201c",
+                      "secondary": "#9d4223",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed-dim": "#f1bf5e",
+                      "on-error-container": "#93000a",
+                      "primary-fixed": "#afefe3",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "24px",
+                      "xl": "48px",
+                      "lg": "32px",
+                      "gutter": "16px",
+                      "sm": "16px",
+                      "container-margin": "20px",
+                      "base": "4px",
+                      "xs": "8px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-sm": [
+                              "Sora"
+                      ],
+                      "display-md": [
+                              "Sora"
+                      ],
+                      "label-sm": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "display-lg": [
+                              "Sora"
+                      ],
+                      "body-md": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+<!-- Navigation Drawer (SideNav) -->
+<nav class="hidden md:flex flex-col bg-slate-900 border-r border-slate-800 w-72 h-screen sticky top-0 py-md">
+<div class="px-container-margin mb-xl flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<div>
+<h1 class="font-display-md text-label-md text-slate-100">Mindsyncpro</h1>
+<p class="font-label-sm text-label-sm text-slate-400">Super Admin</p>
+</div>
+</div>
+<div class="flex flex-col gap-xs px-2">
+<a class="bg-purple-500/10 text-purple-400 rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                Overview
+            </a>
+<a class="text-slate-400 hover:bg-slate-800 hover:text-slate-200 mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Therapists
+            </a>
+<a class="text-slate-400 hover:bg-slate-800 hover:text-slate-200 mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+                Organizations
+            </a>
+<a class="text-slate-400 hover:bg-slate-800 hover:text-slate-200 mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">subscriptions</span>
+                Subscriptions
+            </a>
+<a class="text-slate-400 hover:bg-slate-800 hover:text-slate-200 mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+                Plans
+            </a>
+<a class="text-slate-400 hover:bg-slate-800 hover:text-slate-200 mx-2 my-1 px-4 py-3 rounded-lg flex items-center gap-3 font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">flag</span>
+                Flags
+            </a>
+</div>
+</nav>
+<!-- TopAppBar Mobile -->
+<header class="md:hidden fixed top-0 w-full z-50 bg-slate-900/80 backdrop-blur-md flex justify-between items-center px-container-margin py-base h-16 border-b border-slate-800">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<span class="font-display-md text-headline-sm text-slate-100 tracking-tight">Mindsyncpro</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+<img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByBtTHHALySNngrpyh6Y_kHm6K_UrPyiYn9cQWyC-ZRPAtJjhiYx0Hf9vXbpT1soxzgFgo2ec4eIjOJqmafKJn1jznDZGEx2dgue88ZefThe1kwBkvcKDzSibdzooioji-hQwd3R47jOQ8qQZGc4DStT3dn1HXwkTjqYr4EBdwIjm7M3hVvS4GnyrctCuhYBRI-uRgYy_TbrPPAVE-xE9-9w6Ennst0L4uH8cvAH2jvdIkYUGyGYxgVSSc7M4eAdGJ4eQUi5bj1jYK"/>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto w-full max-w-7xl mx-auto md:px-lg px-container-margin pt-24 md:pt-lg pb-32 md:pb-lg">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
+<div>
+<h2 class="font-display-lg text-display-lg text-slate-100">Overview</h2>
+<p class="font-body-md text-body-md text-slate-400 mt-1">Platform metrics and administrative controls.</p>
+</div>
+<div class="flex items-center gap-sm">
+<div class="relative w-full md:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+<input class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-body-md text-label-md" placeholder="Search therapists..." type="text"/>
+</div>
+<div class="hidden md:block w-10 h-10 rounded-full bg-slate-800 overflow-hidden border border-slate-700 ml-sm shrink-0">
+<img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOy_4-90Ceyn428se-XuOxfj4NElFvetzw_vpdGu_09mfRiiVciFp7gegwT-XepRQzQ_23kWx29r5OmSrFUeqo5Hi1v2yA34EsH7hYhOWvq2Akmh5kYOuwtST1oJ46V_T-W-tQo9n9derVBQQ6etFXj7a3pXAcLokH5W-IxVCJ0kEY39W0i2B1SblPiaOKNP8bAqdpBd7R6gCTUKBifpL5GBH1tx_8CRHfdvbsO45wFa9lmuTdLTGItCv9WLPPGSgY5bM3NebOidgb"/>
+</div>
+</div>
+</div>
+<!-- Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-sm md:gap-md">
+<!-- MRR Card (Span 2 cols) -->
+<div class="md:col-span-2 bg-gradient-to-br from-slate-900 to-slate-900 border border-slate-800 rounded-2xl p-md relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+<div class="relative z-10 flex flex-col h-full justify-between gap-lg">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+</div>
+<h3 class="font-label-md text-label-md text-slate-300 uppercase tracking-wider">Estimated MRR</h3>
+</div>
+<div>
+<div class="font-display-lg text-[48px] leading-tight font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-300">$124,500</div>
+<div class="flex items-center gap-2 mt-2">
+<span class="material-symbols-outlined text-emerald-400 text-sm">trending_up</span>
+<span class="font-label-sm text-label-sm text-emerald-400">+12.5%</span>
+<span class="font-label-sm text-label-sm text-slate-500">vs last month</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Stat Card 1 -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-md flex flex-col justify-between min-h-[160px]">
+<div class="flex items-center gap-3 mb-sm">
+<span class="material-symbols-outlined text-slate-400">groups</span>
+<h3 class="font-label-md text-label-md text-slate-400">Total Therapists</h3>
+</div>
+<div>
+<div class="font-display-md text-display-md text-slate-100">1,248</div>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-md flex flex-col justify-between min-h-[160px]">
+<div class="flex items-center justify-between mb-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-400" style="font-variation-settings: 'FILL' 1;">verified</span>
+<h3 class="font-label-md text-label-md text-slate-400">RCI Verified</h3>
+</div>
+<span class="font-label-sm text-label-sm bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md">82%</span>
+</div>
+<div>
+<div class="font-display-md text-display-md text-slate-100">1,023</div>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-md flex flex-col justify-between min-h-[160px]">
+<div class="flex items-center gap-3 mb-sm">
+<span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1;">pending_actions</span>
+<h3 class="font-label-md text-label-md text-slate-400">Pending Review</h3>
+</div>
+<div>
+<div class="font-display-md text-display-md text-slate-100">45</div>
+<button class="mt-2 text-amber-400 font-label-sm text-label-sm hover:underline">Review now →</button>
+</div>
+</div>
+<!-- Stat Card 4 -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-md flex flex-col justify-between min-h-[160px]">
+<div class="flex items-center gap-3 mb-sm">
+<span class="material-symbols-outlined text-emerald-400">card_membership</span>
+<h3 class="font-label-md text-label-md text-slate-400">Active Subs</h3>
+</div>
+<div>
+<div class="font-display-md text-display-md text-slate-100">8,402</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-slate-900/90 backdrop-blur-lg shadow-lg border-t border-slate-800">
+<a class="flex flex-col items-center justify-center text-purple-400 font-bold w-16" href="#">
+<div class="bg-purple-500/20 text-purple-400 rounded-full px-4 py-1 flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+</div>
+<span class="font-label-sm text-[10px] mt-1">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 w-16 transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-sm text-[10px] mt-1">Therapists</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 w-16 transition-colors" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+<span class="font-label-sm text-[10px] mt-1">Orgs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 w-16 transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-sm text-[10px] mt-1">Plans</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 w-16 transition-colors" href="#">
+<span class="material-symbols-outlined">flag</span>
+<span class="font-label-sm text-[10px] mt-1">Flags</span>
+</a>
+</nav>
+</body></html>

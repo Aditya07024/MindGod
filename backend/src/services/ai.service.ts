@@ -98,6 +98,27 @@ export class AIService {
     if (crisis) {
       conversation.riskLevel = "high";
       conversation.escalated = true;
+
+      // Trigger high-severity crisis notification to super admin
+      try {
+        const seeker = await User.findById(userId).select("fullName").lean();
+        const seekerName = seeker?.fullName || "A Seeker";
+        const superAdmins = await User.find({ role: "super_admin" }).select("_id").lean();
+        const notificationBody = `Distress alert: Seeker "${seekerName}" has triggered a crisis flag. Context: "${message.slice(0, 150)}..."`;
+
+        const { NotificationController } = require("@/controllers/notification.controller");
+        for (const admin of superAdmins) {
+          await NotificationController.createNotification(
+            admin._id.toString(),
+            "⚠️ High-Risk Seeker Alert",
+            notificationBody,
+            "crisis_alert",
+            { conversationId: conversation._id.toString(), userId }
+          );
+        }
+      } catch (err) {
+        console.error("[Notifications] Failed sending crisis flag to super admins:", err);
+      }
     }
 
     await conversation.save();

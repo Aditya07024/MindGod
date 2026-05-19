@@ -1,0 +1,487 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { Send, AlertTriangle, Sparkles } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { Theme } from '../../theme';
+import { useStore, FREE_DAILY_LIMIT } from '../../lib/store';
+import { ManasAvatar } from '../../components/ManasAvatar';
+import { CrisisOverlay } from '../../components/CrisisOverlay';
+import { detectCrisis } from '../../lib/crisis';
+import API from '../../lib/api';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
+export const ChatScreen: React.FC = () => {
+  const firstName = useStore(state => state.firstName) || 'friend';
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [streaming, setStreaming] = useState(false);
+  const [crisis, setCrisis] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Load message history from MongoDB whenever the screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      const loadHistory = async () => {
+        try {
+          const history = await API.chat.getMessages();
+          if (history && Array.isArray(history.messages) && history.messages.length > 0) {
+            const mapped: Message[] = history.messages.map((m: any) => ({
+              id: m._id || Math.random().toString(),
+              role: m.role,
+              content: m.content,
+              timestamp: m.timestamp ? new Date(m.timestamp).getTime() : Date.now()
+            }));
+            setMessages(mapped);
+          } else {
+            // Fallback to initial welcome message if no history exists yet
+            setMessages([
+              {
+                id: 'initial',
+                role: 'assistant',
+                content: `Hi ${firstName}. I'm Manas. Whatever brought you here — let's just sit with it together. What's on your mind?`,
+                timestamp: Date.now()
+              }
+            ]);
+          }
+        } catch (err) {
+          console.warn("Failed to fetch conversation history:", err);
+          // Fallback to welcome message on error
+          setMessages([
+            {
+              id: 'initial',
+              role: 'assistant',
+              content: `Hi ${firstName}. I'm Manas. Whatever brought you here — let's just sit with it together. What's on your mind?`,
+              timestamp: Date.now()
+            }
+          ]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadHistory();
+      
+      return () => {
+        // Optional cleanup on unfocus
+      };
+    }, [firstName])
+  );
+
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  const usedToday = messages.filter(m => 
+    m.role === 'user' && 
+    new Date(m.timestamp).toLocaleDateString('en-CA') === todayStr
+  ).length;
+  const remaining = Math.max(0, FREE_DAILY_LIMIT - usedToday);
+  const limitHit = remaining === 0;
+
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || streaming || limitHit) return;
+
+    // Detect immediate crisis keywords
+    if (detectCrisis(text)) {
+      setCrisis(true);
+    }
+
+    const userMsg: Message = {
+      id: Math.random().toString(),
+      role: 'user',
+      content: text,
+      timestamp: Date.now()
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setStreaming(true);
+
+    const placeholderId = Math.random().toString();
+    const assistantPlaceholder: Message = {
+      id: placeholderId,
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now()
+    };
+    setMessages(prev => [...prev, assistantPlaceholder]);
+
+    // Scroll to bottom immediately
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+
+    try {
+      // Fetch response using API module
+      const res = await API.chat.sendMessage({ message: text });
+      
+      let replyText = res?.reply || "I am here with you. Can you tell me more about that?";
+      
+      // Simulate typing animation character by character for a highly polished micro-interaction feel
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < replyText.length) {
+          setMessages(prev => prev.map(m => 
+            m.id === placeholderId ? { ...m, content: replyText.substring(0, index + 1) } : m
+          ));
+          index += 2; // print 2 chars at a time for smooth pacing
+          scrollRef.current?.scrollToEnd({ animated: false });
+        } else {
+          clearInterval(interval);
+          setStreaming(false);
+        }
+      }, 20);
+
+    } catch (err) {
+      console.warn("API Chat fetch error, using graceful local empathy responder:", err);
+      // Failsafe local response generator for offline or simulation stages
+      const fallbackReplies = [
+        "I hear you. That sounds like a heavy weight to carry. Let's breathe through it together.",
+        "Take a slow breath. Whatever you are feeling right now is completely okay to feel. Tell me more.",
+        "Thank you for sharing that with me. I am right here with you. What do you feel in your body right now?"
+      ];
+      const randomReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < randomReply.length) {
+          setMessages(prev => prev.map(m => 
+            m.id === placeholderId ? { ...m, content: randomReply.substring(0, index + 1) } : m
+          ));
+          index += 2;
+          scrollRef.current?.scrollToEnd({ animated: false });
+        } else {
+          clearInterval(interval);
+          setStreaming(false);
+        }
+      }, 20);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      {/* Dynamic top bar */}
+      <View style={styles.topBar}>
+        <View style={styles.topBarLeft}>
+          <ManasAvatar size={34} />
+          <View>
+            <Text style={styles.companionName}>Manas</Text>
+            <View style={styles.statusRow}>
+              <View style={styles.pulseDot} />
+              <Text style={styles.statusText}>AI companion · always here</Text>
+            </View>
+          </View>
+        </View>
+        <View style={[
+          styles.limitBadge,
+          limitHit ? styles.limitBadgeHit : styles.limitBadgeNormal
+        ]}>
+          <Text style={[
+            styles.limitText,
+            limitHit ? styles.limitTextHit : styles.limitTextNormal
+          ]}>
+            {remaining} left
+          </Text>
+        </View>
+      </View>
+
+      {/* Messages Feed */}
+      <ScrollView 
+        ref={scrollRef}
+        style={styles.feed}
+        contentContainerStyle={styles.feedContent}
+        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+      >
+        {messages.map(m => {
+          const isUser = m.role === 'user';
+          return (
+            <View 
+              key={m.id} 
+              style={[
+                styles.msgBubbleRow,
+                isUser ? styles.msgRowUser : styles.msgRowAssistant
+              ]}
+            >
+              {!isUser && (
+                <View style={styles.avatarMini}>
+                  <Sparkles size={12} color="#FFF" />
+                </View>
+              )}
+              <View style={[
+                styles.bubble,
+                isUser ? styles.bubbleUser : styles.bubbleAssistant
+              ]}>
+                {m.content === '' && streaming ? (
+                  <View style={styles.typingBox}>
+                    <View style={styles.typingDot} />
+                    <View style={styles.typingDot} />
+                    <View style={styles.typingDot} />
+                  </View>
+                ) : (
+                  <Text style={[
+                    styles.bubbleText,
+                    isUser ? styles.textWhite : styles.textDark
+                  ]}>
+                    {m.content}
+                  </Text>
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+
+      {/* Limit Warning banner */}
+      {limitHit && (
+        <View style={styles.limitWarning}>
+          <View style={styles.warningHead}>
+            <AlertTriangle size={16} color={Theme.colors.secondary} />
+            <Text style={styles.warningTitle}>Daily limit reached</Text>
+          </View>
+          <Text style={styles.warningDesc}>
+            Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day.
+          </Text>
+        </View>
+      )}
+
+      {/* Input container */}
+      <View style={styles.inputArea}>
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          editable={!streaming && !limitHit}
+          placeholder={limitHit ? 'Daily limit reached' : 'Type what you feel…'}
+          placeholderTextColor={Theme.colors.outline}
+          style={styles.chatInput}
+        />
+        <TouchableOpacity
+          onPress={handleSend}
+          disabled={!input.trim() || streaming || limitHit}
+          style={[
+            styles.sendBtn,
+            (!input.trim() || streaming || limitHit) && styles.sendBtnDisabled
+          ]}
+        >
+          <Send size={18} color="#FFF" />
+        </TouchableOpacity>
+      </View>
+
+      <CrisisOverlay open={crisis} onClose={() => setCrisis(false)} />
+    </KeyboardAvoidingView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Theme.colors.background,
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.margin,
+    paddingTop: 50,
+    paddingBottom: Theme.spacing.xs,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.surfaceHigh,
+  },
+  topBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+  },
+  companionName: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 16,
+    color: Theme.colors.onSurface,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 1,
+  },
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4CAF50',
+  },
+  statusText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11,
+    color: Theme.colors.textMuted,
+  },
+  limitBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Theme.radius.full,
+  },
+  limitBadgeNormal: {
+    backgroundColor: Theme.colors.primary + '15',
+  },
+  limitBadgeHit: {
+    backgroundColor: Theme.colors.errorContainer,
+  },
+  limitText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 10,
+  },
+  limitTextNormal: {
+    color: Theme.colors.primary,
+  },
+  limitTextHit: {
+    color: Theme.colors.onErrorContainer,
+  },
+  feed: {
+    flex: 1,
+  },
+  feedContent: {
+    paddingHorizontal: Theme.spacing.margin,
+    paddingVertical: Theme.spacing.md,
+    gap: Theme.spacing.sm,
+  },
+  msgBubbleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+    maxWidth: '80%',
+  },
+  msgRowUser: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row-reverse',
+  },
+  msgRowAssistant: {
+    alignSelf: 'flex-start',
+  },
+  avatarMini: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: Theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  bubble: {
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.sm,
+    shadowColor: '#2E6E65',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  bubbleUser: {
+    backgroundColor: Theme.colors.primary,
+    borderBottomRightRadius: 4,
+  },
+  bubbleAssistant: {
+    backgroundColor: '#FFF',
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+  },
+  bubbleText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  textWhite: {
+    color: '#FFF',
+  },
+  textDark: {
+    color: Theme.colors.onSurface,
+  },
+  typingBox: {
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  typingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Theme.colors.primary + '80',
+  },
+  limitWarning: {
+    backgroundColor: Theme.colors.secondaryContainer + '10',
+    borderWidth: 1,
+    borderColor: Theme.colors.secondaryContainer + '40',
+    borderRadius: Theme.radius.lg,
+    padding: Theme.spacing.sm,
+    marginHorizontal: Theme.spacing.margin,
+    marginBottom: Theme.spacing.xs,
+  },
+  warningHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  warningTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 13,
+    color: Theme.colors.secondary,
+  },
+  warningDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11,
+    color: Theme.colors.textMuted,
+    lineHeight: 16,
+  },
+  inputArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+    paddingHorizontal: Theme.spacing.margin,
+    paddingVertical: Theme.spacing.sm,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.surfaceHigh,
+    paddingBottom: Platform.OS === 'ios' ? 24 : Theme.spacing.sm,
+  },
+  chatInput: {
+    flex: 1,
+    height: 48,
+    borderRadius: Theme.radius.full,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontFamily: Theme.fonts.body,
+    color: Theme.colors.onSurface,
+    backgroundColor: Theme.colors.surfaceLow,
+  },
+  sendBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendBtnDisabled: {
+    opacity: 0.4,
+  },
+});
+export default ChatScreen;

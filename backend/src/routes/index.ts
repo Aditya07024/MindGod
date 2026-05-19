@@ -11,6 +11,7 @@ import paymentRoutes from "./payment";
 import subscriptionRoutes from "./subscription";
 import orgRoutes from "./org";
 import planRoutes from "./plan";
+import notificationRoutes from "./notification";
 
 export const apiRouter = Router();
 
@@ -30,4 +31,5 @@ apiRouter.use("/subscription", subscriptionRoutes);
 apiRouter.use("/admin", adminRoutes);
 apiRouter.use("/org", orgRoutes);
 apiRouter.use("/plans", planRoutes);
+apiRouter.use("/notifications", notificationRoutes);
 

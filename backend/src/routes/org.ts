@@ -27,12 +27,14 @@ router.get(
   "/pending-therapists",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.pendingTherapists,
 );
 router.patch(
   "/therapist/:id/verify",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.verifyTherapist,
 );
 
@@ -63,12 +65,14 @@ router.patch(
   "/join-request/:userId/approve",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.approveJoinRequest,
 );
 router.patch(
   "/join-request/:userId/reject",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.rejectJoinRequest,
 );
 
@@ -94,6 +98,7 @@ router.get(
   "/user-data/:userId",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.getUserData,
 );
 
@@ -102,18 +107,21 @@ router.post(
   "/invite-therapist",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.inviteTherapist,
 );
 router.get(
   "/invitations",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.listInvitations,
 );
 router.delete(
   "/invitation/:id",
   requireAuth,
   requireRole(["org_admin"]),
+  requireSubscription,
   OrgController.cancelInvitation,
 );
 

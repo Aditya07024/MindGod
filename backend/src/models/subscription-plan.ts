@@ -11,6 +11,21 @@ export interface ISubscriptionPlan extends Document {
     hasPriorityBooking: boolean;
     therapistDiscount: number; // percentage
     hasUnlimitedJournal: boolean;
+    // Seeker Features
+    enableChat: boolean;
+    enableTherapistAccess: boolean;
+    enableJournaling: boolean;
+    enableMoodCheck: boolean;
+    enableBreathe: boolean;
+    // Therapist Features
+    enableScheduling: boolean;
+    enableBookings: boolean;
+    enableEarnings: boolean;
+    enableProfileControl: boolean;
+    // Org Features
+    enableRosterManagement: boolean;
+    enableTherapistAffiliation: boolean;
+    enableAnalytics: boolean;
   };
   razorpayPlanId?: string;
   createdAt: Date;
@@ -32,7 +47,22 @@ const SubscriptionPlanSchema = new Schema<ISubscriptionPlan>(
       dailyChatLimit: { type: Number, default: 7 },
       hasPriorityBooking: { type: Boolean, default: false },
       therapistDiscount: { type: Number, default: 0 },
-      hasUnlimitedJournal: { type: Boolean, default: false }
+      hasUnlimitedJournal: { type: Boolean, default: false },
+      // Seeker Features
+      enableChat: { type: Boolean, default: true },
+      enableTherapistAccess: { type: Boolean, default: true },
+      enableJournaling: { type: Boolean, default: true },
+      enableMoodCheck: { type: Boolean, default: true },
+      enableBreathe: { type: Boolean, default: true },
+      // Therapist Features
+      enableScheduling: { type: Boolean, default: true },
+      enableBookings: { type: Boolean, default: true },
+      enableEarnings: { type: Boolean, default: true },
+      enableProfileControl: { type: Boolean, default: true },
+      // Org Features
+      enableRosterManagement: { type: Boolean, default: true },
+      enableTherapistAffiliation: { type: Boolean, default: true },
+      enableAnalytics: { type: Boolean, default: true }
     },
     razorpayPlanId: { type: String }
   },

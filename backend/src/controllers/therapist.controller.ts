@@ -317,6 +317,7 @@ export class TherapistController {
 
       const bookings = await TherapistBooking.find({ therapistId: userId })
         .sort({ slot: 1 })
+        .populate("userId", "fullName orgId")
         .lean();
 
       // Build monthly revenue buckets for chart
@@ -331,7 +332,9 @@ export class TherapistController {
       res.json({
         bookings: bookings.map((b) => ({
           id: b._id,
-          clientId: b.userId,
+          clientId: (b.userId as any)?._id || b.userId,
+          clientName: (b.userId as any)?.fullName || "Corporate Seeker",
+          clientOrgId: (b.userId as any)?.orgId || null,
           slot: b.slot,
           status: b.status,
           topic: "Therapy session",

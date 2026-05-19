@@ -5,6 +5,7 @@ import { User, TherapistBooking, Mood, JournalEntry } from "@/models";
 import { AppError } from "@/lib/app-error";
 import LiveKitService from "@/services/livekit.service";
 import mongoose from "mongoose";
+import { NotificationController } from "./notification.controller";
 
 
 export class BookingController {
@@ -85,6 +86,32 @@ export class BookingController {
         videoRoomId: `room-${Date.now()}`,
       });
 
+      // Send live notifications
+      try {
+        const seekerName = (await User.findById(req.user!.sub).select("fullName"))?.fullName || "A Seeker";
+        const formattedSlot = slotDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+        // Seeker confirmation notification
+        await NotificationController.createNotification(
+          req.user!.sub,
+          "Booking Reserved",
+          `Your appointment with Dr. ${therapist.therapistProfile.name} is reserved for ${formattedSlot}.`,
+          "booking",
+          { bookingId: booking._id.toString(), therapistId }
+        );
+
+        // Therapist notification alert
+        await NotificationController.createNotification(
+          therapistId,
+          "New Session Booked",
+          `${seekerName} has booked a counseling session with you for ${formattedSlot}.`,
+          "booking",
+          { bookingId: booking._id.toString(), seekerId: req.user!.sub }
+        );
+      } catch (err) {
+        console.error("[Notifications] Failed sending booking alerts:", err);
+      }
+
       res.status(201).json({
         booking: {
           id: booking._id,
@@ -116,6 +143,23 @@ export class BookingController {
 
       booking.status = "cancelled";
       await booking.save();
+
+      // Send live cancellation notifications
+      try {
+        const seekerName = (await User.findById(req.user!.sub).select("fullName"))?.fullName || "A Seeker";
+        const formattedSlot = new Date(booking.slot).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+        // Notify Therapist of cancellation
+        await NotificationController.createNotification(
+          booking.therapistId.toString(),
+          "Session Cancelled",
+          `${seekerName} has cancelled the session booked for ${formattedSlot}.`,
+          "booking",
+          { bookingId: booking._id.toString(), seekerId: req.user!.sub }
+        );
+      } catch (err) {
+        console.error("[Notifications] Failed sending cancellation alert:", err);
+      }
 
       res.json({ message: "Booking cancelled successfully", bookingId });
     },

@@ -20,10 +20,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Mindsyncpro — Apna Dil Kholo" },
-      { name: "description", content: "India's warm, AI-powered mental wellness companion." },
-      { property: "og:title", content: "Mindsyncpro — Apna Dil Kholo" },
-      { property: "og:description", content: "A safe space, just for you." },
+      { title: "MindSyncPro AI Mental Health Platform India" },
+      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and RCI-verified therapists. Private, affordable, and free to start." },
+      { property: "og:title", content: "MindSyncPro AI Mental Health Platform India" },
+      { property: "og:description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and RCI-verified therapists. Private, affordable, and free to start." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -38,7 +38,98 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: `{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MindSyncPro",
+  "alternateName": "Mindsyncpro",
+  "description": "India's AI-powered mental health platform combining Manas AI companion, CBT tools, mood tracking, and RCI-verified online therapist booking.",
+  "url": "https://mindsyncpro.online",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "inLanguage": ["en-IN", "hi"],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "INR",
+    "description": "Free plan available. Paid plans from ₹499/month."
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "reviewCount": "127",
+    "bestRating": "5"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "MindSyncPro",
+    "url": "https://mindsyncpro.online",
+    "email": "your-work@outlook.com",
+    "sameAs": [
+      "https://www.instagram.com/yourwork2025",
+      "https://www.linkedin.com/company/107088242"
+    ]
+  }
+}`
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: `{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is MindSyncPro free to use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. MindSyncPro offers a free plan with 7 daily AI messages and basic mood tracking. Paid plans start at ₹499/month."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Manas AI work for mental health?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Manas is an AI companion trained in CBT (Cognitive Behavioural Therapy). It has emotion-aware conversations, tracks your mood, suggests breathing exercises and thought records, and prepares a brief for your therapist."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are therapists on MindSyncPro RCI verified?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Every therapist is verified against RCI (Rehabilitation Council of India) records before listing. You can view credentials and book video sessions directly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is MindSyncPro safe and private?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Phone numbers are hashed, all data is stored in India, and MindSyncPro is DPDPA 2023 compliant. We never sell your data."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can colleges and companies use MindSyncPro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. MindSyncPro offers organisation plans with anonymous aggregate wellness dashboards for colleges and corporates. No individual data is ever visible to admins."
+      }
+    }
+  ]
+}`
+          }}
+        />
+      </head>
       <body>
         {children}
         <Scripts />

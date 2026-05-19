@@ -34,7 +34,19 @@ function SuperAdminDashboard() {
       dailyChatLimit: 7,
       hasPriorityBooking: false,
       therapistDiscount: 0,
-      hasUnlimitedJournal: false
+      hasUnlimitedJournal: false,
+      enableChat: true,
+      enableTherapistAccess: true,
+      enableJournaling: true,
+      enableMoodCheck: true,
+      enableBreathe: true,
+      enableScheduling: true,
+      enableBookings: true,
+      enableEarnings: true,
+      enableProfileControl: true,
+      enableRosterManagement: true,
+      enableTherapistAffiliation: true,
+      enableAnalytics: true
     }
   });
   const [adminPassword, setAdminPassword] = useState('');
@@ -423,7 +435,12 @@ function SuperAdminDashboard() {
                 onClick={() => {
                   setPlanForm({ 
                     name: '', price: 0, audience: 'therapist', features: '', isActive: true,
-                    config: { dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false }
+                    config: { 
+                      dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false,
+                      enableChat: true, enableTherapistAccess: true, enableJournaling: true, enableMoodCheck: true, enableBreathe: true,
+                      enableScheduling: true, enableBookings: true, enableEarnings: true, enableProfileControl: true,
+                      enableRosterManagement: true, enableTherapistAffiliation: true, enableAnalytics: true
+                    }
                   });
                   setPlanModal({ open: true });
                 }}
@@ -461,7 +478,24 @@ function SuperAdminDashboard() {
                           audience: p.audience, 
                           features: p.features.join('\n'), 
                           isActive: p.isActive,
-                          config: p.config || { dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false }
+                          config: {
+                            dailyChatLimit: p.config?.dailyChatLimit ?? 7,
+                            hasPriorityBooking: p.config?.hasPriorityBooking ?? false,
+                            therapistDiscount: p.config?.therapistDiscount ?? 0,
+                            hasUnlimitedJournal: p.config?.hasUnlimitedJournal ?? false,
+                            enableChat: p.config?.enableChat ?? true,
+                            enableTherapistAccess: p.config?.enableTherapistAccess ?? true,
+                            enableJournaling: p.config?.enableJournaling ?? true,
+                            enableMoodCheck: p.config?.enableMoodCheck ?? true,
+                            enableBreathe: p.config?.enableBreathe ?? true,
+                            enableScheduling: p.config?.enableScheduling ?? true,
+                            enableBookings: p.config?.enableBookings ?? true,
+                            enableEarnings: p.config?.enableEarnings ?? true,
+                            enableProfileControl: p.config?.enableProfileControl ?? true,
+                            enableRosterManagement: p.config?.enableRosterManagement ?? true,
+                            enableTherapistAffiliation: p.config?.enableTherapistAffiliation ?? true,
+                            enableAnalytics: p.config?.enableAnalytics ?? true
+                          }
                         });
                         setPlanModal({ open: true, plan: p });
                       }}
@@ -703,32 +737,62 @@ function SuperAdminDashboard() {
                           <span className="text-sm text-slate-300">Priority Booking Access</span>
                         </label>
                       </div>
+                      
+                      <div className="flex flex-col gap-2 pt-2 border-t border-slate-800/50">
+                        <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Toggle Portal Features</p>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableChat ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableChat: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Manas AI Chat</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableTherapistAccess ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableTherapistAccess: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Therapist Matching & Booking</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableJournaling ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableJournaling: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">CBT Journal logs</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableMoodCheck ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableMoodCheck: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Mood Diary check-ins</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableBreathe ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableBreathe: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Breath Coaching widget</span>
+                        </label>
+                      </div>
                     </div>
                   )}
 
                   {/* THERAPIST PLAN OPTIONS */}
                   {planForm.audience === 'therapist' && (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Platform Fee %</label>
-                          <input type="number" 
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Monthly Bookings</label>
-                          <input type="number" placeholder="Unlimited"
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-                        </div>
-                      </div>
                       <div className="flex flex-col gap-2">
+                        <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Toggle Portal Features</p>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked />
-                          <span className="text-sm text-slate-300">Premium Profile Badge</span>
+                          <input type="checkbox" checked={planForm.config.enableScheduling ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableScheduling: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Schedule Management (Slots)</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked />
-                          <span className="text-sm text-slate-300">Priority Search Ranking</span>
+                          <input type="checkbox" checked={planForm.config.enableBookings ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableBookings: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Sessions Booking Logs</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableEarnings ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableEarnings: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Earnings Sheets & Statements</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={planForm.config.enableProfileControl ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableProfileControl: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Professional Listing Profile Edits</span>
                         </label>
                       </div>
                     </div>
@@ -738,21 +802,21 @@ function SuperAdminDashboard() {
                   {planForm.audience === 'organization' && (
                     <div className="space-y-4">
                       <div className="flex flex-col gap-2">
+                        <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Toggle Portal Features</p>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked />
-                          <span className="text-sm text-slate-300">Cover ALL Employees (Bulk)</span>
+                          <input type="checkbox" checked={planForm.config.enableRosterManagement ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableRosterManagement: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Roster Management (Invites & Seats)</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked />
-                          <span className="text-sm text-slate-300">Advanced Analytics Dashboard</span>
+                          <input type="checkbox" checked={planForm.config.enableTherapistAffiliation ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableTherapistAffiliation: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Therapist Affiliation Network</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked />
-                          <span className="text-sm text-slate-300">Custom Wellness Workshops</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked />
-                          <span className="text-sm text-slate-300">Unlimited AI for Staff</span>
+                          <input type="checkbox" checked={planForm.config.enableAnalytics ?? true} 
+                            onChange={e => setPlanForm({...planForm, config: {...planForm.config, enableAnalytics: e.target.checked}})} />
+                          <span className="text-sm text-slate-300">Workplace Mood & Bento Analytics</span>
                         </label>
                       </div>
                     </div>

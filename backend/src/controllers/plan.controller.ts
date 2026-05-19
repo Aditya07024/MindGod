@@ -22,7 +22,7 @@ export class PlanController {
   static createPlan = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { name, price, features, audience, config, password } = req.body;
 
-    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    if (req.user?.role !== "super_admin" && password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
@@ -53,7 +53,7 @@ export class PlanController {
     const { id } = req.params;
     const { name, price, features, audience, config, isActive, password } = req.body;
 
-    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    if (req.user?.role !== "super_admin" && password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
@@ -80,7 +80,7 @@ export class PlanController {
     const { id } = req.params;
     const { password } = req.body;
 
-    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    if (req.user?.role !== "super_admin" && password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
