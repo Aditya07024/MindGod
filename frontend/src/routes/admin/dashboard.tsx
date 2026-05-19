@@ -249,21 +249,37 @@ function SuperAdminDashboard() {
                       ))}
                     </div>
                     {/* Expanded details */}
-                    <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-700 pt-3">
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-700 pt-3">
                       <div>
                         <p className="text-xs text-slate-400 font-semibold mb-1">Professional Details</p>
-                        <p className="text-xs text-slate-300">Exp: {t.experienceYears} yrs</p>
+                        <p className="text-xs text-slate-300">Tier: {t.experienceCategory}</p>
+                        <p className="text-xs text-slate-300">Fee: ₹{t.sessionFee}</p>
                         <p className="text-xs text-slate-300">Qual: {t.qualification}</p>
                         <p className="text-xs text-slate-300 line-clamp-1" title={t.clinicDetails}>Clinic: {t.clinicDetails}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Verification Links</p>
-                        <div className="flex flex-col gap-1">
-                          {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Degree / Certificate ↗</a>}
-                          {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-xs text-violet-400 hover:underline">License / RCI ↗</a>}
-                          {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Government ID ↗</a>}
-                          {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-xs text-blue-400 hover:underline">Intro Video ↗</a>}
+                        <p className="text-xs text-slate-400 font-semibold mb-1">Earnings & Payouts</p>
+                        <p className="text-xs text-slate-300">Total Bookings: {t.totalBookings}</p>
+                        <p className="text-xs text-slate-300">Sessions Given: {t.sessionsGiven}</p>
+                        <p className="text-xs text-slate-300 font-bold text-teal-400">Payout Due (70%): ₹{t.totalPayout?.toLocaleString('en-IN')}</p>
+                        <div className="flex flex-col gap-1 mt-1">
+                          {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
+                          {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License / RCI ↗</a>}
+                          {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Government ID ↗</a>}
+                          {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-[11px] text-blue-400 hover:underline">Intro Video ↗</a>}
                         </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-semibold mb-1">Payment Details</p>
+                        {t.paymentDetails?.upiId ? (
+                          <p className="text-xs text-slate-300 font-mono">UPI: {t.paymentDetails.upiId}</p>
+                        ) : null}
+                        {t.paymentDetails?.bankDetails ? (
+                          <p className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-tight">{t.paymentDetails.bankDetails}</p>
+                        ) : null}
+                        {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
+                          <p className="text-xs text-slate-500 italic">No banking info added</p>
+                        ) : null}
                       </div>
                     </div>
                   </div>

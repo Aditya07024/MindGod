@@ -160,23 +160,39 @@ export class AdminController {
       $or: [{ orgId: null }, { orgId: { $exists: false } }]
     }).select("therapistProfile phoneMasked createdAt").lean();
 
-    res.json({
-      therapists: pending.map(t => ({
-        id: t._id,
-        name: t.therapistProfile?.name || "Therapist",
-        specializations: t.therapistProfile?.specializations ?? [],
-        languages: t.therapistProfile?.languages ?? [],
-        rating: t.therapistProfile?.rating ?? 5.0,
-        sessionCount: t.therapistProfile?.sessionCount ?? 0,
-        sessionFee: t.therapistProfile?.sessionFee ?? 1800,
-        verified: t.therapistProfile?.verified ?? false,
-        verificationStatus: t.therapistProfile?.verificationStatus ?? "pending",
-        bio: t.therapistProfile?.bio ?? "",
-        introVideoUrl: t.therapistProfile?.introVideoUrl ?? "",
-        availability: t.therapistProfile?.availability ?? [],
-        documents: t.therapistProfile?.documents ?? null
-      }))
-    });
+    const therapistStats = await Promise.all(
+      pending.map(async (t) => {
+        const bookings = await TherapistBooking.find({ therapistId: t._id }).select("status payment.amount payment.paid").lean();
+        const totalBookings = bookings.length;
+        const sessionsGiven = bookings.filter((b: any) => b.status === "completed").length;
+        const totalPayout = bookings
+          .filter((b: any) => b.status === "completed" && b.payment?.paid)
+          .reduce((sum: number, b: any) => sum + (b.payment?.amount || 0), 0) * 0.70;
+
+        return {
+          id: t._id,
+          name: t.therapistProfile?.name || "Therapist",
+          specializations: t.therapistProfile?.specializations ?? [],
+          languages: t.therapistProfile?.languages ?? [],
+          rating: t.therapistProfile?.rating ?? 5.0,
+          sessionCount: t.therapistProfile?.sessionCount ?? 0,
+          sessionFee: t.therapistProfile?.sessionFee ?? 1800,
+          experienceCategory: t.therapistProfile?.experienceCategory ?? "N/A",
+          verified: t.therapistProfile?.verified ?? false,
+          verificationStatus: t.therapistProfile?.verificationStatus ?? "pending",
+          bio: t.therapistProfile?.bio ?? "",
+          introVideoUrl: t.therapistProfile?.introVideoUrl ?? "",
+          availability: t.therapistProfile?.availability ?? [],
+          documents: t.therapistProfile?.documents ?? null,
+          paymentDetails: t.therapistProfile?.paymentDetails ?? null,
+          totalBookings,
+          sessionsGiven,
+          totalPayout
+        };
+      })
+    );
+
+    res.json({ therapists: therapistStats });
   });
 
   /** PATCH /admin/therapist/:id/verify — Super admin: verify or revoke therapist */

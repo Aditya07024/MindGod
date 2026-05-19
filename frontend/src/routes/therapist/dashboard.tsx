@@ -779,6 +779,36 @@ function TherapistDashboard() {
                     )}
                   </div>
 
+                  {/* Client Profile / Onboarding */}
+                  {(briefData.clientName || briefData.onboardingDetails) && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Client Onboarding Profile</p>
+                      <p className="text-sm font-semibold text-slate-800">Name: {briefData.clientName}</p>
+                      {briefData.onboardingDetails && (
+                        <>
+                          {briefData.onboardingDetails.moodScore && (
+                            <p className="text-sm text-slate-600">Onboarding Mood Score: <span className="font-semibold">{briefData.onboardingDetails.moodScore}/10</span></p>
+                          )}
+                          {briefData.onboardingDetails.primaryNeed && (
+                            <p className="text-sm text-slate-600">Primary Goal/Need: <span className="font-semibold">{briefData.onboardingDetails.primaryNeed}</span></p>
+                          )}
+                          {briefData.onboardingDetails.concerns?.length > 0 && (
+                            <div className="text-sm text-slate-600">
+                              <span>Main Concerns:</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {briefData.onboardingDetails.concerns.map((c: string, idx: number) => (
+                                  <span key={idx} className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+                                    {c}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   {/* Groq Summary */}
                   {briefData.groqSummary && (
                     <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">

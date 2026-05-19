@@ -52,10 +52,8 @@ export class AuthController {
     async (req: AuthedRequest, res: Response) => {
       const {
         fullName,
-        email,
-        phone,
         qualification,
-        experienceYears,
+        experienceCategory,
         specializations,
         clinicDetails,
         degreeUrl,
@@ -63,7 +61,9 @@ export class AuthController {
         governmentIdUrl,
         introVideoUrl,
         orgId,
-        location
+        location,
+        upiId,
+        bankDetails
       } = req.body;
 
       const user = await User.findById(req.user!.sub);
@@ -75,13 +75,18 @@ export class AuthController {
 
       // Ensure they have the therapist role now, but verification is pending
       user.role = "therapist";
+
+      let sessionFee = 899; // Default
+      if (experienceCategory === "5 to 10 yr") sessionFee = 1299;
+      else if (experienceCategory === "10 to 15 yr") sessionFee = 1599;
+      else if (experienceCategory === "more than 15 yr") sessionFee = 2199;
       
       user.therapistProfile = {
         name: fullName || user.fullName || "",
         verified: false,
         verificationStatus: "pending",
         qualification,
-        experienceYears,
+        experienceCategory,
         clinicDetails,
         specializations: specializations || [],
         documents: {
@@ -91,10 +96,14 @@ export class AuthController {
         },
         introVideoUrl,
         languages: [],
-        sessionFee: 0,
+        sessionFee,
         rating: 0,
         sessionCount: 0,
-        availability: []
+        availability: [],
+        paymentDetails: {
+          upiId,
+          bankDetails
+        }
       };
 
       await user.save();

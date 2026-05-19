@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, FileText, Video, CheckCircle, ArrowRight } from 'lucide-react';
+import { User, FileText, Video, CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
 import API from '@/lib/api';
 
 export const Route = createFileRoute('/therapist/onboarding')({
@@ -22,7 +22,7 @@ function TherapistOnboarding() {
   const [formData, setFormData] = useState({
     fullName: '',
     qualification: '',
-    experienceYears: '',
+    experienceCategory: '',
     specializations: '',
     clinicDetails: '',
     degreeUrl: '',
@@ -31,6 +31,8 @@ function TherapistOnboarding() {
     introVideoUrl: '',
     orgId: '',
     location: '',
+    upiId: '',
+    bankDetails: '',
   });
 
   // Check if they are already verified or pending
@@ -40,7 +42,7 @@ function TherapistOnboarding() {
       if (status === 'verified') {
         nav({ to: '/therapist/dashboard', replace: true });
       } else if (status === 'pending') {
-        setStep(4); // Show success/pending screen
+        setStep(5); // Show success/pending screen
       }
     });
   }, [nav]);
@@ -58,11 +60,10 @@ function TherapistOnboarding() {
       
       await API.auth.therapistOnboarding({
         ...formData,
-        experienceYears: Number(formData.experienceYears) || 0,
         specializations: specArray,
         orgId: formData.orgId === 'independent' ? null : formData.orgId,
       });
-      setStep(4);
+      setStep(5);
     } catch (err: any) {
       setError(err.message || 'Failed to submit application');
     } finally {
@@ -81,7 +82,7 @@ function TherapistOnboarding() {
         {/* Step Indicator */}
         <div className="flex items-center justify-between mb-8 relative">
           <div className="absolute left-0 top-1/2 w-full h-0.5 bg-border -z-10 -translate-y-1/2" />
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <div
               key={s}
               className={`size-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
@@ -89,9 +90,10 @@ function TherapistOnboarding() {
               }`}
             >
               {s === 1 && <User className="size-4" />}
-              {s === 2 && <FileText className="size-4" />}
-              {s === 3 && <Video className="size-4" />}
-              {s === 4 && <CheckCircle className="size-4" />}
+              {s === 2 && <CreditCard className="size-4" />}
+              {s === 3 && <FileText className="size-4" />}
+              {s === 4 && <Video className="size-4" />}
+              {s === 5 && <CheckCircle className="size-4" />}
             </div>
           ))}
         </div>
@@ -121,12 +123,25 @@ function TherapistOnboarding() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground uppercase">Experience (Yrs)</label>
-                    <input
-                      name="experienceYears" type="number" value={formData.experienceYears} onChange={handleChange}
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Experience</label>
+                    <select
+                      name="experienceCategory" value={formData.experienceCategory} onChange={handleChange as any}
                       className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
-                      placeholder="5"
-                    />
+                    >
+                      <option value="" disabled>Select Experience</option>
+                      <option value="less than 5 yr">&lt; 5 years</option>
+                      <option value="5 to 10 yr">5 to 10 years</option>
+                      <option value="10 to 15 yr">10 to 15 years</option>
+                      <option value="more than 15 yr">&gt; 15 years</option>
+                    </select>
+                    {formData.experienceCategory && (
+                      <p className="text-xs text-primary mt-1 font-medium">
+                        Session Fee set to: ₹
+                        {formData.experienceCategory === 'less than 5 yr' ? 899 :
+                         formData.experienceCategory === '5 to 10 yr' ? 1299 :
+                         formData.experienceCategory === '10 to 15 yr' ? 1599 : 2199}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -172,7 +187,7 @@ function TherapistOnboarding() {
                 </div>
 
                 <button
-                  disabled={!formData.fullName || !formData.qualification || !formData.orgId || !formData.location}
+                  disabled={!formData.fullName || !formData.qualification || !formData.experienceCategory || !formData.orgId || !formData.location}
                   onClick={() => setStep(2)}
                   className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50 mt-6"
                 >
@@ -183,6 +198,51 @@ function TherapistOnboarding() {
           )}
 
           {step === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <div className="space-y-4 rounded-3xl bg-card p-6 shadow-sm border border-border">
+                <h2 className="font-display text-xl font-bold text-primary-deep">Payment Details</h2>
+                <div className="bg-primary-soft/30 border border-primary/20 p-4 rounded-xl text-sm text-primary-deep leading-relaxed">
+                  <strong>Important:</strong> You will get the payment weekly according to your user bookings. 
+                  The platform takes a <strong>30% commission</strong> for each booking by a user.
+                </div>
+                
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">UPI ID</label>
+                  <input
+                    name="upiId" value={formData.upiId} onChange={handleChange}
+                    className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
+                    placeholder="example@upi"
+                  />
+                </div>
+                
+                <div className="text-center text-xs font-semibold text-muted-foreground uppercase my-2">OR</div>
+
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Bank Details</label>
+                  <textarea
+                    name="bankDetails" value={formData.bankDetails} onChange={handleChange} rows={3}
+                    className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
+                    placeholder="Account Name, A/C No, IFSC Code"
+                  />
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button onClick={() => setStep(1)} className="flex-1 rounded-xl border border-input bg-background px-4 py-3 font-semibold transition hover:bg-muted">
+                    Back
+                  </button>
+                  <button
+                    disabled={!formData.upiId && !formData.bankDetails}
+                    onClick={() => setStep(3)}
+                    className="flex-1 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    Next Step
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="space-y-4 rounded-3xl bg-card p-6 shadow-sm border border-border">
                 <h2 className="font-display text-xl font-bold text-primary-deep">Document Verification</h2>
@@ -221,7 +281,7 @@ function TherapistOnboarding() {
                   </button>
                   <button
                     disabled={!formData.degreeUrl || !formData.licenseUrl || !formData.governmentIdUrl}
-                    onClick={() => setStep(3)}
+                    onClick={() => setStep(4)}
                     className="flex-1 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
                   >
                     Next Step
@@ -231,7 +291,7 @@ function TherapistOnboarding() {
             </motion.div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="space-y-4 rounded-3xl bg-card p-6 shadow-sm border border-border">
                 <h2 className="font-display text-xl font-bold text-primary-deep">Video Introduction</h2>
@@ -249,7 +309,7 @@ function TherapistOnboarding() {
                 {error && <div className="text-sm text-red-500 font-medium bg-red-50 p-3 rounded-lg">{error}</div>}
 
                 <div className="flex gap-3 mt-6">
-                  <button onClick={() => setStep(2)} className="flex-1 rounded-xl border border-input bg-background px-4 py-3 font-semibold transition hover:bg-muted">
+                  <button onClick={() => setStep(3)} className="flex-1 rounded-xl border border-input bg-background px-4 py-3 font-semibold transition hover:bg-muted">
                     Back
                   </button>
                   <button
@@ -264,7 +324,7 @@ function TherapistOnboarding() {
             </motion.div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <motion.div key="s4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
               <div className="flex flex-col items-center justify-center space-y-4 rounded-3xl bg-card p-8 shadow-sm border border-border text-center">
                 <div className="grid size-16 place-items-center rounded-full bg-primary/10 text-primary">

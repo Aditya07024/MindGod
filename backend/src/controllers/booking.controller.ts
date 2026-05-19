@@ -453,8 +453,14 @@ Write a therapist pre-session brief:`;
         }
       }
 
+      const client = await User.findById(booking.userId)
+        .select("fullName onboarding")
+        .lean();
+
       res.json({
         clientId: booking.userId,
+        clientName: client?.fullName || "Anonymous Client",
+        onboardingDetails: client?.onboarding || null,
         moodChart: moods.map((m) => ({
           date: m.date,
           score: m.score,

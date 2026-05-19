@@ -187,19 +187,43 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
                   {/* Details list */}
                   <View style={styles.detailsBox}>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>License Num:</Text>
-                      <Text style={styles.detailValue}>{t.therapistProfile?.licenseNum || 'Not Provided'}</Text>
+                      <Text style={styles.detailLabel}>Tier (Exp):</Text>
+                      <Text style={styles.detailValue}>{t.experienceCategory || 'N/A'}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Clinic Suite:</Text>
-                      <Text style={styles.detailValue}>{t.therapistProfile?.clinicDetails || 'Not Provided'}</Text>
+                      <Text style={styles.detailLabel}>Fixed Fee:</Text>
+                      <Text style={styles.detailValue}>₹{t.sessionFee || 0}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Specializations:</Text>
-                      <Text style={styles.detailValue}>
-                        {t.therapistProfile?.specializations?.join(', ') || 'Not Specified'}
+                      <Text style={styles.detailLabel}>Sessions Given:</Text>
+                      <Text style={styles.detailValue}>{t.sessionsGiven || 0} completed</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Payout Due (70%):</Text>
+                      <Text style={[styles.detailValue, { color: Theme.colors.primary, fontFamily: Theme.fonts.bodyBold }]}>
+                        ₹{t.totalPayout?.toLocaleString('en-IN') || 0}
                       </Text>
                     </View>
+                    {t.paymentDetails?.upiId ? (
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>UPI ID:</Text>
+                        <Text style={[styles.detailValue, { fontFamily: Theme.fonts.bodyBold }]}>{t.paymentDetails.upiId}</Text>
+                      </View>
+                    ) : null}
+                    {t.paymentDetails?.bankDetails ? (
+                      <View style={[styles.detailRow, { flexDirection: 'column', alignItems: 'flex-start', gap: 2 }]}>
+                        <Text style={styles.detailLabel}>Bank Details:</Text>
+                        <Text style={[styles.detailValue, { fontSize: 11, fontFamily: Theme.fonts.body, color: Theme.colors.outline }]}>
+                          {t.paymentDetails.bankDetails}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Payment Details:</Text>
+                        <Text style={[styles.detailValue, { fontStyle: 'italic', color: Theme.colors.outline }]}>Not Provided</Text>
+                      </View>
+                    ) : null}
                   </View>
 
                   {/* Actions */}

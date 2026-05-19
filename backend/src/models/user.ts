@@ -35,6 +35,7 @@ export interface IUser extends Document {
     verificationStatus: "pending" | "verified" | "rejected";
     qualification?: string;
     experienceYears?: number;
+    experienceCategory?: string;
     clinicDetails?: string;
     documents?: {
       degreeUrl?: string;
@@ -49,6 +50,10 @@ export interface IUser extends Document {
     introVideoUrl?: string;
     bio?: string;
     availability: { day: number; slots: string[] }[];
+    paymentDetails?: {
+      upiId?: string;
+      bankDetails?: string;
+    };
   };
   deletedAt?: Date;
   createdAt: Date;
@@ -103,6 +108,7 @@ const UserSchema = new Schema<IUser>(
         verificationStatus: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" },
         qualification: { type: String },
         experienceYears: { type: Number },
+        experienceCategory: { type: String, enum: ["less than 5 yr", "5 to 10 yr", "10 to 15 yr", "more than 15 yr"] },
         clinicDetails: { type: String },
         documents: {
           type: {
@@ -128,6 +134,13 @@ const UserSchema = new Schema<IUser>(
             }
           ],
           default: []
+        },
+        paymentDetails: {
+          type: {
+            upiId: { type: String },
+            bankDetails: { type: String }
+          },
+          required: false
         }
       },
       required: false

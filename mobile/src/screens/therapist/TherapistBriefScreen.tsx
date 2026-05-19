@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { ShieldCheck, ArrowLeft, Sparkles, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import API from '../../lib/api';
 import { Theme } from '../../theme';
 
 interface TherapistBriefScreenProps {
@@ -9,11 +11,27 @@ interface TherapistBriefScreenProps {
 }
 
 export const TherapistBriefScreen: React.FC<TherapistBriefScreenProps> = ({ navigation, route }) => {
-  const clientName = route.params?.clientName || 'Aarav Patel';
+  const bookingId = route.params?.bookingId;
+  const fallbackClientName = route.params?.clientName || 'Seeker';
+
+  const { data: brief, isLoading } = useQuery({
+    queryKey: ['aiBrief', bookingId],
+    queryFn: () => API.booking.getAiBrief(bookingId),
+    enabled: !!bookingId,
+  });
 
   const handleAgree = () => {
     Alert.alert('Confidentiality Verified', 'Access logs have been signed under your practitioner license ID.');
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+        <Text style={styles.loadingText}>Fetching AI Brief...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -39,9 +57,43 @@ export const TherapistBriefScreen: React.FC<TherapistBriefScreenProps> = ({ navi
       {/* Patient overview header */}
       <View style={styles.patientCard}>
         <Text style={styles.patientPre}>SYNTHESIZED OVERVIEW</Text>
-        <Text style={styles.patientName}>{clientName}</Text>
-        <Text style={styles.patientSub}>Active seeker since March 2026</Text>
+        <Text style={styles.patientName}>{brief?.clientName || fallbackClientName}</Text>
+        <Text style={styles.patientSub}>Active seeker · Avg Mood: {brief?.avgMood ? `${brief.avgMood}/10` : 'N/A'}</Text>
       </View>
+
+      {/* Onboarding Profile details */}
+      {brief?.onboardingDetails && (
+        <View style={styles.card}>
+          <View style={styles.secHeader}>
+            <ShieldCheck size={16} color={Theme.colors.primary} />
+            <Text style={styles.secTitle}>Client Onboarding Profile</Text>
+          </View>
+          {brief.onboardingDetails.moodScore !== undefined && (
+            <Text style={styles.bodyText}>
+              <Text style={styles.boldText}>Onboarding Mood Score: </Text>
+              {brief.onboardingDetails.moodScore}/10
+            </Text>
+          )}
+          {brief.onboardingDetails.primaryNeed && (
+            <Text style={styles.bodyText}>
+              <Text style={styles.boldText}>Primary Goal/Need: </Text>
+              {brief.onboardingDetails.primaryNeed}
+            </Text>
+          )}
+          {brief.onboardingDetails.concerns?.length > 0 && (
+            <View style={{ marginTop: 4 }}>
+              <Text style={styles.boldText}>Main Concerns: </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                {brief.onboardingDetails.concerns.map((c: string, index: number) => (
+                  <View key={index} style={styles.concernTag}>
+                    <Text style={styles.concernTagText}>{c}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Sentiment Trend summary */}
       <View style={styles.card}>
@@ -50,57 +102,30 @@ export const TherapistBriefScreen: React.FC<TherapistBriefScreenProps> = ({ navi
           <Text style={styles.secTitle}>Sentiment Trend Summary</Text>
         </View>
         <Text style={styles.bodyText}>
-          Aarav's mood history shows stable baseline scores (average 4.2/7) with isolated emotional spikes corresponding to professional/occupational stressors. Peak anxiety spikes typically occur on Sunday evenings.
+          {brief?.groqSummary || `Mood history shows average score of ${brief?.avgMood ? `${brief.avgMood}/10` : 'N/A'}. Clinical risk level is flagged as ${brief?.riskLevel || 'unknown'}.`}
         </Text>
       </View>
 
-      {/* Distortions Identified */}
-      <View style={styles.card}>
-        <View style={styles.secHeader}>
-          <AlertCircle size={16} color={Theme.colors.secondary} />
-          <Text style={styles.secTitle}>Cognitive Traps & Distortions</Text>
-        </View>
-        <Text style={styles.bodyText}>
-          Synthesized from daily journaling categories:
-        </Text>
-        
-        <View style={styles.bulletList}>
-          <View style={styles.bulletItem}>
-            <View style={styles.dot} />
-            <Text style={styles.bulletText}>
-              <Text style={styles.boldText}>Catastrophizing (High):</Text> Anticipating catastrophic vocational failure based on minor presentation feedback.
-            </Text>
+      {/* Recent journal excerpts */}
+      {brief?.recentJournals?.length > 0 && (
+        <View style={styles.card}>
+          <View style={styles.secHeader}>
+            <AlertCircle size={16} color={Theme.colors.secondary} />
+            <Text style={styles.secTitle}>Recent Journal Excerpts</Text>
           </View>
-          <View style={styles.bulletItem}>
-            <View style={styles.dot} />
-            <Text style={styles.bulletText}>
-              <Text style={styles.boldText}>All-or-Nothing (Medium):</Text> Framing work outputs as either flawless or complete failures.
-            </Text>
+          <View style={styles.bulletList}>
+            {brief.recentJournals.map((j: any, i: number) => (
+              <View key={i} style={styles.bulletItem}>
+                <View style={styles.dot} />
+                <Text style={styles.bulletText}>
+                  <Text style={styles.boldText}>{new Date(j.date).toLocaleDateString('en-IN')}: </Text>
+                  "{j.excerpt}..."
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
-      </View>
-
-      {/* Suggested clinical exercises */}
-      <View style={styles.card}>
-        <View style={styles.secHeader}>
-          <Sparkles size={16} color={Theme.colors.tertiary} />
-          <Text style={styles.secTitle}>Recommended CBT Protocols</Text>
-        </View>
-        <Text style={styles.bodyText}>
-          Manas AI has highlighted these practices for your upcoming WebRTC consultation:
-        </Text>
-
-        <View style={styles.checkList}>
-          <View style={styles.checkItem}>
-            <CheckCircle size={16} color={Theme.colors.primary} />
-            <Text style={styles.checkText}>Challenging work-competence assumptions (Objective Reframer)</Text>
-          </View>
-          <View style={styles.checkItem}>
-            <CheckCircle size={16} color={Theme.colors.primary} />
-            <Text style={styles.checkText}>Relaxation guide timing sheets (4-4-4 Box breathing)</Text>
-          </View>
-        </View>
-      </View>
+      )}
 
       <TouchableOpacity onPress={handleAgree} style={styles.actionBtn}>
         <Text style={styles.actionBtnText}>Acknowledge & Confirm Access</Text>
@@ -118,6 +143,18 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.margin,
     paddingBottom: Theme.spacing.xl,
     gap: Theme.spacing.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.background,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: Theme.colors.onSurfaceVariant,
+    fontFamily: Theme.fonts.bodyMedium,
   },
   backRow: {
     flexDirection: 'row',
@@ -247,21 +284,6 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fonts.bodyBold,
     color: Theme.colors.onSurface,
   },
-  checkList: {
-    gap: 8,
-    marginTop: 2,
-  },
-  checkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-    flex: 1,
-  },
   actionBtn: {
     backgroundColor: Theme.colors.primary,
     height: 52,
@@ -274,6 +296,19 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontFamily: Theme.fonts.headline,
     fontSize: 14,
+  },
+  concernTag: {
+    backgroundColor: '#F0F9F6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#D3ECE4',
+  },
+  concernTagText: {
+    fontSize: 11,
+    color: '#2E6E65',
+    fontFamily: Theme.fonts.bodyMedium,
   },
 });
 export default TherapistBriefScreen;

@@ -224,11 +224,11 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
                 activeBookings.map((booking: any) => (
                   <View key={booking._id || booking.id} style={styles.bookingRow}>
                     <View>
-                      <Text style={styles.clientName}>{booking.userName || 'Seeker'}</Text>
+                      <Text style={styles.clientName}>{booking.clientName || 'Seeker'}</Text>
                       <Text style={styles.clientTime}>{new Date(booking.slot).toLocaleString()}</Text>
                     </View>
                     <TouchableOpacity 
-                      onPress={() => navigation.navigate('TherapistBrief', { clientId: booking.userId, clientName: booking.userName })}
+                      onPress={() => navigation.navigate('TherapistBrief', { bookingId: booking.id, clientId: booking.clientId, clientName: booking.clientName })}
                       style={styles.briefBtn}
                     >
                       <Text style={styles.briefBtnText}>AI Brief</Text>
