@@ -5,7 +5,7 @@
   "outputDirectory": "frontend/dist/client",
   "functions": {
     "frontend/api/**/*.js": {
-      "includeFiles": "frontend/dist/**/*",
+      "includeFiles": ["frontend/dist/**", "frontend/package.json"],
       "maxDuration": 30
     }
   },

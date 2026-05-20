@@ -28,17 +28,10 @@ let app;
 
 async function getApp() {
   if (!app) {
-    const serverPath = join(__dirname, "..", "dist", "server", "server.js");
-    const { pathToFileURL } = await import("node:url");
-    const mod = await import(pathToFileURL(serverPath).href);
+    const mod = await import("../dist/server/server.js");
     app = mod.default || mod;
   }
   return app;
-}
-
-// Force Vercel's bundler to trace and package the server build
-export function dummyWebpackTracer() {
-  return import("../dist/server/server.js");
 }
 
 export default async function handler(req, res) {
