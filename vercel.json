@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm run build",
+  "installCommand": "cd frontend && npm install",
+  "outputDirectory": "frontend/dist/client",
+  "functions": {
+    "frontend/api/index.js": {
+      "includeFiles": "frontend/dist/**",
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/api/index.js"
+    }
+  ]
+}
