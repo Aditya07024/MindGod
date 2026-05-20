@@ -1,8 +1,8 @@
 import { readFileSync, existsSync } from "node:fs";
-import { join, extname } from "node:path";
+import { join, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __dirname = join(fileURLToPath(import.meta.url), "..");
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIR = join(__dirname, "..", "dist", "client");
 
 const MIME_TYPES = {
@@ -29,6 +29,8 @@ let app;
 async function getApp() {
   if (!app) {
     const serverPath = join(__dirname, "..", "dist", "server", "server.js");
+    console.log("Loading server from:", serverPath);
+    console.log("Server exists:", existsSync(serverPath));
     const { pathToFileURL } = await import("node:url");
     const mod = await import(pathToFileURL(serverPath).href);
     app = mod.default || mod;
