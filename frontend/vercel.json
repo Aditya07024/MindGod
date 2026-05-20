@@ -3,7 +3,7 @@
   "outputDirectory": "dist/client",
   "functions": {
     "api/**/*.js": {
-      "includeFiles": ["dist/**/*"],
+      "includeFiles": "dist/**/*",
       "maxDuration": 30
     }
   },
