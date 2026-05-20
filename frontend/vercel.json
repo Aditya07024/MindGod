@@ -1,6 +1,5 @@
 {
-  "version": 2,
-  "outputDirectory": "dist/client",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/index.js": {
       "includeFiles": "dist/**",
