@@ -1,5 +1,0 @@
-# Exclude node_modules from being uploaded
-node_modules
-
-# Do NOT exclude dist because we need Vercel NFT to bundle dist/server/server.js
-!dist
