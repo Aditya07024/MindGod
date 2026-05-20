@@ -4,8 +4,8 @@
   "installCommand": "cd frontend && npm install",
   "outputDirectory": "frontend/dist/client",
   "functions": {
-    "frontend/api/index.js": {
-      "includeFiles": "frontend/dist/**",
+    "frontend/api/**/*.js": {
+      "includeFiles": ["frontend/dist/**/*"],
       "maxDuration": 30
     }
   },

@@ -29,13 +29,16 @@ let app;
 async function getApp() {
   if (!app) {
     const serverPath = join(__dirname, "..", "dist", "server", "server.js");
-    console.log("Loading server from:", serverPath);
-    console.log("Server exists:", existsSync(serverPath));
     const { pathToFileURL } = await import("node:url");
     const mod = await import(pathToFileURL(serverPath).href);
     app = mod.default || mod;
   }
   return app;
+}
+
+// Force Vercel's bundler to trace and package the server build
+export function dummyWebpackTracer() {
+  return import("../dist/server/server.js");
 }
 
 export default async function handler(req, res) {
