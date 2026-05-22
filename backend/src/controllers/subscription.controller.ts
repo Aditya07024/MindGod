@@ -18,15 +18,16 @@ export class SubscriptionController {
       const user = await User.findById(req.user!.sub).lean();
       if (!user) throw new AppError("User not found", 404);
 
+      // Look for active personal subscription first
       let sub = await Subscription.findOne({
         userId: req.user!.sub,
-        status: { $in: ["active", "pending"] },
+        status: "active",
       })
         .sort({ createdAt: -1 })
         .lean();
 
-      // If no personal active/pending sub, check for an active organization-level sub
-      if ((!sub || sub.status !== 'active') && user.orgId) {
+      // If no personal active sub, check for an active organization-level sub
+      if (!sub && user.orgId) {
         const orgSub = await Subscription.findOne({
           orgId: user.orgId,
           status: "active",
@@ -37,6 +38,17 @@ export class SubscriptionController {
         if (orgSub) {
           sub = orgSub;
         }
+      }
+
+      // If no active subscription is found, look for any pending subscription to display in the UI metadata
+      let displaySub = sub;
+      if (!displaySub) {
+        displaySub = await Subscription.findOne({
+          userId: req.user!.sub,
+          status: "pending",
+        })
+          .sort({ createdAt: -1 })
+          .lean();
       }
 
       const isOrgSub = !!(sub && sub.orgId);
@@ -87,15 +99,15 @@ export class SubscriptionController {
         tier: effectiveTier,
         tierLabel: isOrgSub ? "Organization Premium" : (TIER_LABELS[effectiveTier] ?? effectiveTier),
         config: planConfig, // Send the dynamic config to frontend
-        subscription: sub
+        subscription: displaySub
           ? {
-              id: sub._id,
-              plan: sub.plan,
-              status: sub.status,
-              startDate: sub.startDate,
-              endDate: sub.endDate,
-              razorpaySubscriptionId: sub.razorpaySubscriptionId,
-              isOrganization: !!sub.orgId,
+              id: displaySub._id,
+              plan: displaySub.plan,
+              status: displaySub.status,
+              startDate: displaySub.startDate,
+              endDate: displaySub.endDate,
+              razorpaySubscriptionId: displaySub.razorpaySubscriptionId,
+              isOrganization: !!displaySub.orgId,
             }
           : null,
         usage: {
