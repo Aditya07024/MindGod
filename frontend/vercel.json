@@ -2,6 +2,12 @@
   "version": 2,
   "outputDirectory": "dist/client",
   "cleanUrls": true,
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/server/**",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
