@@ -41,6 +41,18 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         </View>
       )}
 
+      {isActive && (
+        <View style={styles.activeBadge}>
+          <Text style={styles.activeBadgeText}>✓ ACTIVE</Text>
+        </View>
+      )}
+
+      {btnLabel === 'Payment Pending' && (
+        <View style={styles.pendingBadge}>
+          <Text style={styles.pendingBadgeText}>PAYMENT PENDING</Text>
+        </View>
+      )}
+
       <Text style={[styles.name, isHighlighted && styles.textWhite]}>
         {plan.name}
       </Text>
@@ -77,16 +89,19 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
       <TouchableOpacity
         onPress={onPress}
+        disabled={isActive || btnLabel === 'Payment Pending'}
         style={[
           styles.actionBtn,
           isHighlighted ? styles.actionBtnHighlighted : styles.actionBtnNormal,
-          isActive && styles.actionBtnActive
+          isActive && styles.actionBtnActive,
+          btnLabel === 'Payment Pending' && styles.actionBtnPending
         ]}
       >
         <Text style={[
           styles.actionBtnText,
           isHighlighted && styles.textPrimaryColor,
-          isActive && styles.textWhite
+          isActive && styles.textWhite,
+          btnLabel === 'Payment Pending' && styles.textPending
         ]}>
           {isActive ? 'Current Plan' : btnLabel || (plan.price === 0 ? 'Start Free' : 'Upgrade Now')}
         </Text>
@@ -218,6 +233,42 @@ const styles = StyleSheet.create({
   },
   textOutlineColor: {
     color: Theme.colors.primary,
+  },
+  activeBadge: {
+    position: 'absolute',
+    top: -12,
+    right: 16,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Theme.radius.full,
+  },
+  activeBadgeText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 9,
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  pendingBadge: {
+    position: 'absolute',
+    top: -12,
+    right: 16,
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Theme.radius.full,
+  },
+  pendingBadgeText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 9,
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  actionBtnPending: {
+    backgroundColor: '#FFE0B2',
+  },
+  textPending: {
+    color: '#B66000',
   },
 });
 export default PlanCard;

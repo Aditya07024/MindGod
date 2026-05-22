@@ -57,6 +57,13 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
     retry: false,
   });
 
+  const { data: subscriptionData, isLoading: isSubscriptionLoading } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => API.subscription.get().catch(() => null),
+    retry: false,
+    enabled: !!isSignedIn,
+  });
+
   useEffect(() => {
     if (remotePlans) {
       const planList = Array.isArray(remotePlans) 
@@ -82,9 +89,27 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
     }
   });
 
+  const currentTier = subscriptionData?.tier ?? 'free';
+  const hasPendingSub = subscriptionData?.subscription?.status === 'pending';
+  const pendingPlanName = hasPendingSub ? subscriptionData?.subscription?.plan : null;
+
   const handleSelectPlan = async (plan: PlanData) => {
     if (plan.price === 0) {
       Alert.alert('Free Activated', 'You are currently on the Free Tier!');
+      return;
+    }
+
+    if (hasPendingSub) {
+      Alert.alert(
+        'Payment Pending',
+        'You already have a subscription payment pending. Please complete the checkout in your browser or wait for verification.'
+      );
+      return;
+    }
+
+    const isPlanActive = currentTier === plan.id || currentTier === plan._id || currentTier === plan.name;
+    if (isPlanActive) {
+      Alert.alert('Plan Active', 'You are already subscribed to this plan!');
       return;
     }
     
@@ -191,7 +216,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
         <Text style={styles.subtitle}>Choose a tier aligned with your professional mental well-being goals.</Text>
       </View>
 
-      {isLoading && (
+      {(isLoading || (isSignedIn && isSubscriptionLoading)) && (
         <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
       )}
 
@@ -201,13 +226,22 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
 
       <View style={styles.cardsWrapper}>
         {filteredPlans.length > 0 ? (
-          filteredPlans.map((plan, idx) => (
-            <PlanCard
-              key={plan.id || plan._id || idx.toString()}
-              plan={plan}
-              onPress={() => handleSelectPlan(plan)}
-            />
-          ))
+          filteredPlans.map((plan, idx) => {
+            const isPlanActive = currentTier === plan.id || currentTier === plan._id || currentTier === plan.name;
+            const isPending = hasPendingSub && 
+              (pendingPlanName === plan.id || 
+               pendingPlanName === plan._id || 
+               pendingPlanName === plan.name);
+            return (
+              <PlanCard
+                key={plan.id || plan._id || idx.toString()}
+                plan={plan}
+                isActive={isPlanActive}
+                btnLabel={isPending ? 'Payment Pending' : undefined}
+                onPress={() => handleSelectPlan(plan)}
+              />
+            );
+          })
         ) : (
           <View style={styles.emptyPlansCard}>
             <Text style={styles.emptyPlansText}>No plans available for your role at this time.</Text>

@@ -142,9 +142,16 @@ const API = {
         method: "DELETE",
         body: JSON.stringify(data),
       }),
-    stats: () => apiCall<any>("/api/admin/stats"),
+     stats: () => apiCall<any>("/api/admin/stats"),
     verify: (id: string) =>
       apiCall<any>(`/api/admin/verify/${id}`, { method: "PATCH" }),
+    listUsersAndOrgs: () =>
+      apiCall<any>("/api/admin/users-orgs").catch(() => ({ users: [], organizations: [] })),
+    manualUpgrade: (data: any) =>
+      apiCall<any>("/api/admin/manual-upgrade", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
 
   org: {
