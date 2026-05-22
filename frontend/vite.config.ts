@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     // cloudflare(),
     tanstackStart({
-      server: { entry: "server", preset: "vercel" },
+      server: { entry: "server", preset: "vercel-serverless" },
       react: {
         customViteReactPlugin: true,
       },
