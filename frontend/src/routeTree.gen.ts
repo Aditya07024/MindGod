@@ -30,7 +30,6 @@ import { Route as SessionBookingIdRouteImport } from './routes/session.$bookingI
 import { Route as OrgOnboardingRouteImport } from './routes/org/onboarding'
 import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
 import { Route as BookingTherapistIdRouteImport } from './routes/booking.$therapistId'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 
 const TherapistsRoute = TherapistsRouteImport.update({
@@ -138,11 +137,6 @@ const BookingTherapistIdRoute = BookingTherapistIdRouteImport.update({
   path: '/booking/$therapistId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
@@ -166,7 +160,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
-  '/api/chat': typeof ApiChatRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
@@ -191,7 +184,6 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
-  '/api/chat': typeof ApiChatRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
@@ -217,7 +209,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
-  '/api/chat': typeof ApiChatRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
@@ -244,7 +235,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/therapists'
     | '/admin/dashboard'
-    | '/api/chat'
     | '/booking/$therapistId'
     | '/org/dashboard'
     | '/org/onboarding'
@@ -269,7 +259,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/therapists'
     | '/admin/dashboard'
-    | '/api/chat'
     | '/booking/$therapistId'
     | '/org/dashboard'
     | '/org/onboarding'
@@ -294,7 +283,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/therapists'
     | '/admin/dashboard'
-    | '/api/chat'
     | '/booking/$therapistId'
     | '/org/dashboard'
     | '/org/onboarding'
@@ -320,7 +308,6 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TherapistsRoute: typeof TherapistsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
-  ApiChatRoute: typeof ApiChatRoute
   BookingTherapistIdRoute: typeof BookingTherapistIdRoute
   OrgDashboardRoute: typeof OrgDashboardRoute
   OrgOnboardingRoute: typeof OrgOnboardingRoute
@@ -478,13 +465,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingTherapistIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -512,7 +492,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TherapistsRoute: TherapistsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
-  ApiChatRoute: ApiChatRoute,
   BookingTherapistIdRoute: BookingTherapistIdRoute,
   OrgDashboardRoute: OrgDashboardRoute,
   OrgOnboardingRoute: OrgOnboardingRoute,
@@ -523,13 +502,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,17 +1,7 @@
 {
-  "version": 2,
-  "outputDirectory": "dist/client",
+  "outputDirectory": "dist",
   "cleanUrls": true,
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "dist/server/**",
-      "maxDuration": 60
-    }
-  },
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
