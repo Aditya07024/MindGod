@@ -48,6 +48,8 @@ export const Route = createFileRoute("/api/chat")({
         // Try Groq first
         if (groqKey) {
           try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
             const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
               method: "POST",
               headers: {
@@ -61,7 +63,9 @@ export const Route = createFileRoute("/api/chat")({
                 temperature: 0.7,
                 max_tokens: 400,
               }),
+              signal: controller.signal,
             });
+            clearTimeout(timeout);
             if (groqRes.ok && groqRes.body) {
               return new Response(groqRes.body, {
                 headers: {
@@ -89,6 +93,8 @@ export const Route = createFileRoute("/api/chat")({
               }));
             const sysInstr = fullMessages.find((m) => m.role === "system")?.content;
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
             const gRes = await fetch(url, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -97,7 +103,9 @@ export const Route = createFileRoute("/api/chat")({
                 contents,
                 generationConfig: { temperature: 0.7, maxOutputTokens: 400 },
               }),
+              signal: controller.signal,
             });
+            clearTimeout(timeout);
             if (!gRes.ok || !gRes.body) {
               const errTxt = await gRes.text().catch(() => "");
               return new Response(JSON.stringify({ error: "AI unavailable", details: errTxt }), {

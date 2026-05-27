@@ -28,7 +28,7 @@ export default async function handler(request, context) {
   }
 
   // Allow overriding the timeout using `FUNCTION_TIMEOUT_MS` env var for testing.
-  const timeoutMs = Number(process.env.FUNCTION_TIMEOUT_MS) || 10000;
+  const timeoutMs = Number(process.env.FUNCTION_TIMEOUT_MS) || 30000; // 30s default, will be less than Vercel's 60s maxDuration
 
   try {
     const fetchPromise = server.fetch(request, env, context);
