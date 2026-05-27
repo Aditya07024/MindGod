@@ -1,40 +1,17 @@
 {
-	"buildCommand": "npm --prefix frontend ci && npm --prefix frontend run build",
-	"outputDirectory": "frontend/dist",
-	"cleanUrls": true,
-	"trailingSlash": false,
-	"redirects": [],
-	"rewrites": [
-		{
-			"source": "/((?!.*\\.).*)",
-			"destination": "/index.html"
-		}
-	],
-	"headers": [
-		{
-			"source": "/(.*)",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=31536000, immutable"
-				}
-			],
-			"has": [
-				{
-					"type": "header",
-					"key": "Content-Type",
-					"value": "application/.*"
-				}
-			]
-		},
-		{
-			"source": "/index.html",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "public, max-age=0, must-revalidate"
-				}
-			]
-		}
-	]
+  "buildCommand": "npm --prefix frontend ci && npm --prefix frontend run build",
+  "outputDirectory": "frontend/dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
+
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
