@@ -1,5 +1,6 @@
 export const config = {
   runtime: "nodejs",
+  maxDuration: 60,
 };
 
 // Wrap the server handler with logging and a timeout so we can detect
@@ -11,8 +12,8 @@ export default async function handler(request, context) {
   // TSS_SHELL=true tells TanStack Start to return only the HTML shell
   // (doctype, head with assets/meta, and <Scripts /> placeholder) without
   // running Clerk auth, route data fetching, or full SSR — the client hydrates.
-  // This eliminates the 30s+ timeout from the full SSR pipeline when honored.
-  const env = { ...process.env, TSS_SHELL: "true" };
+  // Set directly on process.env so TanStack Start actually reads it.
+  process.env.TSS_SHELL = "true";
 
   // Lazy-import the server bundle so we can log before module initialization
   // and detect cold-start time separately from request handling time.
@@ -27,11 +28,11 @@ export default async function handler(request, context) {
     return new Response("Server initialization error", { status: 500 });
   }
 
-  // Allow overriding the timeout using `FUNCTION_TIMEOUT_MS` env var for testing.
-  const timeoutMs = Number(process.env.FUNCTION_TIMEOUT_MS) || 30000; // 30s default, will be less than Vercel's 60s maxDuration
+  // Internal timeout at 55s — leaves 5s headroom before Vercel's 60s maxDuration kills the function.
+  const timeoutMs = Number(process.env.FUNCTION_TIMEOUT_MS) || 55000;
 
   try {
-    const fetchPromise = server.fetch(request, env, context);
+    const fetchPromise = server.fetch(request, {}, context);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error("handler timed out")), timeoutMs),
     );
