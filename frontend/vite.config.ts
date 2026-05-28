@@ -21,6 +21,18 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
     minify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', '@clerk/clerk-react'],
+          router: ['@tanstack/react-router'],
+        },
+      },
+    },
+  },
+
+  server: {
+    middlewareMode: false,
   },
 
   resolve: {
