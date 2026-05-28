@@ -4,7 +4,7 @@
  * Call setTokenGetter(fn) once from ClerkProvider to inject the token getter.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online";
 
 // Token getter injected by ClerkProvider wrapper
 let _getToken: (() => Promise<string | null>) | null = null;

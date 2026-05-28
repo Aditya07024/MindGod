@@ -28,7 +28,7 @@ import { useState, useEffect } from "react";
 import API from "@/lib/api";
 import logoUrl from "@/assets/logo.png";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online";
 const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "enterprise@Mindsyncpro.com";
 
 const PRICING_PLANS = [
