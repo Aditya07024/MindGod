@@ -231,7 +231,7 @@ const API = {
   chat: {
     sendMessage: (data: { message: string }) =>
       apiCall<any>("/api/chat", { method: "POST", body: JSON.stringify(data) }),
-    getMessages: () => apiCall<any>("/api/chat/history"),
+    getMessages: (_filter?: string) => apiCall<any>("/api/chat/history"),
   },
 
   mood: {

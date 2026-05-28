@@ -11,6 +11,10 @@ import { setTokenGetter } from "@/lib/api";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
     component: RootComponent,
@@ -29,9 +33,12 @@ function ClerkTokenWirer() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <ClerkTokenWirer />
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignOutUrl="/"
+    >
       <QueryClientProvider client={queryClient}>
+        <ClerkTokenWirer />
         <Outlet />
         <Toaster position="top-center" richColors closeButton />
       </QueryClientProvider>
