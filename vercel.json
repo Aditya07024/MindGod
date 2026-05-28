@@ -7,6 +7,14 @@
       "destination": "https://api.mindsyncpro.online/:path*"
     },
     {
+      "source": "/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/index.html"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }
