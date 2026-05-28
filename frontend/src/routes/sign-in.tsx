@@ -73,7 +73,8 @@ function SignInPage() {
 
         {/* Clerk SignIn — handles Google, Apple, email */}
         <SignIn
-          routing="hash"
+          routing="path"
+          path="/sign-in"
           fallbackRedirectUrl="/dashboard"
           signUpFallbackRedirectUrl="/onboarding"
           appearance={{
