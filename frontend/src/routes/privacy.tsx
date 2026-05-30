@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { Shield, ArrowLeft, Lock, EyeOff, Server } from 'lucide-react';
 import logoUrl from '@/assets/logo.png';
+import dpdpaCertUrl from '@/assets/DPDPA_Certificate.png';
 
 export const Route = createFileRoute('/privacy')({
   component: PrivacyPage,
@@ -90,23 +91,42 @@ function PrivacyPage() {
             </div>
           </div>
           
-          {/* Compliance features checklist */}
-          <div className="mt-8 pt-6 border-t border-slate-200/50 grid gap-4 sm:grid-cols-3">
-            {[
-              { title: "Local Data Residency", desc: "All user databases reside strictly inside secure data centers in India." },
-              { title: "Consent Manager", desc: "Users have granular and revocable consent control over their personal records." },
-              { title: "Principal Rights", desc: "Full rights of access, correction, update, and complete erasure of personal data." }
-            ].map((f, i) => (
-              <div key={i} className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-teal-500 flex-shrink-0" />
-                  {f.title}
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed pl-3.5">
-                  {f.desc}
-                </p>
+          {/* Compliance details & Certificate image */}
+          <div className="mt-8 flex flex-col md:flex-row gap-8 items-center border-t border-slate-200/50 pt-8">
+            <div className="flex-1 space-y-4">
+              {[
+                { title: "Local Data Residency", desc: "All user databases reside strictly inside secure data centers in India." },
+                { title: "Consent Manager", desc: "Users have granular and revocable consent control over their personal records." },
+                { title: "Principal Rights", desc: "Full rights of access, correction, update, and complete erasure of personal data." }
+              ].map((f, i) => (
+                <div key={i} className="space-y-1">
+                  <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-teal-500 flex-shrink-0" />
+                    {f.title}
+                  </h4>
+                  <p className="text-xs text-slate-500 leading-relaxed pl-3.5">
+                    {f.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+            
+            <div className="w-full md:w-64 flex-shrink-0">
+              <div className="group relative rounded-2xl overflow-hidden border border-slate-200 bg-white p-2 shadow-sm transition hover:shadow-md hover:border-amber-500/40">
+                <a href={dpdpaCertUrl} target="_blank" rel="noreferrer" className="block relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-100">
+                  <img 
+                    src={dpdpaCertUrl} 
+                    alt="DPDPA 2023 Certificate of Compliance" 
+                    className="size-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <span className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow">
+                      View Certificate
+                    </span>
+                  </div>
+                </a>
               </div>
-            ))}
+            </div>
           </div>
         </motion.div>
 
