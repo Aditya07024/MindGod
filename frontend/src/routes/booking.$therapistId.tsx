@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, Calendar, Clock, AlertCircle, Star } from "lucide-react";
@@ -7,6 +7,7 @@ import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
 
 export const Route = createFileRoute("/booking/$therapistId")({
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/booking/$therapistId")({
 function BookingFlow() {
   const { therapistId } = useParams({ from: "/booking/$therapistId" });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [bookingStep, setBookingStep] = useState<"select" | "confirm" | "payment" | "success">(
@@ -52,8 +54,14 @@ function BookingFlow() {
   // Demo Verify Mutation
   const demoVerifyMutation = useMutation({
     mutationFn: (id: string) => API.payment.demoVerify({ bookingId: id }),
-    onSuccess: () => {
-      setBookingStep("success");
+    onSuccess: async () => {
+      toast.success("Payment verified! Redirecting to dashboard...");
+      await queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      await queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      await queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      setTimeout(() => {
+        navigate({ to: "/dashboard" });
+      }, 1500);
     },
   });
 
@@ -319,7 +327,15 @@ function BookingFlow() {
                 bookingId={bookingId}
                 amount={therapist.sessionFee}
                 userName={therapist.name}
-                onSuccess={() => setBookingStep("success")}
+                onSuccess={async () => {
+                  toast.success("Payment verified! Redirecting to dashboard...");
+                  await queryClient.invalidateQueries({ queryKey: ["bookings"] });
+                  await queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                  await queryClient.invalidateQueries({ queryKey: ["userStats"] });
+                  setTimeout(() => {
+                    navigate({ to: "/dashboard" });
+                  }, 1500);
+                }}
               />
               <div className="pt-4 border-t border-slate-200">
                 <Button 

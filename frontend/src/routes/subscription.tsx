@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,6 +77,7 @@ type TierId = typeof TIERS[number]["id"];
 
 function SubscriptionPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [upgrading, setUpgrading] = useState<string | null>(null);
 
   const { data: user } = useQuery({
@@ -142,7 +143,15 @@ function SubscriptionPage() {
     mutationFn: () => API.subscription.sync(),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["subscription"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["userStats"] });
       toast.success(data.message || "Subscription status synced successfully!");
+      if (data.status === 'active') {
+        setTimeout(() => {
+          navigate({ to: "/dashboard" });
+        }, 1500);
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -155,7 +164,13 @@ function SubscriptionPage() {
         .then((res) => {
           if (res.status === 'active') {
             qc.invalidateQueries({ queryKey: ["subscription"] });
+            qc.invalidateQueries({ queryKey: ["me"] });
+            qc.invalidateQueries({ queryKey: ["bookings"] });
+            qc.invalidateQueries({ queryKey: ["userStats"] });
             toast.success("Payment verified! Subscription activated.");
+            setTimeout(() => {
+              navigate({ to: "/dashboard" });
+            }, 1500);
           }
         })
         .catch((err) => console.log("Background sync error:", err));
@@ -273,7 +288,7 @@ function SubscriptionPage() {
 
                   {/* Features */}
                   <div className="space-y-2 mb-5">
-                    {tier.features.map((f, i) => (
+                    {tier.features.map((f: { text: string; included: boolean }, i: number) => (
                       <div key={i} className="flex items-center gap-2.5">
                         <div className={`size-4 rounded-full flex items-center justify-center flex-shrink-0 ${
                           f.included ? "bg-green-100" : "bg-muted"
