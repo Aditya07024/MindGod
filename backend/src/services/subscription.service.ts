@@ -154,6 +154,17 @@ export class SubscriptionService {
     await getRazorpay().subscriptions.cancel(razorpaySubId);
   }
 
+  /** Fetch details of a Razorpay subscription */
+  static async getSubscriptionDetails(razorpaySubId: string) {
+    try {
+      const subscription = await getRazorpay().subscriptions.fetch(razorpaySubId);
+      return subscription;
+    } catch (error) {
+      console.error("[SubscriptionService] getSubscriptionDetails failed:", error);
+      throw error;
+    }
+  }
+
   /** Verify webhook signature from Razorpay */
   static verifyWebhookSignature(body: string, signature: string): boolean {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;

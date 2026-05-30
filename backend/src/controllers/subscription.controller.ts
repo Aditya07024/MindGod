@@ -275,14 +275,19 @@ export class SubscriptionController {
           sub.status = "active";
           await sub.save();
           
-          if (sub.userId) {
-            const tier = SubscriptionService.tierFromPlanId(planId);
+          if (!sub.orgId && sub.userId) {
+            let tier: string | null = SubscriptionService.tierFromPlanId(planId);
+            if (!tier && planId) {
+              const { SubscriptionPlan } = await import("@/models");
+              const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: planId }).lean();
+              if (dbPlan) {
+                tier = dbPlan._id.toString();
+              }
+            }
             if (tier) {
               await User.findByIdAndUpdate(sub.userId, { tier });
             }
           }
-          // If it's an org sub, we don't update individual user tiers,
-          // getMySubscription handles the benefit lookup.
         }
         break;
       }
@@ -291,7 +296,9 @@ export class SubscriptionController {
         if (sub) {
           sub.status = event.event === "subscription.cancelled" ? "cancelled" : "expired";
           await sub.save();
-          await User.findByIdAndUpdate(sub.userId, { tier: "free" });
+          if (!sub.orgId && sub.userId) {
+            await User.findByIdAndUpdate(sub.userId, { tier: "free" });
+          }
         }
         break;
       }
@@ -380,6 +387,80 @@ export class SubscriptionController {
 
       res.json({ subscriptions: subs, total: subs.length });
     },
+  );
+
+  /** POST /subscription/sync — sync subscription status with Razorpay */
+  static syncSubscription = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const userId = req.user!.sub;
+
+      // Find the most recent pending or active subscription for this user
+      const sub = await Subscription.findOne({
+        userId,
+        status: { $in: ["pending", "active"] },
+      }).sort({ createdAt: -1 });
+
+      if (!sub) {
+        throw new AppError("No pending or active subscription found to sync.", 404);
+      }
+
+      if (!sub.razorpaySubscriptionId) {
+        throw new AppError("Subscription has no associated Razorpay ID.", 400);
+      }
+
+      try {
+        const razorpaySub = await SubscriptionService.getSubscriptionDetails(sub.razorpaySubscriptionId);
+        
+        const oldStatus = sub.status;
+        let newStatus = sub.status;
+
+        // Razorpay status can be: "created", "authenticated", "active", "pending", "halted", "cancelled", "completed", "expired"
+        if (["active", "authenticated", "completed"].includes(razorpaySub.status)) {
+          newStatus = "active";
+        } else if (["cancelled"].includes(razorpaySub.status)) {
+          newStatus = "cancelled";
+        } else if (["expired"].includes(razorpaySub.status)) {
+          newStatus = "expired";
+        }
+
+        sub.status = newStatus;
+        await sub.save();
+
+        if (newStatus === "active" && oldStatus !== "active") {
+          // Update user's tier if not an org subscription
+          if (!sub.orgId && sub.userId) {
+            let tier: string | null = null;
+            if (razorpaySub.plan_id) {
+              tier = SubscriptionService.tierFromPlanId(razorpaySub.plan_id);
+              if (!tier) {
+                const { SubscriptionPlan } = await import("@/models");
+                const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: razorpaySub.plan_id }).lean();
+                if (dbPlan) {
+                  tier = dbPlan._id.toString();
+                }
+              }
+            }
+            if (tier) {
+              await User.findByIdAndUpdate(sub.userId, { tier });
+            }
+          }
+        } else if (newStatus !== "active" && oldStatus === "active") {
+          // Downgrade user's tier if it is no longer active
+          if (!sub.orgId && sub.userId) {
+            await User.findByIdAndUpdate(sub.userId, { tier: "free" });
+          }
+        }
+
+        res.json({
+          status: sub.status,
+          razorpayStatus: razorpaySub.status,
+          message: `Subscription synced. Status: ${sub.status}`,
+        });
+      } catch (err: any) {
+        console.error("[Subscription Sync Error]", err);
+        throw new AppError(err.message || "Failed to sync subscription status", 500);
+      }
+    }
   );
 }
 

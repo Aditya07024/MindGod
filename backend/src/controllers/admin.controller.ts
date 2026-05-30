@@ -200,7 +200,7 @@ export class AdminController {
     const id = req.params.id as string;
     const { verified, password } = req.body as { verified: boolean, password?: string };
 
-    if (req.user?.role !== "super_admin" && password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
@@ -269,7 +269,7 @@ export class AdminController {
     const id = req.params.id as string;
     const { verified, password } = req.body as { verified: boolean, password?: string };
 
-    if (req.user?.role !== "super_admin" && password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
@@ -315,7 +315,7 @@ export class AdminController {
     const { id } = req.params;
     const { allow, password } = req.body as { allow: boolean, password?: string };
 
-    if (req.user?.role !== "super_admin" && password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 

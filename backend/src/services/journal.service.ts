@@ -26,7 +26,47 @@ export class JournalService {
       throw new Error("User not found");
     }
 
-    const weeklyLimit = this.getWeeklyLimit(user.tier);
+    let weeklyLimit = this.getWeeklyLimit(user.tier);
+    let hasUnlimitedJournal = user.tier !== "free";
+
+    const { Subscription } = await import("@/models");
+    const activeSub = await Subscription.findOne({
+      userId,
+      status: "active",
+    }).lean();
+
+    if (activeSub) {
+      if (activeSub.planId) {
+        const { SubscriptionPlan } = await import("@/models");
+        const plan = await SubscriptionPlan.findById(activeSub.planId).lean();
+        if (plan?.config) {
+          weeklyLimit = plan.config.hasUnlimitedJournal ? Number.POSITIVE_INFINITY : 3;
+          hasUnlimitedJournal = plan.config.hasUnlimitedJournal;
+        }
+      } else {
+        weeklyLimit = Number.POSITIVE_INFINITY;
+        hasUnlimitedJournal = true;
+      }
+    } else if (user.orgId) {
+      const activeOrgSub = await Subscription.findOne({
+        orgId: user.orgId,
+        status: "active",
+      }).lean();
+      if (activeOrgSub) {
+        if (activeOrgSub.planId) {
+          const { SubscriptionPlan } = await import("@/models");
+          const plan = await SubscriptionPlan.findById(activeOrgSub.planId).lean();
+          if (plan?.config) {
+            weeklyLimit = plan.config.hasUnlimitedJournal ? Number.POSITIVE_INFINITY : 3;
+            hasUnlimitedJournal = plan.config.hasUnlimitedJournal;
+          }
+        } else {
+          weeklyLimit = Number.POSITIVE_INFINITY;
+          hasUnlimitedJournal = true;
+        }
+      }
+    }
+
     if (Number.isFinite(weeklyLimit)) {
       const since = new Date();
       since.setDate(since.getDate() - 7);
@@ -37,7 +77,7 @@ export class JournalService {
     }
 
     const aiResponse =
-      user.tier === "free"
+      !hasUnlimitedJournal
         ? undefined
         : "You’re noticing a painful automatic thought and already starting to loosen its grip. What evidence supports the more balanced view you wrote?";
 

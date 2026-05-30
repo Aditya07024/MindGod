@@ -268,6 +268,15 @@ function OrgDashboard() {
     },
   });
 
+  const syncMutation = useMutation({
+    mutationFn: () => API.subscription.sync(),
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ['subscription'] });
+      toast.success(data.message || 'Subscription status synced successfully!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const handleUploadEmails = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -874,6 +883,34 @@ function OrgDashboard() {
         )}
         {tab === 'subscriptions' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {subscription?.subscription?.status === 'pending' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <AlertCircle className="size-5 text-amber-600 shrink-0" />
+                    <h4 className="font-bold">Organization Plan Payment Pending</h4>
+                  </div>
+                  <p className="text-xs text-amber-700 leading-relaxed max-w-xl">
+                    We've registered your organization plan, but the payment confirmation is pending. If you have already completed the transaction on Razorpay, click sync to activate benefits instantly.
+                  </p>
+                </div>
+                <button
+                  onClick={() => syncMutation.mutate()}
+                  disabled={syncMutation.isPending}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50"
+                >
+                  {syncMutation.isPending ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    'Sync Payment Status'
+                  )}
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div className="space-y-1">
                 <h2 className="text-2xl font-bold text-slate-900">Organization Subscriptions</h2>

@@ -138,6 +138,15 @@ function SubscriptionPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const syncMutation = useMutation({
+    mutationFn: () => API.subscription.sync(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success(data.message || "Subscription status synced successfully!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const currentTier = subscription?.tier ?? "free";
 
   const handleUpgrade = (tierId: string) => {
@@ -168,6 +177,35 @@ function SubscriptionPage() {
                 {subscription.usage.messagesUsedToday} / {subscription.usage.dailyLimit} messages used today
               </p>
             )}
+          </div>
+        )}
+
+        {/* Sync Banner if pending */}
+        {subscription?.subscription?.status === 'pending' && (
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5 text-center space-y-3 max-w-md mx-auto shadow-sm">
+            <div className="flex items-center justify-center gap-2 text-amber-800">
+              <AlertCircle className="size-5 text-amber-600 shrink-0" />
+              <p className="text-sm font-bold">
+                Payment Confirmation Pending
+              </p>
+            </div>
+            <p className="text-xs text-amber-700 leading-relaxed">
+              If you have already paid via Razorpay, it might take a moment to activate. Click below to verify and sync your status instantly.
+            </p>
+            <Button 
+              onClick={() => syncMutation.mutate()} 
+              disabled={syncMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+            >
+              {syncMutation.isPending ? (
+                <>
+                  <Loader className="size-3.5 animate-spin" />
+                  Syncing Status...
+                </>
+              ) : (
+                "Sync Payment Status"
+              )}
+            </Button>
           </div>
         )}
 

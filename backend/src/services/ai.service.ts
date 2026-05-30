@@ -56,7 +56,51 @@ export class AIService {
       conversation?.messages.filter((message) => message.role === "user")
         .length ?? 0;
 
-    const limit = this.getDailyMessageLimit(user.tier);
+    let limit = this.getDailyMessageLimit(user.tier);
+
+    // Look for active subscription to override legacy tier limits
+    const { Subscription } = await import("@/models");
+    const activeSub = await Subscription.findOne({
+      userId,
+      status: "active",
+    }).lean();
+
+    if (activeSub) {
+      if (activeSub.planId) {
+        const { SubscriptionPlan } = await import("@/models");
+        const plan = await SubscriptionPlan.findById(activeSub.planId).lean();
+        if (plan?.config && plan.config.dailyChatLimit !== undefined) {
+          limit = plan.config.dailyChatLimit ?? Number.POSITIVE_INFINITY;
+        }
+      } else {
+        // Fallback for legacy plans in subscription records
+        if (activeSub.plan === "Mann Shanti") {
+          limit = 100;
+        } else if (activeSub.plan === "Apna Therapist") {
+          limit = Number.POSITIVE_INFINITY;
+        }
+      }
+    } else if (user.orgId) {
+      // Check org subscription
+      const activeOrgSub = await Subscription.findOne({
+        orgId: user.orgId,
+        status: "active",
+      }).lean();
+      
+      if (activeOrgSub) {
+        if (activeOrgSub.planId) {
+          const { SubscriptionPlan } = await import("@/models");
+          const plan = await SubscriptionPlan.findById(activeOrgSub.planId).lean();
+          if (plan?.config && plan.config.dailyChatLimit !== undefined) {
+            limit = plan.config.dailyChatLimit ?? Number.POSITIVE_INFINITY;
+          }
+        } else {
+          // org plans by default get unlimited chat
+          limit = Number.POSITIVE_INFINITY;
+        }
+      }
+    }
+
     if (userMessagesToday >= limit) {
       throw new AppError("Daily chat limit reached", 429);
     }
