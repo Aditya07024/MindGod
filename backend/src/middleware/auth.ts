@@ -46,6 +46,26 @@ export async function requireAuth(
         .filter(Boolean)
         .join(" ");
 
+      if (email) {
+        // Search by email in phoneMasked (case-insensitive)
+        user = await User.findOne({
+          $or: [
+            { phoneMasked: email },
+            { phoneMasked: email.toLowerCase() },
+            { phoneMasked: { $regex: new RegExp(`^${email}$`, "i") } }
+          ]
+        }).lean();
+
+        if (user) {
+          // Link Clerk ID to existing MongoDB user
+          await User.updateOne(
+            { _id: user._id },
+            { $set: { clerkId: clerkUserId } }
+          );
+          user.clerkId = clerkUserId;
+        }
+      }
+
       try {
         // Detect intended role from header or Clerk metadata
         let intentRole = (req.headers["x-intent-role"] as string) || (clerkUser.publicMetadata?.role as string);

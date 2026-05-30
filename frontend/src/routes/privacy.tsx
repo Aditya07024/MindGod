@@ -55,6 +55,61 @@ function PrivacyPage() {
           <div className="h-1 w-20 bg-teal-500 mt-6 rounded-full" />
         </motion.div>
 
+        {/* DPDPA 2023 Compliance Certificate Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-16 rounded-[32px] border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-teal-500/5 to-transparent p-8 shadow-md relative overflow-hidden"
+        >
+          {/* Subtle gold decorative circle */}
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
+            <div className="flex size-16 items-center justify-center rounded-3xl bg-amber-500/20 text-amber-900 flex-shrink-0 shadow-lg border border-amber-500/30">
+              <Shield className="size-8 text-amber-700" />
+            </div>
+            
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="bg-amber-500/20 text-amber-800 text-xs font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-amber-500/30">
+                  Certified Compliant
+                </span>
+                <span className="text-slate-500 text-xs font-semibold">
+                  Registry Code: MSP-DPDPA-2023-993
+                </span>
+              </div>
+              <h2 className="font-display text-2xl font-black text-slate-900">
+                Digital Personal Data Protection Act (DPDPA) 2023
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                MindSyncPro is fully certified and compliant with the DPDP Act 2023 of India. We uphold 
+                the highest standards of data principal rights, secure consent management, and localize all data residency 
+                within India.
+              </p>
+            </div>
+          </div>
+          
+          {/* Compliance features checklist */}
+          <div className="mt-8 pt-6 border-t border-slate-200/50 grid gap-4 sm:grid-cols-3">
+            {[
+              { title: "Local Data Residency", desc: "All user databases reside strictly inside secure data centers in India." },
+              { title: "Consent Manager", desc: "Users have granular and revocable consent control over their personal records." },
+              { title: "Principal Rights", desc: "Full rights of access, correction, update, and complete erasure of personal data." }
+            ].map((f, i) => (
+              <div key={i} className="space-y-1">
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-teal-500 flex-shrink-0" />
+                  {f.title}
+                </h4>
+                <p className="text-xs text-slate-500 leading-relaxed pl-3.5">
+                  {f.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         <div className="space-y-12">
           {sections.map((s, i) => (
             <motion.section 

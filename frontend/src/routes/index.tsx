@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/clerk-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
   MessageCircle,
@@ -29,7 +29,7 @@ import API from "@/lib/api";
 import logoUrl from "@/assets/logo.png";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online";
-const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "enterprise@Mindsyncpro.com";
+const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "mindsyncpro@outlook.com";
 
 const PRICING_PLANS = [
   {
@@ -124,6 +124,69 @@ const PORTALS = [
     dest: "/sign-in",
   },
 ] as const;
+
+const FAQ_ITEMS = [
+  {
+    q: "Is MindSyncPro free to use?",
+    a: "Yes. MindSyncPro is a free mental health app for students and everyone else, offering a free plan with 7 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking."
+  },
+  {
+    q: "How does Manas AI work?",
+    a: "Manas is MindSyncPro's AI mental health companion, trained in Cognitive Behavioural Therapy (CBT). It has emotion-aware conversations, suggests CBT exercises, tracks your mood patterns, and prepares an AI brief for your therapist before each session."
+  },
+  {
+    q: "Are the therapists on MindSyncPro verified?",
+    a: "Yes. Every therapist on our platform is verified against RCI (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking."
+  },
+  {
+    q: "Is my data private and safe?",
+    a: "Absolutely. Your phone number is hashed - we cannot read it. All data is stored in India on secure servers and we are fully compliant with the Digital Personal Data Protection Act (DPDPA) 2023. We never sell your data."
+  },
+  {
+    q: "Can my college or company use MindSyncPro?",
+    a: "Yes. MindSyncPro offers organisation wellness plans for colleges and corporates. Admins get anonymous, aggregate mental wellness dashboards - no individual data is ever visible. Contact us at mindsyncpro@outlook.com."
+  },
+  {
+    q: "What mental health tools does MindSyncPro offer?",
+    a: "MindSyncPro includes 18+ CBT tools for anxiety India including thought records, mood calendar, 4-7-8 breathing, box breathing, 5-4-3-2-1 grounding, body scan, journaling, and a crisis support overlay with icall helpline access."
+  }
+];
+
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border-b border-slate-100 pb-5 last:border-0 pt-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between text-left font-display text-lg font-bold text-slate-900 focus:outline-none cursor-pointer group"
+      >
+        <span className="group-hover:text-teal-600 transition-colors duration-200">{question}</span>
+        <motion.span
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="ml-4 text-teal-600 flex-shrink-0"
+        >
+          <ChevronRight className="size-5 rotate-90" />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="mt-3 text-slate-600 leading-relaxed pr-6 text-sm sm:text-base font-normal">
+              {answer}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function Landing() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -285,8 +348,12 @@ function Landing() {
 
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
+            animate={{ opacity: 1, scale: 1, y: [0, -10, 0] }}
+            transition={{ 
+              scale: { duration: 0.8 }, 
+              opacity: { duration: 0.8 }, 
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut" } 
+            }}
             className="relative flex items-center justify-center"
           >
             <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-cyan-200/40 to-teal-200/20 blur-3xl" />
@@ -381,9 +448,10 @@ function Landing() {
                   onClick={(e) => handlePortalClick(e, p.id, p.dest)}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -8, scale: 1.015 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
-                  className="group relative overflow-hidden rounded-[32px] border border-teal-100 bg-white/80 p-7 shadow-lg backdrop-blur-2xl transition-all duration-300 hover:-translate-y-2 hover:border-teal-300 hover:bg-white hover:shadow-[0_25px_80px_rgba(20,184,166,0.12)]"
+                  transition={{ delay: i * 0.08, scale: { duration: 0.2 }, y: { duration: 0.2 } }}
+                  className="group relative overflow-hidden rounded-[32px] border border-teal-100 bg-white/80 p-7 shadow-lg backdrop-blur-2xl transition-shadow duration-300 hover:border-teal-300 hover:bg-white hover:shadow-[0_25px_80px_rgba(20,184,166,0.12)]"
                 >
                   <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-teal-300/20 blur-3xl transition-all duration-500 group-hover:scale-125" />
 
@@ -504,9 +572,10 @@ function Landing() {
                 key={plan.name}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -6, scale: 1.02 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative flex flex-col rounded-[32px] border border-slate-200 p-8 shadow-sm transition-all hover:shadow-xl ${plan.color}`}
+                transition={{ delay: i * 0.1, scale: { duration: 0.2 }, y: { duration: 0.2 } }}
+                className={`relative flex flex-col rounded-[32px] border border-slate-200 p-8 shadow-sm transition-shadow duration-300 hover:shadow-xl ${plan.color}`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-1 text-xs font-bold text-white shadow-lg">
@@ -735,31 +804,10 @@ function Landing() {
           </h2>
         </div>
         
-        <div className="space-y-8">
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Q: Is MindSyncPro free to use?</h3>
-            <p className="mt-2 text-slate-600 leading-relaxed">A: Yes. MindSyncPro is a free mental health app for students and everyone else, offering a free plan with 7 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking.</p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Q: How does Manas AI work?</h3>
-            <p className="mt-2 text-slate-600 leading-relaxed">A: Manas is MindSyncPro's AI mental health companion, trained in Cognitive Behavioural Therapy (CBT). It has emotion-aware conversations, suggests CBT exercises, tracks your mood patterns, and prepares an AI brief for your therapist before each session.</p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Q: Are the therapists on MindSyncPro verified?</h3>
-            <p className="mt-2 text-slate-600 leading-relaxed">A: Yes. Every therapist on our platform is verified against RCI (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking.</p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Q: Is my data private and safe?</h3>
-            <p className="mt-2 text-slate-600 leading-relaxed">A: Absolutely. Your phone number is hashed - we cannot read it. All data is stored in India on secure servers and we are fully compliant with the Digital Personal Data Protection Act (DPDPA) 2023. We never sell your data.</p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Q: Can my college or company use MindSyncPro?</h3>
-            <p className="mt-2 text-slate-600 leading-relaxed">A: Yes. MindSyncPro offers organisation wellness plans for colleges and corporates. Admins get anonymous, aggregate mental wellness dashboards - no individual data is ever visible. Contact us at corporate@mindsyncpro.online.</p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Q: What mental health tools does MindSyncPro offer?</h3>
-            <p className="mt-2 text-slate-600 leading-relaxed">A: MindSyncPro includes 18+ CBT tools for anxiety India including thought records, mood calendar, 4-7-8 breathing, box breathing, 5-4-3-2-1 grounding, body scan, journaling, and a crisis support overlay with icall helpline access.</p>
-          </div>
+        <div className="space-y-4">
+          {FAQ_ITEMS.map((item, idx) => (
+            <FAQItem key={idx} question={item.q} answer={item.a} />
+          ))}
         </div>
       </section>
 
@@ -817,7 +865,7 @@ function Landing() {
 
             <div className="mt-5 flex items-center gap-3">
               <a 
-                href="https://www.instagram.com/yourwork2025?igsh=MW5yMTBkdTY0aXUycw==" 
+                href="https://www.instagram.com/mindsyncproindia/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
