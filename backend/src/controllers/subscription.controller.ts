@@ -221,30 +221,46 @@ export class SubscriptionController {
     },
   );
 
-  /** POST /subscription/cancel — cancel active subscription */
+  /** POST /subscription/cancel — cancel active or pending subscription */
   static cancelSubscription = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      const activeSub = await Subscription.findOne({
-        userId: req.user!.sub,
+      const userId = req.user!.sub;
+
+      // Look for active subscription first
+      let sub = await Subscription.findOne({
+        userId,
         status: "active",
         plan: { $ne: "free" },
       });
 
-      if (!activeSub) throw new AppError("No active subscription found", 404);
-
-      if (activeSub.razorpaySubscriptionId) {
-        await SubscriptionService.cancelSubscription(
-          activeSub.razorpaySubscriptionId,
-        );
+      // Fallback to pending subscription if no active one exists
+      if (!sub) {
+        sub = await Subscription.findOne({
+          userId,
+          status: "pending",
+          plan: { $ne: "free" },
+        });
       }
 
-      activeSub.status = "cancelled";
-      await activeSub.save();
+      if (!sub) throw new AppError("No active or pending subscription found", 404);
+
+      if (sub.razorpaySubscriptionId) {
+        try {
+          await SubscriptionService.cancelSubscription(
+            sub.razorpaySubscriptionId,
+          );
+        } catch (err) {
+          console.warn("[Cancel] Failed to cancel subscription on Razorpay (might be unpaid/pending):", err);
+        }
+      }
+
+      sub.status = "cancelled";
+      await sub.save();
 
       // Downgrade user tier to free
-      await User.findByIdAndUpdate(req.user!.sub, { tier: "free" });
+      await User.findByIdAndUpdate(userId, { tier: "free" });
 
-      res.json({ message: "Subscription cancelled. You have been moved to the Free plan." });
+      res.json({ message: "Subscription cancelled successfully." });
     },
   );
 

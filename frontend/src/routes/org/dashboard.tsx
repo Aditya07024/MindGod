@@ -277,6 +277,19 @@ function OrgDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  useEffect(() => {
+    if (subscription?.subscription?.status === 'pending') {
+      API.subscription.sync()
+        .then((res: any) => {
+          if (res.status === 'active') {
+            qc.invalidateQueries({ queryKey: ['subscription'] });
+            toast.success("Payment verified! Organization plan activated.");
+          }
+        })
+        .catch((err: any) => console.log("Background sync error:", err));
+    }
+  }, [subscription?.subscription?.status]);
+
   const handleUploadEmails = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

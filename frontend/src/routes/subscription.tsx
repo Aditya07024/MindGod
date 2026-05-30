@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Zap, Crown, Loader, AlertCircle, Sparkles } from "lucide-react";
 import API from "@/lib/api";
@@ -148,6 +148,19 @@ function SubscriptionPage() {
   });
 
   const currentTier = subscription?.tier ?? "free";
+
+  useEffect(() => {
+    if (subscription?.subscription?.status === 'pending') {
+      API.subscription.sync()
+        .then((res) => {
+          if (res.status === 'active') {
+            qc.invalidateQueries({ queryKey: ["subscription"] });
+            toast.success("Payment verified! Subscription activated.");
+          }
+        })
+        .catch((err) => console.log("Background sync error:", err));
+    }
+  }, [subscription?.subscription?.status]);
 
   const handleUpgrade = (tierId: string) => {
     if (tierId === "free" || tierId === currentTier) return;

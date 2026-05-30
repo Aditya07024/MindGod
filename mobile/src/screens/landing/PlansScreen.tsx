@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { CheckCircle } from 'lucide-react-native';
@@ -14,6 +14,7 @@ interface PlansScreenProps {
 
 export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
   const { isSignedIn } = useAuth();
+  const queryClient = useQueryClient();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [plans, setPlans] = useState<PlanData[]>([
     {
@@ -102,7 +103,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
     if (hasPendingSub) {
       Alert.alert(
         'Payment Pending',
-        'You already have a subscription payment pending. Please complete the checkout in your browser or wait for verification.'
+        'You already have a subscription payment pending. Please sync status or click "Cancel Pending" at the top of the page to choose another plan.'
       );
       return;
     }
@@ -157,13 +158,29 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
                     text: 'Open Checkout',
                     onPress: async () => {
                       await WebBrowser.openBrowserAsync(shortUrl);
-                      Alert.alert(
-                        'Payment Processing',
-                        'Your payment is being verified securely by Razorpay. Once done, your account will be activated instantly!',
-                        [
-                          { text: 'OK', onPress: () => navigation.goBack() }
-                        ]
-                      );
+                      // Auto-sync status when they return to the app
+                      try {
+                        setCheckoutLoading(true);
+                        const syncRes = await API.subscription.sync();
+                        if (syncRes.status === 'active') {
+                          Alert.alert('Subscription Activated!', 'Your payment was verified. Premium features are now unlocked!');
+                        } else {
+                          Alert.alert(
+                            'Payment Processing',
+                            'Your payment is being processed. If you already completed the payment, click "Sync Status" on the plans page to update.'
+                          );
+                        }
+                        queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                      } catch (err) {
+                        console.warn("Auto-sync on return failed:", err);
+                        Alert.alert(
+                          'Payment Processing',
+                          'Your payment is being verified securely by Razorpay. Once done, click "Sync Status" to activate.'
+                        );
+                      } finally {
+                        setCheckoutLoading(false);
+                        navigation.goBack();
+                      }
                     }
                   }
                 ]
@@ -215,6 +232,65 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
         <Text style={styles.title}>Simple, Transparent Pricing</Text>
         <Text style={styles.subtitle}>Choose a tier aligned with your professional mental well-being goals.</Text>
       </View>
+
+      {hasPendingSub && (
+        <View style={styles.pendingBanner}>
+          <Text style={styles.pendingTitle}>Payment Confirmation Pending</Text>
+          <Text style={styles.pendingDesc}>
+            You have a pending subscription for "{pendingPlanName}". If you already paid, sync status below. Otherwise, cancel it to try again or select another plan.
+          </Text>
+          <View style={styles.pendingActions}>
+            <TouchableOpacity 
+              onPress={async () => {
+                try {
+                  setCheckoutLoading(true);
+                  const res = await API.subscription.sync();
+                  Alert.alert("Sync Status", res.message || "Synced successfully!");
+                  queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                } catch (err: any) {
+                  Alert.alert("Sync Failed", err.message || "Failed to sync status.");
+                } finally {
+                  setCheckoutLoading(false);
+                }
+              }}
+              style={[styles.actionBtn, styles.syncBtn]}
+            >
+              <Text style={styles.actionBtnText}>Sync Status</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              onPress={async () => {
+                Alert.alert(
+                  "Cancel Pending",
+                  "Are you sure you want to cancel this pending subscription? You can then choose any plan to subscribe again.",
+                  [
+                    { text: "No", style: "cancel" },
+                    {
+                      text: "Yes, Cancel",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          setCheckoutLoading(true);
+                          await API.subscription.cancel();
+                          Alert.alert("Cancelled", "Pending subscription cancelled.");
+                          queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                        } catch (err: any) {
+                          Alert.alert("Error", err.message || "Failed to cancel.");
+                        } finally {
+                          setCheckoutLoading(false);
+                        }
+                      }
+                    }
+                  ]
+                );
+              }}
+              style={[styles.actionBtn, styles.cancelBtn]}
+            >
+              <Text style={[styles.actionBtnText, styles.cancelBtnText]}>Cancel Pending</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {(isLoading || (isSignedIn && isSubscriptionLoading)) && (
         <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
@@ -358,6 +434,54 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color: Theme.colors.onSurfaceVariant,
     textAlign: 'center',
+  },
+  pendingBanner: {
+    backgroundColor: '#FFF9E6',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+    borderRadius: Theme.radius.lg,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+  },
+  pendingTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 15,
+    color: '#E65100',
+    marginBottom: Theme.spacing.xs - 2,
+  },
+  pendingDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 12.5,
+    color: '#EF6C00',
+    lineHeight: 18,
+    marginBottom: Theme.spacing.md,
+  },
+  pendingActions: {
+    flexDirection: 'row',
+    gap: Theme.spacing.sm,
+  },
+  actionBtn: {
+    flex: 1,
+    height: 38,
+    borderRadius: Theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  syncBtn: {
+    backgroundColor: '#E65100',
+  },
+  cancelBtn: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+  },
+  actionBtnText: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 13,
+    color: '#FFF',
+  },
+  cancelBtnText: {
+    color: '#E65100',
   },
 });
 

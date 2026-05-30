@@ -451,6 +451,7 @@ const API = {
     cancel: () => apiCall<any>("/api/subscription/cancel", { method: "POST" }),
     demoActivate: () =>
       apiCall<any>("/api/subscription/demo-activate", { method: "POST" }),
+    sync: () => apiCall<any>("/api/subscription/sync", { method: "POST" }),
     admin: { all: () => apiCall<any>("/api/subscription/admin/all") },
   },
 
