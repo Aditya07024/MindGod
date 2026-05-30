@@ -21,6 +21,8 @@ function TherapistOnboarding() {
 
   const [formData, setFormData] = useState({
     fullName: '',
+    email: '',
+    website: '',
     qualification: '',
     experienceCategory: '',
     specializations: '',
@@ -175,6 +177,25 @@ function TherapistOnboarding() {
                     className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Mumbai, Maharashtra"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Email ID (Optional)</label>
+                    <input
+                      name="email" value={formData.email} onChange={handleChange}
+                      className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      placeholder="dr.rajesh@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Personal Website (Optional)</label>
+                    <input
+                      name="website" value={formData.website} onChange={handleChange}
+                      className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
+                      placeholder="https://drrajesh.com"
+                    />
+                  </div>
                 </div>
 
                 <div>

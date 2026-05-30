@@ -30,6 +30,8 @@ export interface IUser extends Document {
   onboarding: IOnboardingState;
   therapistProfile?: {
     name: string;
+    email?: string;
+    website?: string;
     rciNumber?: string;
     verified: boolean;
     verificationStatus: "pending" | "verified" | "rejected";
@@ -108,6 +110,8 @@ const UserSchema = new Schema<IUser>(
     therapistProfile: {
       type: {
         name: { type: String },
+        email: { type: String },
+        website: { type: String },
         rciNumber: { type: String },
         verified: { type: Boolean, default: false },
         verificationStatus: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" },

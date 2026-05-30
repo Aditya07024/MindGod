@@ -149,6 +149,8 @@ export class TherapistController {
       therapists: therapists.map((t) => ({
         id: t._id,
         name: t.therapistProfile?.name || "Therapist",
+        email: t.therapistProfile?.email ?? "",
+        website: t.therapistProfile?.website ?? "",
         specializations: t.therapistProfile?.specializations ?? [],
         languages: t.therapistProfile?.languages ?? [],
         rating: t.therapistProfile?.rating ?? 5.0,
@@ -199,6 +201,8 @@ export class TherapistController {
     res.json({
       id: therapist._id,
       name: therapist.therapistProfile.name || "Therapist",
+      email: therapist.therapistProfile.email || "",
+      website: therapist.therapistProfile.website || "",
       rciNumber: therapist.therapistProfile.rciNumber,
       verified: therapist.therapistProfile.verified,
       specializations: therapist.therapistProfile.specializations,
@@ -313,6 +317,8 @@ export class TherapistController {
     res.json({
       profile: {
         name: therapist.therapistProfile?.name ?? "",
+        email: therapist.therapistProfile?.email ?? "",
+        website: therapist.therapistProfile?.website ?? "",
         rciNumber: therapist.therapistProfile?.rciNumber ?? "",
         specializations: therapist.therapistProfile?.specializations ?? [],
         languages: therapist.therapistProfile?.languages ?? [],
@@ -393,7 +399,7 @@ export class TherapistController {
   static updateProfile = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
       const userId = req.user!.sub;
-      const { bio, fee, specializations, introVideoUrl } = req.body;
+      const { bio, fee, specializations, introVideoUrl, email, website } = req.body;
 
       const user = await User.findById(userId);
       if (!user) throw new AppError("User not found", 404);
@@ -424,6 +430,8 @@ export class TherapistController {
         profile.specializations = specializations.split(",").map((s: string) => s.trim()).filter(Boolean);
       }
       if (introVideoUrl !== undefined) profile.introVideoUrl = introVideoUrl;
+      if (email !== undefined) profile.email = email;
+      if (website !== undefined) profile.website = website;
 
       await user.save();
 

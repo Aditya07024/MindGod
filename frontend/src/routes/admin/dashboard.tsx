@@ -256,6 +256,12 @@ function SuperAdminDashboard() {
                         <p className="text-xs text-slate-300">Fee: ₹{t.sessionFee}</p>
                         <p className="text-xs text-slate-300">Qual: {t.qualification}</p>
                         <p className="text-xs text-slate-300 line-clamp-1" title={t.clinicDetails}>Clinic: {t.clinicDetails}</p>
+                        {t.email && <p className="text-xs text-slate-300">Email: {t.email}</p>}
+                        {t.website && (
+                          <p className="text-xs text-slate-300 line-clamp-1" title={t.website}>
+                            Website: <a href={t.website} target="_blank" rel="noreferrer" className="text-violet-450 text-violet-400 hover:underline">{t.website} ↗</a>
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs text-slate-400 font-semibold mb-1">Earnings & Payouts</p>

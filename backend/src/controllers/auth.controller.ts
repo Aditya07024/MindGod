@@ -63,7 +63,9 @@ export class AuthController {
         orgId,
         location,
         upiId,
-        bankDetails
+        bankDetails,
+        email,
+        website
       } = req.body;
 
       const user = await User.findById(req.user!.sub);
@@ -83,6 +85,8 @@ export class AuthController {
       
       user.therapistProfile = {
         name: fullName || user.fullName || "",
+        email,
+        website,
         verified: false,
         verificationStatus: "pending",
         qualification,

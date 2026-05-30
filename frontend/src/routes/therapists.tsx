@@ -37,6 +37,8 @@ interface TherapistCard {
   bio: string;
   introVideoUrl?: string;
   location?: string;
+  email?: string;
+  website?: string;
   availability: Array<{ day: number; slots: string[] }>;
 }
 
@@ -455,6 +457,23 @@ function TherapistMarketplace() {
                     <p className="text-xs text-slate-500">per session</p>
                   </div>
                 </div>
+
+                {(selectedTherapist.email || selectedTherapist.website) && (
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold bg-teal-50/40 p-3.5 rounded-2xl border border-teal-100/50">
+                    {selectedTherapist.email && (
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <span className="text-slate-400 font-normal">Email:</span>
+                        <a href={`mailto:${selectedTherapist.email}`} className="text-teal-700 hover:underline">{selectedTherapist.email}</a>
+                      </div>
+                    )}
+                    {selectedTherapist.website && (
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <span className="text-slate-400 font-normal">Website:</span>
+                        <a href={selectedTherapist.website} target="_blank" rel="noopener noreferrer" className="text-teal-700 hover:underline">{selectedTherapist.website}</a>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-2">

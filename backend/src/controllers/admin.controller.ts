@@ -172,6 +172,8 @@ export class AdminController {
         return {
           id: t._id,
           name: t.therapistProfile?.name || "Therapist",
+          email: t.therapistProfile?.email ?? "",
+          website: t.therapistProfile?.website ?? "",
           specializations: t.therapistProfile?.specializations ?? [],
           languages: t.therapistProfile?.languages ?? [],
           rating: t.therapistProfile?.rating ?? 5.0,

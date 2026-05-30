@@ -202,6 +202,8 @@ function TherapistDashboard() {
     fee: 1500,
     specializations: '',
     introVideoUrl: '',
+    email: '',
+    website: '',
   });
 
   useEffect(() => {
@@ -223,6 +225,8 @@ function TherapistDashboard() {
         fee: profile.sessionFee || 1500,
         specializations: profile.specializations?.join(', ') || '',
         introVideoUrl: profile.introVideoUrl || '',
+        email: profile.email || '',
+        website: profile.website || '',
       });
       if (profile.availability && profile.availability.length > 0) {
         setAvailability(profile.availability);
@@ -584,6 +588,16 @@ function TherapistDashboard() {
               <div>
                 <label className="block text-sm font-bold text-slate-600 mb-2">Intro Video URL (YouTube/Vimeo)</label>
                 <input value={profileForm.introVideoUrl} onChange={e => setProfileForm(p => ({...p, introVideoUrl: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Email ID</label>
+                  <input type="email" value={profileForm.email} onChange={e => setProfileForm(p => ({...p, email: e.target.value}))} placeholder="dr.rajesh@example.com" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Personal Website</label>
+                  <input type="url" value={profileForm.website} onChange={e => setProfileForm(p => ({...p, website: e.target.value}))} placeholder="https://drrajesh.com" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-600 mb-2">Session Fee (₹) <span className="font-normal text-slate-400 text-xs ml-2">(Limits: 500 - 5000)</span></label>
