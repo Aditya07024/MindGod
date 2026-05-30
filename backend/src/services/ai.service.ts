@@ -2,10 +2,6 @@ import crypto from "crypto";
 import { AppError } from "@/lib/app-error";
 import { Conversation, User, type IUser } from "@/models";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-
 const CRISIS_KEYWORDS = [
   "want to die",
   "kill myself",
@@ -21,14 +17,32 @@ const PLAN_LIMITS: Record<IUser["tier"], number> = {
   apna_therapist: Number.POSITIVE_INFINITY,
 };
 
-const MANAS_SYSTEM_PROMPT = `You are Manas, Mindsyncpro's AI wellness companion for India.
-- You are an AI, NOT a therapist. Always disclose your AI identity naturally; never pretend to be human.
-- Never diagnose, prescribe, or give medical advice.
-- Keep replies under 150 words.
-- Use warm, empathetic, and culturally fluent language for India. Reference the Indian context naturally when appropriate (e.g., family pressure, academic anxiety, career stress).
-- Use gentle CBT and mindfulness reflections to help users notice and reframe automatic thoughts.
-- End with exactly one thoughtful follow-up question.
-- If the user sounds unsafe, prioritize safety and direct them to the crisis line 14416 / 1800891446.`;
+const MANAS_SYSTEM_PROMPT = `You are Manas AI.
+You are a compassionate emotional wellness companion.
+Your role is to:
+* Listen carefully.
+* Understand emotions.
+* Respond with empathy.
+* Help users reflect on situations.
+* Ask thoughtful questions.
+* Provide practical guidance.
+
+Response style:
+1. Acknowledge feelings.
+2. Understand the situation.
+3. Provide insights.
+4. Suggest practical actions.
+5. Ask a reflective follow-up question.
+
+Keep responses meaningful and personalized.
+Avoid:
+* Generic advice
+* Robotic wording
+* Repeating the same phrases
+
+Never claim to be a licensed therapist.
+Never diagnose medical conditions.
+If the user is in severe distress or unsafe, suggest they call/text the crisis line 14416 / 1800891446.`;
 
 export class AIService {
   static detectCrisis(text: string): boolean {
@@ -169,50 +183,378 @@ export class AIService {
     return { conversation, crisis };
   }
 
-  static async createAssistantReply(
-    message: string,
-    history: { role: string; content: string }[],
-  ) {
-    const crisis = this.detectCrisis(message);
+  // Inject only relevant memories using keyword matching
+  static getRelevantMemories(userMessage: string, memories: any[]): string[] {
+    if (!memories || memories.length === 0) return [];
 
-    if (crisis) {
-      return "I’m really glad you said that. If you may be in immediate danger or feel like you might act on this, call or text MANAS at 14416 / 1800891446 right now. Can you tell me if you are safe in this moment?";
+    const messageWords = new Set(
+      userMessage
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(/\s+/)
+        .filter((w) => w.length > 3)
+    );
+
+    const relevant: string[] = [];
+
+    for (const memory of memories) {
+      const memoryWords = memory.content
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(/\s+/)
+        .filter((w: string) => w.length > 3);
+
+      const hasOverlap = memoryWords.some((w: string) => messageWords.has(w));
+      
+      const categoryKeywords: Record<string, string[]> = {
+        goal: ["goal", "want to", "aim", "plan", "future"],
+        concern: ["concern", "worry", "anxious", "stress", "struggle"],
+        relationship: ["family", "mother", "father", "friend", "partner", "wife", "husband", "son", "daughter", "boss", "colleague"],
+        trigger: ["triggered", "trigger", "anxious when", "sad when", "angry when"],
+        event: ["lost", "started", "moved", "died", "left", "happened"]
+      };
+
+      const categoryMatch = categoryKeywords[memory.category]?.some((kw) => 
+        userMessage.toLowerCase().includes(kw)
+      );
+
+      if (hasOverlap || categoryMatch) {
+        relevant.push(`[${memory.category.toUpperCase()}] ${memory.content}`);
+      }
     }
 
-    const groqReply = await this.tryGroq(history);
-    if (groqReply) {
-      return groqReply;
-    }
-
-    const geminiReply = await this.tryGemini(history);
-    if (geminiReply) {
-      return geminiReply;
-    }
-
-    return "I’m here with you. I’m having technical trouble right now, but we can slow this down together. What feels heaviest in this moment?";
+    return relevant.slice(0, 3); // inject maximum of 3 memories to optimize tokens
   }
 
+  // Rolling rolling summary generation
+  static async summarizeConversation(conversation: any): Promise<string | null> {
+    if (conversation.messages.length <= 10) return conversation.summary || null;
+
+    const messagesToSummarize = conversation.messages.slice(0, -10);
+    const formattedHistory = messagesToSummarize
+      .map((m: any) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+      .join("\n");
+
+    const prompt = `You are updating the summary of an ongoing emotional wellness chat.
+${conversation.summary ? `Previous summary: ${conversation.summary}\n\n` : ""}
+New conversation turns to integrate into the summary:
+${formattedHistory}
+
+Write a brief, cumulative summary of the whole conversation, focusing on user goals, recurring concerns, relationships, triggers, and events. Keep it under 100 words.`;
+
+    try {
+      const summary = await this.queryBytez([
+        { role: "system", content: "You are a helpful assistant that summarizes conversations concisely." },
+        { role: "user", content: prompt }
+      ]);
+      if (summary) {
+        conversation.summary = summary;
+        await conversation.save();
+        return summary;
+      }
+    } catch (err) {
+      console.error("Failed to generate conversation summary:", err);
+    }
+    return conversation.summary || null;
+  }
+
+  // Extract factual memories from user message
+  static async extractMemories(userId: string, userMessage: string, assistantReply: string) {
+    const keywords = ["goal", "want to", "aim", "struggling with", "worry", "afraid", "scared", "always", "never", "mother", "father", "brother", "sister", "friend", "partner", "wife", "husband", "job", "work", "boss", "feel", "when I", "triggered", "anxious"];
+    const lowerMessage = userMessage.toLowerCase();
+    const hasKeywords = keywords.some((kw) => lowerMessage.includes(kw));
+
+    if (!hasKeywords) return;
+
+    const prompt = `You are a memory extraction assistant. Analyze the user message and extract key information about their goals, recurring concerns, relationship context, emotional triggers, and important life events.
+Only extract information if it falls into one of these categories:
+- goal: User goals
+- concern: Recurring concerns
+- relationship: Relationship context (family, friends, partner, etc.)
+- trigger: Emotional triggers (what makes them anxious, sad, angry, etc.)
+- event: Important life events (loss of job, relocation, breakups, etc.)
+
+User message: "${userMessage}"
+Assistant reply: "${assistantReply}"
+
+Respond with a JSON array of extracted memories, or an empty array if nothing important is found. Do not write anything else.
+Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event", "content": "..."}]`;
+
+    try {
+      const resultText = await this.queryBytez([
+        { role: "system", content: "You are a memory extractor. Reply only with valid JSON." },
+        { role: "user", content: prompt }
+      ]);
+
+      if (resultText) {
+        const cleaned = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
+        const extracted = JSON.parse(cleaned);
+        if (Array.isArray(extracted) && extracted.length > 0) {
+          const user = await User.findById(userId);
+          if (user) {
+            if (!user.memories) user.memories = [];
+            for (const item of extracted) {
+              if (["goal", "concern", "relationship", "trigger", "event"].includes(item.category) && item.content) {
+                user.memories.push({
+                  category: item.category,
+                  content: item.content,
+                  timestamp: new Date()
+                });
+              }
+            }
+            if (user.memories.length > 50) {
+              user.memories = user.memories.slice(-50);
+            }
+            await user.save();
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to extract memories:", err);
+    }
+  }
+
+  private static async fetchWithTimeout(url: string, options: any, timeoutMs = 15000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      return response;
+    } catch (err) {
+      clearTimeout(id);
+      throw err;
+    }
+  }
+
+  // Bytez API helpers with retry once on failure
+  private static async queryBytez(
+    messages: { role: string; content: string }[]
+  ): Promise<string> {
+    const apiKey = process.env.BYTEZ_API_KEY;
+    const model = process.env.BYTEZ_MODEL || "Qwen/Qwen2.5-7B-Instruct";
+
+    if (!apiKey) {
+      throw new Error("BYTEZ_API_KEY is not configured");
+    }
+
+    let attempt = 0;
+    const maxAttempts = 2;
+    let lastError: any = null;
+
+    while (attempt < maxAttempts) {
+      try {
+        const response = await this.fetchWithTimeout("https://api.bytez.com/models/v2/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: 220,
+            temperature: 0.6,
+            stream: false,
+          }),
+        }, 15000);
+
+        if (!response.ok) {
+          const errText = await response.text().catch(() => "API Error");
+          throw new Error(`Bytez API error: ${response.status} - ${errText}`);
+        }
+
+        const data = await response.json() as any;
+        return data.choices?.[0]?.message?.content?.trim() ?? "";
+      } catch (err) {
+        lastError = err;
+        attempt++;
+        if (attempt < maxAttempts) {
+          console.warn(`Bytez API query failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
+          await new Promise((res) => setTimeout(res, 1000));
+        }
+      }
+    }
+
+    throw lastError || new Error("Failed to query Bytez API");
+  }
+
+  private static async *queryBytezStream(
+    messages: { role: string; content: string }[]
+  ): AsyncGenerator<string> {
+    const apiKey = process.env.BYTEZ_API_KEY;
+    const model = process.env.BYTEZ_MODEL || "Qwen/Qwen2.5-7B-Instruct";
+
+    if (!apiKey) {
+      throw new Error("BYTEZ_API_KEY is not configured");
+    }
+
+    let attempt = 0;
+    const maxAttempts = 2;
+    let response: Response | null = null;
+    let lastError: any = null;
+
+    while (attempt < maxAttempts) {
+      try {
+        response = await this.fetchWithTimeout("https://api.bytez.com/models/v2/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: 220,
+            temperature: 0.6,
+            stream: true,
+          }),
+        }, 15000) as any;
+        
+        if (response && response.ok) {
+          break;
+        } else if (response) {
+          const errText = await response.text().catch(() => "API Error");
+          throw new Error(`Bytez API error: ${response.status} - ${errText}`);
+        } else {
+          throw new Error("No response received");
+        }
+      } catch (err) {
+        lastError = err;
+        attempt++;
+        if (attempt < maxAttempts) {
+          console.warn(`Bytez API connection failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
+          await new Promise((res) => setTimeout(res, 1000));
+        }
+      }
+    }
+
+    if (!response || !response.ok) {
+      throw lastError || new Error("Failed to connect to Bytez API");
+    }
+
+    if (!response.body) {
+      throw new Error("No response body received from Bytez API");
+    }
+
+    const reader = (response.body as any).getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed === "data: [DONE]") continue;
+
+          if (trimmed.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              const text = data.choices?.[0]?.delta?.content;
+              if (text) {
+                yield text;
+              }
+            } catch (e) {
+              // ignore
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  // Assistant Reply logic - handles crisis or streams response from Bytez
   static async *streamReply(
     userId: string,
     message: string,
   ): AsyncGenerator<string> {
-    const { conversation } = await this.appendUserMessage(userId, message);
-    const history = conversation.messages.map((entry) => ({
-      role: entry.role,
-      content: entry.content,
-    }));
-    const reply = await this.createAssistantReply(message, history);
+    const { conversation, crisis } = await this.appendUserMessage(userId, message);
 
+    if (crisis) {
+      const crisisReply = "I’m really glad you said that. If you may be in immediate danger or feel like you might act on this, call or text MANAS at 14416 / 1800891446 right now. Can you tell me if you are safe in this moment?";
+      conversation.messages.push({
+        role: "assistant",
+        content: crisisReply,
+        timestamp: new Date(),
+      });
+      await conversation.save();
+      for (const token of crisisReply.split(" ")) {
+        yield `${token} `;
+      }
+      return;
+    }
+
+    // Trigger rolling conversation summarization if message history is getting long
+    if (conversation.messages.length > 10) {
+      await this.summarizeConversation(conversation);
+    }
+
+    // Grab relevant background facts to inject
+    const user = await User.findById(userId).lean();
+    const relevantMemories = user?.memories ? this.getRelevantMemories(message, user.memories) : [];
+
+    // Construct prompt
+    const systemPromptParts = [MANAS_SYSTEM_PROMPT];
+    if (conversation.summary) {
+      systemPromptParts.push(`Summary of the conversation so far:\n${conversation.summary}`);
+    }
+    if (relevantMemories.length > 0) {
+      systemPromptParts.push(`Relevant facts from previous conversations:\n${relevantMemories.map(m => `- ${m}`).join("\n")}`);
+    }
+    const systemPrompt = systemPromptParts.join("\n\n");
+
+    // History: system prompt + last 10 messages + current user message
+    const allMessages = conversation.messages;
+    const historyMessages = allMessages.slice(0, -1);
+    const last10History = historyMessages.slice(-10);
+
+    const apiMessages = [
+      { role: "system", content: systemPrompt },
+      ...last10History.map((entry) => ({
+        role: entry.role,
+        content: entry.content,
+      })),
+      { role: "user", content: message }
+    ];
+
+    let fullReply = "";
+    try {
+      for await (const chunk of this.queryBytezStream(apiMessages)) {
+        fullReply += chunk;
+        yield chunk;
+      }
+    } catch (err) {
+      console.error("Bytez streamReply failed:", err);
+      fullReply = "I'm having trouble responding right now. Please try again in a moment.";
+      yield fullReply;
+    }
+
+    // Record response in DB
     conversation.messages.push({
       role: "assistant",
-      content: reply,
+      content: fullReply,
       timestamp: new Date(),
     });
-
     await conversation.save();
 
-    for (const token of reply.split(" ")) {
-      yield `${token} `;
+    // Trigger background memory extraction if response succeeded
+    if (fullReply && fullReply !== "I'm having trouble responding right now. Please try again in a moment.") {
+      this.extractMemories(userId, message, fullReply).catch((e) => {
+        console.error("Background fact memory extraction failed:", e);
+      });
     }
   }
 
@@ -235,76 +577,5 @@ export class AIService {
       escalated: conversation.escalated,
       messages: conversation.messages,
     };
-  }
-
-  private static async tryGroq(history: { role: string; content: string }[]) {
-    if (!process.env.GROQ_API_KEY) {
-      return null;
-    }
-
-    const response = await fetch(GROQ_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.6,
-        max_tokens: 220,
-        messages: [
-          { role: "system", content: MANAS_SYSTEM_PROMPT },
-          ...history,
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-
-    return data.choices?.[0]?.message?.content?.trim() ?? null;
-  }
-
-  private static async tryGemini(history: { role: string; content: string }[]) {
-    if (!process.env.GEMINI_API_KEY) {
-      return null;
-    }
-
-    const response = await fetch(
-      `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `${MANAS_SYSTEM_PROMPT}\n\n${history
-                    .map((entry) => `${entry.role}: ${entry.content}`)
-                    .join("\n")}`,
-                },
-              ],
-            },
-          ],
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = (await response.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? null;
   }
 }

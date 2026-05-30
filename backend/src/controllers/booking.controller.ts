@@ -413,7 +413,8 @@ export class BookingController {
 
       let groqSummary: string | null = null;
 
-      if (process.env.GROQ_API_KEY && (moods.length > 0 || journals.length > 0)) {
+      const apiKey = process.env.BYTEZ_API_KEY || process.env.GROQ_API_KEY;
+      if (apiKey && (moods.length > 0 || journals.length > 0)) {
         try {
           const prompt = `You are a clinical psychologist assistant. Summarise the following client data for their therapist in 3-4 concise bullet points. Focus on: mood trend, key emotional themes, risk indicators, and suggested areas to explore in today's session. Be clinical but compassionate. Do not use the client's name.
 
@@ -428,14 +429,22 @@ Risk level: ${riskLevel}
 
 Write a therapist pre-session brief:`;
 
-          const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          const url = process.env.BYTEZ_API_KEY 
+            ? "https://api.bytez.com/models/v2/openai/v1/chat/completions"
+            : "https://api.groq.com/openai/v1/chat/completions";
+
+          const model = process.env.BYTEZ_API_KEY
+            ? (process.env.BYTEZ_MODEL || "Qwen/Qwen2.5-7B-Instruct")
+            : "llama-3.3-70b-versatile";
+
+          const resp = await fetch(url, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+              Authorization: `Bearer ${apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "llama-3.3-70b-versatile",
+              model,
               temperature: 0.3,
               max_tokens: 400,
               messages: [{ role: "user", content: prompt }],
@@ -449,7 +458,7 @@ Write a therapist pre-session brief:`;
             groqSummary = data.choices?.[0]?.message?.content?.trim() ?? null;
           }
         } catch (err) {
-          console.error("[AI Brief] Groq call failed:", err);
+          console.error("[AI Brief] AI pre-session brief call failed:", err);
         }
       }
 

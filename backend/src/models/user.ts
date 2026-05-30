@@ -55,6 +55,11 @@ export interface IUser extends Document {
       bankDetails?: string;
     };
   };
+  memories?: {
+    category: "goal" | "concern" | "relationship" | "trigger" | "event";
+    content: string;
+    timestamp: Date;
+  }[];
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -144,6 +149,16 @@ const UserSchema = new Schema<IUser>(
         }
       },
       required: false
+    },
+    memories: {
+      type: [
+        {
+          category: { type: String, enum: ["goal", "concern", "relationship", "trigger", "event"], required: true },
+          content: { type: String, required: true },
+          timestamp: { type: Date, default: Date.now }
+        }
+      ],
+      default: []
     },
     deletedAt: { type: Date }
   },

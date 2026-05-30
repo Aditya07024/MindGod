@@ -15,6 +15,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
+  BYTEZ_API_KEY: z.string().optional(),
+  BYTEZ_MODEL: z.string().default("Qwen/Qwen2.5-7B-Instruct"),
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),

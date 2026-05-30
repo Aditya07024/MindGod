@@ -43,11 +43,12 @@ interface TherapistCard {
 function TherapistMarketplace() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [specialization, setSpecialization] = useState("");
-  const [language, setLanguage] = useState("");
-  const [gender, setGender] = useState("");
-  const [availabilityFilter, setAvailabilityFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  const [specialization, setSpecialization] = useState("all");
+  const [language, setLanguage] = useState("all");
+  const [gender, setGender] = useState("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<TherapistCard | null>(null);
@@ -60,21 +61,44 @@ function TherapistMarketplace() {
   } = useQuery({
     queryKey: [
       "therapists",
-      { specialization, language, gender, availability: availabilityFilter, location: locationFilter, minFee: priceRange[0], maxFee: priceRange[1] },
+      { 
+        specialization: specialization === "all" ? "" : specialization, 
+        language: language === "all" ? "" : language, 
+        gender: gender === "all" ? "" : gender, 
+        availability: availabilityFilter === "all" ? "" : availabilityFilter, 
+        city: cityFilter, 
+        state: stateFilter, 
+        minFee: priceRange[0], 
+        maxFee: priceRange[1] 
+      },
     ],
     queryFn: () =>
       API.therapist.list({
-        specialization: specialization || undefined,
-        language: language || undefined,
-        gender: gender || undefined,
-        availability: availabilityFilter || undefined,
-        location: locationFilter || undefined,
+        specialization: specialization !== "all" ? specialization : undefined,
+        language: language !== "all" ? language : undefined,
+        gender: gender !== "all" ? gender : undefined,
+        availability: availabilityFilter !== "all" ? availabilityFilter : undefined,
+        city: cityFilter || undefined,
+        state: stateFilter || undefined,
         minFee: priceRange[0],
         maxFee: priceRange[1],
       }),
   });
 
   const therapists = therapistsData?.therapists || [];
+
+  // Instant client-side search filtering
+  const filteredTherapists = therapists.filter((t: TherapistCard) => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    return (
+      t.name.toLowerCase().includes(term) ||
+      t.bio.toLowerCase().includes(term) ||
+      t.specializations.some((s) => s.toLowerCase().includes(term)) ||
+      t.languages.some((l) => l.toLowerCase().includes(term)) ||
+      (t.location && t.location.toLowerCase().includes(term))
+    );
+  });
 
   return (
     <AppShell>
@@ -125,7 +149,7 @@ function TherapistMarketplace() {
                         <SelectValue placeholder="Specialization" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Specializations</SelectItem>
+                        <SelectItem value="all">All Specializations</SelectItem>
                         <SelectItem value="Depression">Depression</SelectItem>
                         <SelectItem value="Anxiety">Anxiety</SelectItem>
                         <SelectItem value="Trauma">Trauma</SelectItem>
@@ -141,7 +165,7 @@ function TherapistMarketplace() {
                         <SelectValue placeholder="Language" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Languages</SelectItem>
+                        <SelectItem value="all">All Languages</SelectItem>
                         <SelectItem value="English">English</SelectItem>
                         <SelectItem value="Hindi">Hindi</SelectItem>
                         <SelectItem value="Marathi">Marathi</SelectItem>
@@ -155,7 +179,7 @@ function TherapistMarketplace() {
                         <SelectValue placeholder="Gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any Gender</SelectItem>
+                        <SelectItem value="all">Any Gender</SelectItem>
                         <SelectItem value="Female">Female</SelectItem>
                         <SelectItem value="Male">Male</SelectItem>
                         <SelectItem value="Non-binary">Non-binary</SelectItem>
@@ -168,20 +192,31 @@ function TherapistMarketplace() {
                         <SelectValue placeholder="Availability" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any Time</SelectItem>
+                        <SelectItem value="all">Any Time</SelectItem>
                         <SelectItem value="today">Today</SelectItem>
                         <SelectItem value="this_week">This Week</SelectItem>
                         <SelectItem value="weekends">Weekends</SelectItem>
                       </SelectContent>
                     </Select>
                     
-                    {/* Location */}
+                    {/* City */}
                     <div className="relative">
                       <MapPin className="absolute left-3 top-3 text-slate-400 w-4 h-4" />
                       <Input
-                        placeholder="Filter by city..."
-                        value={locationFilter}
-                        onChange={(e) => setLocationFilter(e.target.value)}
+                        placeholder="Filter by city (e.g. Mumbai)..."
+                        value={cityFilter}
+                        onChange={(e) => setCityFilter(e.target.value)}
+                        className="pl-9 h-11 rounded-lg"
+                      />
+                    </div>
+
+                    {/* State */}
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 text-slate-400 w-4 h-4" />
+                      <Input
+                        placeholder="Filter by state (e.g. Maharashtra)..."
+                        value={stateFilter}
+                        onChange={(e) => setStateFilter(e.target.value)}
                         className="pl-9 h-11 rounded-lg"
                       />
                     </div>
@@ -219,7 +254,7 @@ function TherapistMarketplace() {
             <div className="text-center py-12">
               <p className="text-red-600">Failed to load therapists</p>
             </div>
-          ) : therapists.length === 0 ? (
+          ) : filteredTherapists.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-slate-500 text-lg">No therapists found matching your criteria</p>
             </div>
@@ -229,7 +264,7 @@ function TherapistMarketplace() {
               animate={{ opacity: 1 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              {therapists.map((therapist: TherapistCard, index: number) => (
+              {filteredTherapists.map((therapist: TherapistCard, index: number) => (
                 <motion.div
                   key={therapist.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -354,56 +389,62 @@ function TherapistMarketplace() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+              className="w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col relative"
             >
-              <div className="relative aspect-video bg-slate-900 w-full shrink-0">
-                {selectedTherapist.introVideoUrl ? (
-                  getYouTubeId(selectedTherapist.introVideoUrl) ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${getYouTubeId(selectedTherapist.introVideoUrl)}?autoplay=1&mute=0&rel=0`}
-                      className="w-full h-full object-cover"
-                      allow="autoplay; encrypted-media; fullscreen"
-                      allowFullScreen
-                      frameBorder="0"
-                    />
+              {/* Close Button absolute on the modal */}
+              <button
+                onClick={() => setSelectedTherapist(null)}
+                className="absolute top-4 right-4 p-2 bg-black/5 hover:bg-black/10 rounded-full text-slate-600 transition z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Video Header (Centered & Medium Sized) */}
+              <div className="w-full bg-slate-50 p-6 flex justify-center shrink-0 border-b border-slate-100">
+                <div className="relative w-full max-w-md aspect-video bg-slate-900 rounded-2xl overflow-hidden shadow-md border border-slate-200/80">
+                  {selectedTherapist.introVideoUrl ? (
+                    getYouTubeId(selectedTherapist.introVideoUrl) ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${getYouTubeId(selectedTherapist.introVideoUrl)}?autoplay=1&mute=0&rel=0`}
+                        className="w-full h-full object-cover"
+                        allow="autoplay; encrypted-media; fullscreen"
+                        allowFullScreen
+                        frameBorder="0"
+                      />
+                    ) : (
+                      <video
+                        src={selectedTherapist.introVideoUrl}
+                        autoPlay
+                        controls
+                        className="w-full h-full object-cover"
+                      />
+                    )
                   ) : (
-                    <video
-                      src={selectedTherapist.introVideoUrl}
-                      autoPlay
-                      controls
-                      className="w-full h-full object-cover"
-                    />
-                  )
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-700">
-                    No intro video available
-                  </div>
-                )}
-                <button
-                  onClick={() => setSelectedTherapist(null)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white backdrop-blur-md transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                    <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                      No intro video available
+                    </div>
+                  )}
+                </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+              {/* Details Content (Clearly organized, avoiding scroll where possible) */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-5">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900">{selectedTherapist.name}</h2>
-                    <div className="flex items-center gap-3 mt-2 text-sm">
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{selectedTherapist.name}</h2>
+                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                       {selectedTherapist.verified && (
-                        <span className="font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full">
+                        <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
                           ✓ RCI Verified
                         </span>
                       )}
-                      <div className="flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
-                        <Star className="w-4 h-4 fill-amber-500" />
+                      <div className="flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                        <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                         {selectedTherapist.rating.toFixed(1)} ({selectedTherapist.sessionCount} sessions)
                       </div>
                       {selectedTherapist.location && (
-                        <div className="flex items-center gap-1 font-semibold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-full">
-                          <MapPin className="size-4" />
+                        <div className="flex items-center gap-1 font-semibold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full">
+                          <MapPin className="size-3.5" />
                           {selectedTherapist.location}
                         </div>
                       )}
@@ -411,39 +452,39 @@ function TherapistMarketplace() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-slate-900">₹{selectedTherapist.sessionFee}</p>
-                    <p className="text-sm text-slate-500">per session</p>
+                    <p className="text-xs text-slate-500">per session</p>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
-                    <HeartHandshake className="w-5 h-5 text-indigo-500" /> About & Approach
+                  <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-2">
+                    <HeartHandshake className="w-4 h-4 text-indigo-500" /> About & Approach
                   </h3>
-                  <p className="text-slate-600 leading-relaxed">
+                  <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line line-clamp-3">
                     {selectedTherapist.bio || "No biography provided."}
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
-                      <GraduationCap className="w-5 h-5 text-indigo-500" /> Specialties
+                    <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-2 text-sm">
+                      <GraduationCap className="w-4 h-4 text-indigo-500" /> Specialties
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {selectedTherapist.specializations.map((spec) => (
-                        <span key={spec} className="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                        <span key={spec} className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-xs font-medium">
                           {spec}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
-                      <MessageCircle className="w-5 h-5 text-indigo-500" /> Languages
+                    <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-2 text-sm">
+                      <MessageCircle className="w-4 h-4 text-indigo-500" /> Languages
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {selectedTherapist.languages.map((lang) => (
-                        <span key={lang} className="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                        <span key={lang} className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-xs font-medium">
                           {lang}
                         </span>
                       ))}
@@ -452,13 +493,14 @@ function TherapistMarketplace() {
                 </div>
               </div>
 
+              {/* Action Buttons Footer */}
               <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
-                <Button variant="outline" onClick={() => setSelectedTherapist(null)} className="rounded-xl h-12 px-6">
+                <Button variant="outline" onClick={() => setSelectedTherapist(null)} className="rounded-xl h-11 px-5 text-sm">
                   Close
                 </Button>
                 <Button 
                   onClick={() => navigate({ to: `/booking/${selectedTherapist.id}` })} 
-                  className="rounded-xl h-12 px-8 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="rounded-xl h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
                 >
                   Book Session
                 </Button>

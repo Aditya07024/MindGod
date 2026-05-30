@@ -14,6 +14,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
@@ -55,6 +56,11 @@ const SubscriptionRoute = SubscriptionRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reports': typeof ReportsRoute
   '/sign-in': typeof SignInRoute
   '/subscription': typeof SubscriptionRoute
   '/support': typeof SupportRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reports': typeof ReportsRoute
   '/sign-in': typeof SignInRoute
   '/subscription': typeof SubscriptionRoute
   '/support': typeof SupportRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reports': typeof ReportsRoute
   '/sign-in': typeof SignInRoute
   '/subscription': typeof SubscriptionRoute
   '/support': typeof SupportRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/mood'
     | '/onboarding'
     | '/privacy'
+    | '/reports'
     | '/sign-in'
     | '/subscription'
     | '/support'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/mood'
     | '/onboarding'
     | '/privacy'
+    | '/reports'
     | '/sign-in'
     | '/subscription'
     | '/support'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/mood'
     | '/onboarding'
     | '/privacy'
+    | '/reports'
     | '/sign-in'
     | '/subscription'
     | '/support'
@@ -302,6 +314,7 @@ export interface RootRouteChildren {
   MoodRoute: typeof MoodRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  ReportsRoute: typeof ReportsRoute
   SignInRoute: typeof SignInRoute
   SubscriptionRoute: typeof SubscriptionRoute
   SupportRoute: typeof SupportRoute
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -486,6 +506,7 @@ const rootRouteChildren: RootRouteChildren = {
   MoodRoute: MoodRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  ReportsRoute: ReportsRoute,
   SignInRoute: SignInRoute,
   SubscriptionRoute: SubscriptionRoute,
   SupportRoute: SupportRoute,

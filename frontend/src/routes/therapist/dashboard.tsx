@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2 } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton, useClerk } from '@clerk/clerk-react';
@@ -27,12 +27,20 @@ function riskBadge(level: string) {
   );
 }
 
+function moodColor(score: number) {
+  if (score <= 3) return 'oklch(0.65 0.18 25)';
+  if (score <= 5) return 'oklch(0.78 0.14 70)';
+  if (score <= 7) return 'oklch(0.78 0.13 130)';
+  return 'oklch(0.68 0.14 160)';
+}
+
 function TherapistDashboard() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization'>('schedule');
+  const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization' | 'reports'>('schedule');
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [availability, setAvailability] = useState<{ day: number; slots: string[] }[]>(
     DAYS.map((_, day) => ({ day, slots: day >= 1 && day <= 5 ? ['10:00', '14:00', '16:00'] : [] }))
@@ -97,6 +105,18 @@ function TherapistDashboard() {
     queryKey: ['ai-brief', briefBookingId],
     queryFn: () => API.booking.getAiBrief(briefBookingId!),
     enabled: !!briefBookingId,
+  });
+
+  const { data: sharedReportsData, isLoading: sharedReportsLoading } = useQuery({
+    queryKey: ['therapist-shared-reports'],
+    queryFn: () => API.therapist.sharedReports(),
+    enabled: tab === 'reports',
+  });
+
+  const { data: reportDetailData, isLoading: reportDetailLoading } = useQuery({
+    queryKey: ['shared-report-detail', selectedReportId],
+    queryFn: () => API.therapist.sharedReportDetail(selectedReportId!),
+    enabled: !!selectedReportId,
   });
 
   const availabilityMutation = useMutation({
@@ -313,7 +333,7 @@ function TherapistDashboard() {
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 flex gap-2 overflow-x-auto">
-          {(['schedule', 'availability', 'earnings', 'profile', 'subscription', 'invitations', 'organization'] as const)
+          {(['schedule', 'availability', 'earnings', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
             .filter(t => (t !== 'subscription' || !isOrgLinked) && (t !== 'organization' || isOrgLinked))
             .map((t) => {
             const disabled = subRequired && t !== 'subscription' && t !== 'invitations' && t !== 'profile';
@@ -324,7 +344,7 @@ function TherapistDashboard() {
                 className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative whitespace-nowrap ${
                   tab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
                 } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {t}
+                {t === 'reports' ? 'Shared Reports' : t}
                 {disabled && (
                   <Shield className="size-3 absolute top-2 right-2 text-slate-400" />
                 )}
@@ -743,6 +763,57 @@ function TherapistDashboard() {
             </div>
           </motion.div>
         )}
+
+        {tab === 'reports' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Shared Wellness Reports</h2>
+            <p className="text-sm font-medium text-slate-500">Wellness report logs shared by your clients.</p>
+
+            {sharedReportsLoading ? (
+              <div className="h-32 rounded-3xl bg-slate-100 animate-pulse border border-slate-200" />
+            ) : sharedReports.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
+                <FileText className="size-12 mx-auto mb-4 text-slate-200" />
+                <p className="font-medium">No shared wellness reports yet.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {sharedReports.map((r: any) => (
+                  <div key={r.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-lg">{r.userName}</h3>
+                        <p className="text-xs text-slate-500 font-medium">{r.userPhoneMasked || 'Anonymous User'}</p>
+                        <div className="flex gap-1.5 mt-2">
+                          <span className="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                            {r.period}
+                          </span>
+                          <span className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full font-medium">
+                            Shared: {new Date(r.sharedAt).toLocaleDateString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-teal-50 text-teal-600 p-2.5 rounded-2xl border border-teal-100/50">
+                        <FileText className="size-5" />
+                      </div>
+                    </div>
+                    {r.notes && (
+                      <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-600 italic mb-4 border-l-2 border-teal-500/30">
+                        "{r.notes}"
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setSelectedReportId(r.id)}
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl py-2.5 text-sm font-bold shadow-sm transition active:scale-[0.98]"
+                    >
+                      View Full Report
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* AI Brief Modal */}
@@ -849,6 +920,205 @@ function TherapistDashboard() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Shared Report View Modal */}
+      <AnimatePresence>
+        {selectedReportId && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+            onClick={() => setSelectedReportId(null)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl bg-[#FCFAF7] rounded-[2rem] shadow-2xl max-h-[85vh] overflow-y-auto border border-slate-200">
+              
+              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-[2rem] z-10">
+                <div className="flex items-center gap-2">
+                  <FileText className="size-5 text-teal-600" />
+                  <h3 className="font-bold text-slate-900 font-display text-lg">Shared Wellness Report</h3>
+                </div>
+                <button onClick={() => setSelectedReportId(null)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+              </div>
+
+              {reportDetailLoading && (
+                <div className="p-8 space-y-4">
+                  {[1, 2, 3, 4].map(i => <div key={i} className="h-4 bg-slate-200 rounded animate-pulse" />)}
+                </div>
+              )}
+
+              {reportDetailData && (
+                <div className="p-6 md:p-8 space-y-6">
+                  {/* Client Info Header */}
+                  <div className="flex justify-between items-start border-b border-teal-500/20 pb-5">
+                    <div>
+                      <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Shared by Client</span>
+                      <h4 className="font-display text-2xl font-bold text-slate-900 mt-1">{reportDetailData.user?.fullName}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{reportDetailData.user?.phoneMasked || 'Anonymous Patient'}</p>
+                    </div>
+                    <div className="text-right text-xs">
+                      <span className="bg-teal-50 text-teal-700 border border-teal-100 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                        {reportDetailData.period} Report
+                      </span>
+                      <p className="text-slate-400 text-[10px] mt-2 font-medium">
+                        Shared on {new Date(reportDetailData.sharedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Client Notes if any */}
+                  {reportDetailData.notes && (
+                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Message from Client</span>
+                      <p className="text-sm text-slate-600 italic">"{reportDetailData.notes}"</p>
+                    </div>
+                  )}
+
+                  {/* Onboarding info */}
+                  {reportDetailData.user?.onboarding && (
+                    <div className="bg-teal-50/40 border border-teal-100 rounded-2xl p-4 text-xs space-y-2">
+                      <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block">Client General Profile</span>
+                      {reportDetailData.user.onboarding.primaryNeed && (
+                        <p className="text-slate-700">Primary Goal: <span className="font-semibold">{reportDetailData.user.onboarding.primaryNeed}</span></p>
+                      )}
+                      {reportDetailData.user.onboarding.concerns?.length > 0 && (
+                        <div>
+                          <span className="text-slate-700">Key concerns:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {reportDetailData.user.onboarding.concerns.map((c: string, idx: number) => (
+                              <span key={idx} className="bg-teal-100/60 text-teal-800 px-2 py-0.5 rounded-full font-medium text-[10px]">
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mood Section */}
+                  <div className="space-y-3">
+                    <h5 className="font-display font-bold text-slate-900 border-b border-slate-200 pb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5"><Heart className="size-4 text-teal-600" /> Mood check-ins</span>
+                      {reportDetailData.avgMood && (
+                        <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
+                          Avg: {reportDetailData.avgMood}/10
+                        </span>
+                      )}
+                    </h5>
+                    {reportDetailData.moods?.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">No mood check-ins logged during this period.</p>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {reportDetailData.moods.map((m: any) => (
+                          <div key={m.id} className="p-3 bg-white border border-slate-200 rounded-xl text-xs flex flex-col justify-between space-y-1.5 shadow-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-400 text-[10px] font-medium">
+                                {new Date(m.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              </span>
+                              <span className="size-5 rounded-full text-white font-bold grid place-items-center text-[10px]" style={{ backgroundColor: moodColor(m.score) }}>
+                                {m.score}
+                              </span>
+                            </div>
+                            {m.note && <p className="text-slate-600 italic line-clamp-2">"{m.note}"</p>}
+                            {m.tags && m.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {m.tags.slice(0, 2).map((t: string, idx: number) => (
+                                  <span key={idx} className="bg-slate-100 text-[9px] px-1 rounded text-slate-600 font-medium">{t}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CBT Journals */}
+                  <div className="space-y-4">
+                    <h5 className="font-display font-bold text-slate-900 border-b border-slate-200 pb-1 flex items-center gap-1.5">
+                      <Smile className="size-4 text-teal-600" /> CBT Journal Reflections
+                    </h5>
+                    {reportDetailData.journals?.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">No CBT journal entries created during this period.</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {reportDetailData.journals.map((j: any) => (
+                          <div key={j.id} className="p-4 bg-white border border-slate-200 rounded-2xl text-xs space-y-3 shadow-sm">
+                            <div className="flex justify-between items-start">
+                              <h6 className="font-bold text-slate-800 text-sm leading-tight">{j.prompt}</h6>
+                              <span className="text-[10px] text-slate-400 shrink-0 font-medium ml-2">
+                                {new Date(j.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                              <div>
+                                <span className="font-bold text-slate-400 uppercase text-[9px] block mb-0.5">Situation</span>
+                                <p className="text-slate-600">{j.situation}</p>
+                              </div>
+                              <div>
+                                <span className="font-bold text-slate-400 uppercase text-[9px] block mb-0.5">Thought</span>
+                                <p className="text-slate-600">{j.thought}</p>
+                              </div>
+                              <div>
+                                <span className="font-bold text-slate-400 uppercase text-[9px] block mb-0.5">Feeling</span>
+                                <p className="text-slate-600">{j.feeling}</p>
+                              </div>
+                              <div>
+                                <span className="font-bold text-teal-600 uppercase text-[9px] block mb-0.5 font-sans">Reframe</span>
+                                <p className="text-teal-700 font-semibold">{j.reframe}</p>
+                              </div>
+                            </div>
+                            {j.aiResponse && (
+                              <div className="mt-2 p-3 rounded-xl bg-[#FCFAF7] border border-teal-100">
+                                <span className="font-bold uppercase text-[9px] text-teal-600 flex items-center gap-1 mb-1">
+                                  <Sparkles className="size-3" /> Manas Response
+                                </span>
+                                <p className="text-slate-600 italic">"{j.aiResponse}"</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Chats */}
+                  <div className="space-y-3">
+                    <h5 className="font-display font-bold text-slate-900 border-b border-slate-200 pb-1 flex items-center gap-1.5">
+                      <Sparkles className="size-4 text-teal-600" /> Manas AI Chat Activity
+                    </h5>
+                    {reportDetailData.chats?.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">No AI conversation activity logged during this period.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {reportDetailData.chats.map((c: any, idx: number) => (
+                          <div key={c.sessionId || idx} className="flex justify-between items-center bg-white p-3.5 border border-slate-200 rounded-xl text-xs shadow-sm">
+                            <div className="space-y-0.5 max-w-[80%]">
+                              <span className="text-[10px] font-bold text-slate-400">Session ID: #{c.sessionId?.slice(-6) || 'N/A'}</span>
+                              <p className="text-slate-700 font-medium line-clamp-1">{c.summary}</p>
+                            </div>
+                            <div className="text-right text-[10px]">
+                              <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[8px] ${
+                                c.riskLevel === 'high' ? 'bg-red-100 text-red-700' :
+                                c.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                Risk: {c.riskLevel}
+                              </span>
+                              <p className="text-slate-400 mt-1.5 font-medium">
+                                {new Date(c.updatedAt).toLocaleDateString('en-IN')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </motion.div>

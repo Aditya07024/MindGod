@@ -15,6 +15,8 @@ export class TherapistController {
       verified,
       rating,
       location,
+      city,
+      state,
       limit = 50,
       skip = 0,
     } = req.query;
@@ -57,12 +59,35 @@ export class TherapistController {
       filter["therapistProfile.rating"] = { $gte: Number(rating) };
     }
     
-    // Filter by location
+    // Filter by location, city, and state
     if (location) {
       filter["location"] = {
         $regex: String(location),
         $options: "i",
       };
+    }
+
+    if (city) {
+      filter["location"] = {
+        $regex: String(city),
+        $options: "i",
+      };
+    }
+
+    if (state) {
+      if (filter["location"]) {
+        const existingRegex = filter["location"];
+        filter["$and"] = [
+          { location: existingRegex },
+          { location: { $regex: String(state), $options: "i" } }
+        ];
+        delete filter["location"];
+      } else {
+        filter["location"] = {
+          $regex: String(state),
+          $options: "i",
+        };
+      }
     }
 
     // Filter by subscription status

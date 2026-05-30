@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useUser } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
@@ -278,14 +278,19 @@ function Dashboard() {
             <div className="mt-3 font-display font-semibold">CBT Journal</div>
             <div className="text-xs text-muted-foreground">Reframe thoughts</div>
           </Link>
-          <Link to="/therapists" className="col-span-2 rounded-3xl bg-card p-5 shadow-sm transition hover:shadow-md flex items-center gap-4">
+          <Link to="/therapists" className="rounded-3xl bg-card p-5 shadow-sm transition hover:shadow-md">
             <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
               <Users className="size-5" />
             </div>
-            <div>
-              <div className="font-display font-semibold">Find therapist</div>
-              <div className="text-xs text-muted-foreground">Book a session</div>
+            <div className="mt-3 font-display font-semibold">Find therapist</div>
+            <div className="text-xs text-muted-foreground">Book a session</div>
+          </Link>
+          <Link to="/reports" className="rounded-3xl bg-card p-5 shadow-sm transition hover:shadow-md">
+            <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-teal-50 text-teal-700">
+              <FileText className="size-5" />
             </div>
+            <div className="mt-3 font-display font-semibold">Wellness Reports</div>
+            <div className="text-xs text-muted-foreground">Download & Share</div>
           </Link>
         </div>
 

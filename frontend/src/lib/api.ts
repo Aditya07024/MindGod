@@ -171,6 +171,10 @@ const API = {
     update: (data: any) =>
       apiCall<any>("/api/user/profile", { method: "PUT", body: JSON.stringify(data) }),
     profile: () => apiCall<any>("/api/user/profile"),
+    getReport: (period: string) => apiCall<any>(`/api/user/report?period=${period}`),
+    shareReport: (data: { therapistId: string; period: string; notes?: string }) =>
+      apiCall<any>("/api/user/report/share", { method: "POST", body: JSON.stringify(data) }),
+    getShares: () => apiCall<any>("/api/user/report/shares"),
   },
 
   therapist: {
@@ -204,6 +208,8 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    sharedReports: () => apiCall<any>("/api/therapists/me/shared-reports"),
+    sharedReportDetail: (id: string) => apiCall<any>(`/api/therapists/me/shared-reports/${id}`),
   },
 
   booking: {

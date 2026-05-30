@@ -695,7 +695,24 @@ function SuperAdminDashboard() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Audience</label>
-                  <select value={planForm.audience} onChange={e => setPlanForm({...planForm, audience: e.target.value})}
+                  <select value={planForm.audience} onChange={e => {
+                    const aud = e.target.value;
+                    const updates: any = { audience: aud };
+                    if (aud === 'user' && !planForm.features) {
+                      updates.features = "Unlimited AI messages\nUnlimited journal entries\n30-day mood calendar\nAll 5 breathing exercises\n20% therapist discount\nPriority booking + instant access\nCrisis line 24/7";
+                      updates.config = {
+                        ...planForm.config,
+                        dailyChatLimit: null,
+                        hasUnlimitedJournal: true,
+                        hasPriorityBooking: true,
+                        therapistDiscount: 20,
+                        enableMoodCheck: true,
+                        enableBreathe: true,
+                        enableChat: true
+                      };
+                    }
+                    setPlanForm({...planForm, ...updates});
+                  }}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none">
                     <option value="therapist">Therapist</option>
                     <option value="user">User</option>

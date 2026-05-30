@@ -22,53 +22,15 @@ const TIERS = [
     description: "Start your mental wellness journey",
     icon: null,
     features: [
-      { text: "7 AI messages per day", included: true },
-      { text: "7 CBT journal entries/week", included: true },
-      { text: "7-day mood calendar", included: true },
+      { text: "Unlimited AI messages (7 messages/day limit)", included: false },
+      { text: "Unlimited journal entries (3 entries/week limit)", included: false },
+      { text: "30-day mood calendar (7-day limit)", included: false },
       { text: "All 5 breathing exercises", included: true },
-      { text: "10% therapist discount", included: false },
-      { text: "Priority booking", included: false },
+      { text: "20% therapist discount", included: false },
+      { text: "Priority booking + instant access", included: false },
       { text: "Crisis line 24/7", included: true },
     ],
     cta: "Current Plan",
-    recommended: false,
-  },
-  {
-    id: "mann_shanti",
-    name: "Mann Shanti",
-    price: 199,
-    period: "/mo",
-    description: "Unlock more conversations",
-    icon: Zap,
-    features: [
-      { text: "100 AI messages per day", included: true },
-      { text: "Unlimited journal entries", included: true },
-      { text: "30-day mood calendar", included: true },
-      { text: "All 5 breathing exercises", included: true },
-      { text: "10% therapist discount", included: true },
-      { text: "Priority booking", included: true },
-      { text: "Crisis line 24/7", included: true },
-    ],
-    cta: "Upgrade Now",
-    recommended: true,
-  },
-  {
-    id: "apna_therapist",
-    name: "Apna Therapist",
-    price: 499,
-    period: "/mo",
-    description: "Premium therapy experience",
-    icon: Crown,
-    features: [
-      { text: "Unlimited AI messages", included: true },
-      { text: "Unlimited journal entries", included: true },
-      { text: "30-day mood calendar", included: true },
-      { text: "All 5 breathing exercises", included: true },
-      { text: "20% therapist discount", included: true },
-      { text: "Priority booking + instant access", included: true },
-      { text: "Crisis line 24/7", included: true },
-    ],
-    cta: "Upgrade Now",
     recommended: false,
   },
 ] as const;
@@ -96,17 +58,56 @@ function SubscriptionPage() {
     queryFn: () => API.plan.getAll('user'),
   });
 
-  const dynamicPlans = (dynamicPlansData?.plans || []).map((p: any) => ({
-    id: p._id,
-    name: p.name,
-    price: p.price,
-    period: "/mo",
-    description: "Custom wellness plan",
-    icon: Sparkles,
-    features: p.features.map((f: string) => ({ text: f, included: true })),
-    cta: "Upgrade Now",
-    recommended: false,
-  }));
+  const dynamicPlans = (dynamicPlansData?.plans || []).map((p: any) => {
+    const config = p.config || {};
+    const dailyChatLimit = config.dailyChatLimit;
+    const hasUnlimitedJournal = config.hasUnlimitedJournal;
+    const enableMoodCheck = config.enableMoodCheck ?? true;
+    const enableBreathe = config.enableBreathe ?? true;
+    const therapistDiscount = config.therapistDiscount ?? 0;
+    const hasPriorityBooking = config.hasPriorityBooking;
+
+    return {
+      id: p._id,
+      name: p.name,
+      price: p.price,
+      period: "/mo",
+      description: "Premium wellness plan",
+      icon: Sparkles,
+      features: [
+        {
+          text: "Unlimited AI messages",
+          included: dailyChatLimit === null || dailyChatLimit === 0
+        },
+        {
+          text: "Unlimited journal entries",
+          included: !!hasUnlimitedJournal
+        },
+        {
+          text: "30-day mood calendar",
+          included: !!enableMoodCheck
+        },
+        {
+          text: "All 5 breathing exercises",
+          included: !!enableBreathe
+        },
+        {
+          text: `${therapistDiscount}% therapist discount`,
+          included: therapistDiscount > 0
+        },
+        {
+          text: "Priority booking + instant access",
+          included: !!hasPriorityBooking
+        },
+        {
+          text: "Crisis line 24/7",
+          included: true
+        }
+      ],
+      cta: "Upgrade Now",
+      recommended: true,
+    };
+  });
 
   const allTiers = [...TIERS, ...dynamicPlans];
 

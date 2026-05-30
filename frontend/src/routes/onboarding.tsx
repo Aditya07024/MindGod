@@ -5,6 +5,7 @@ import { Briefcase, Users, Heart, HeartPulse, Coins, UserMinus, MessageCircle, W
 import { useStore, type Concern, type NeedType } from '@/lib/store';
 import { ManasAvatar } from '@/components/ManasAvatar';
 import API from '@/lib/api';
+import logoUrl from '@/assets/logo.png';
 
 export const Route = createFileRoute('/onboarding')({ component: Onboarding });
 
@@ -202,9 +203,10 @@ function Onboarding() {
         {/* ── STEP 0: Name ── */}
         {step === 0 && (
           <motion.div key="s0" exit={{ opacity: 0 }} className="flex min-h-screen flex-col items-center justify-center bg-warm-gradient px-6 text-center text-primary-foreground">
-            <div className="relative mb-12 size-48">
+            <div className="relative mb-12 size-48 flex items-center justify-center">
               <div className="absolute inset-0 animate-breathe rounded-full bg-white/20" />
               <div className="absolute inset-4 animate-breathe rounded-full bg-white/30" style={{ animationDelay: '0.4s' }} />
+              <img src={logoUrl} alt="Mindsyncpro Logo" className="relative z-10 size-24 object-contain" />
             </div>
             <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2 }} className="font-display text-5xl font-bold md:text-6xl">
               Apna Dil Kholo

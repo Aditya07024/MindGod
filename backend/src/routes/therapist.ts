@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "@/middleware/auth";
 import { requireSubscription } from "@/middleware/subscription";
 import { TherapistController } from "@/controllers/therapist.controller";
+import { ReportController } from "@/controllers/report.controller";
 
 const router = Router();
 
@@ -32,5 +33,19 @@ router.patch(
 
 router.get("/me/invitations", requireAuth, TherapistController.listInvitations);
 router.patch("/me/invitations/:id/respond", requireAuth, TherapistController.respondToInvitation);
+
+// Shared Reports
+router.get(
+  "/me/shared-reports",
+  requireAuth,
+  requireSubscription,
+  ReportController.getTherapistSharedReports,
+);
+router.get(
+  "/me/shared-reports/:id",
+  requireAuth,
+  requireSubscription,
+  ReportController.getTherapistSharedReportDetail,
+);
 
 export default router;
