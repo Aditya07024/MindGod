@@ -32,6 +32,7 @@ export class BookingController {
             amount: b.payment.amount,
             paid: b.payment.paid,
             videoRoomId: b.videoRoomId,
+            journalShareState: b.journalShareState || "none",
           };
         }),
       );
@@ -287,6 +288,7 @@ export class BookingController {
         amount: booking.payment.amount,
         paid: booking.payment.paid,
         videoRoomId: booking.videoRoomId,
+        journalShareState: booking.journalShareState || "none",
       });
     },
   );
@@ -506,5 +508,117 @@ Write a therapist pre-session brief:`;
       if (!booking) throw new AppError("Booking not found or not your session", 404);
       res.json({ message: "Notes saved" });
     },
+  );
+
+  /** POST /bookings/:bookingId/request-journal — Therapist requests journal access */
+  static requestJournalReport = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { bookingId } = req.params;
+      const therapistId = req.user!.sub;
+
+      const booking = await TherapistBooking.findOne({
+        _id: bookingId,
+        therapistId,
+      });
+
+      if (!booking) throw new AppError("Booking not found or not authorized", 404);
+      if (booking.status !== "confirmed") {
+        throw new AppError("Access can only be requested for confirmed bookings", 400);
+      }
+
+      booking.journalShareState = "requested";
+      await booking.save();
+
+      // Send a notification alert to the user seeker
+      try {
+        const therapistName = (await User.findById(therapistId).select("therapistProfile"))?.therapistProfile?.name || "Your therapist";
+        const formattedSlot = new Date(booking.slot).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+        await NotificationController.createNotification(
+          booking.userId.toString(),
+          "Journal Access Requested",
+          `Dr. ${therapistName} requested access to view your CBT journal entries from last week to prepare for your session on ${formattedSlot}.`,
+          "booking",
+          { bookingId: booking._id.toString(), therapistId }
+        );
+      } catch (err) {
+        console.error("[Notifications] Failed sending journal request alert:", err);
+      }
+
+      res.json({ message: "Journal access requested successfully", journalShareState: "requested" });
+    }
+  );
+
+  /** POST /bookings/:bookingId/respond-journal — User responds to journal request */
+  static respondToJournalRequest = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { bookingId } = req.params;
+      const { approve } = req.body as { approve: boolean };
+      const userId = req.user!.sub;
+
+      const booking = await TherapistBooking.findOne({
+        _id: bookingId,
+        userId,
+      });
+
+      if (!booking) throw new AppError("Booking not found or not authorized", 404);
+      if (booking.journalShareState !== "requested") {
+        throw new AppError("No pending journal access request found for this booking", 400);
+      }
+
+      booking.journalShareState = approve ? "approved" : "declined";
+      await booking.save();
+
+      // Send a notification alert to the therapist
+      try {
+        const seekerName = (await User.findById(userId).select("fullName"))?.fullName || "A Seeker";
+        const title = approve ? "Journal Access Approved" : "Journal Access Declined";
+        const msg = approve 
+          ? `${seekerName} approved your request to view their CBT journal logs from last week.`
+          : `${seekerName} declined your request to view their CBT journal logs.`;
+
+        await NotificationController.createNotification(
+          booking.therapistId.toString(),
+          title,
+          msg,
+          "booking",
+          { bookingId: booking._id.toString(), seekerId: userId }
+        );
+      } catch (err) {
+        console.error("[Notifications] Failed sending journal response alert:", err);
+      }
+
+      res.json({ message: `Response registered: ${booking.journalShareState}`, journalShareState: booking.journalShareState });
+    }
+  );
+
+  /** GET /bookings/:bookingId/shared-journals — Therapist views user's 7-day journal entries */
+  static getSharedJournals = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { bookingId } = req.params;
+      const therapistId = req.user!.sub;
+
+      const booking = await TherapistBooking.findOne({
+        _id: bookingId,
+        therapistId,
+      }).lean();
+
+      if (!booking) throw new AppError("Booking not found or not authorized", 404);
+      if (booking.journalShareState !== "approved") {
+        throw new AppError("Journal access has not been approved for this session", 403);
+      }
+
+      const sessionDate = new Date(booking.slot);
+      const sevenDaysPrior = new Date(sessionDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const journals = await JournalEntry.find({
+        userId: booking.userId,
+        createdAt: { $gte: sevenDaysPrior, $lte: sessionDate }
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      res.json({ journals });
+    }
   );
 }

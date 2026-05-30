@@ -72,7 +72,7 @@ function Dashboard() {
     });
   }, [nav]);
 
-  const { data: bookingsData } = useQuery({
+  const { data: bookingsData, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings'],
     queryFn: () => API.booking.list(),
     retry: false,
@@ -112,6 +112,14 @@ function Dashboard() {
     onSuccess: () => refetchStats(),
   });
 
+  const respondJournalMutation = useMutation({
+    mutationFn: ({ bookingId, approve }: { bookingId: string; approve: boolean }) =>
+      API.booking.respondToJournal(bookingId, approve),
+    onSuccess: () => {
+      refetchBookings();
+    },
+  });
+
   const streak = userStats?.streak ?? 0;
   const todayMood = userStats?.latestMoodDate === todayStr() ? userStats?.latestMood : null;
   const promptText = journalPrompt?.prompt ?? 'What thought has been on a loop today?';
@@ -125,6 +133,9 @@ function Dashboard() {
   const upcomingBooking = bookingsData?.bookings
     ?.filter((b: any) => b.status === 'confirmed' && new Date(b.slot) > new Date())
     ?.sort((a: any, b: any) => new Date(a.slot).getTime() - new Date(b.slot).getTime())[0];
+
+  const requestedBookings = bookingsData?.bookings
+    ?.filter((b: any) => b.status === 'confirmed' && b.journalShareState === 'requested' && new Date(b.slot) > new Date()) || [];
 
   const canJoin = upcomingBooking && (new Date(upcomingBooking.slot).getTime() - Date.now()) < 15 * 60 * 1000;
 
@@ -162,6 +173,52 @@ function Dashboard() {
             </Link>
           </div>
         </div>
+
+        {/* Journal Consent Request Banners */}
+        {requestedBookings.map((b: any) => (
+          <motion.div
+            key={b.id}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl bg-gold/10 border border-gold/30 p-5 shadow-sm space-y-3 relative overflow-hidden"
+          >
+            <div className="absolute -right-12 -top-12 size-24 rounded-full bg-gold/10 blur-xl" />
+            <div className="flex items-start gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-gold/25 text-gold-foreground">
+                <BookOpen className="size-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-display font-bold text-primary-deep text-sm">Journal Sharing Request</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <strong>{b.therapistName}</strong> has requested access to view your CBT journal entries from the past 7 days to prepare for your session on{" "}
+                  <strong>
+                    {new Date(b.slot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </strong>
+                  .
+                </p>
+                <p className="text-[11px] text-muted-foreground/80 italic">
+                  * Only your reflections from the last 7 days will be shared. You can decline if you wish.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                disabled={respondJournalMutation.isPending}
+                onClick={() => respondJournalMutation.mutate({ bookingId: b.id, approve: false })}
+                className="px-4 py-1.5 border border-muted hover:bg-muted/10 text-muted-foreground text-xs font-semibold rounded-xl transition disabled:opacity-50"
+              >
+                Decline
+              </button>
+              <button
+                disabled={respondJournalMutation.isPending}
+                onClick={() => respondJournalMutation.mutate({ bookingId: b.id, approve: true })}
+                className="px-4 py-1.5 bg-primary-deep hover:bg-primary-deep/90 text-white text-xs font-semibold rounded-xl shadow-sm transition disabled:opacity-50"
+              >
+                {respondJournalMutation.isPending ? "Processing..." : "Approve & Share"}
+              </button>
+            </div>
+          </motion.div>
+        ))}
 
         {/* Free tier message counter */}
         {tier === 'free' && (

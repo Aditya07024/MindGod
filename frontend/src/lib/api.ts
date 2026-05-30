@@ -222,6 +222,15 @@ const API = {
     rate: (id: string, data: { rating: number; feedback?: string }) =>
       apiCall<any>(`/api/bookings/${id}/rate`, { method: "POST", body: JSON.stringify(data) }),
     getAiBrief: (id: string) => apiCall<any>(`/api/bookings/${id}/ai-brief`),
+    requestJournal: (id: string) =>
+      apiCall<any>(`/api/bookings/${id}/request-journal`, { method: "POST" }),
+    respondToJournal: (id: string, approve: boolean) =>
+      apiCall<any>(`/api/bookings/${id}/respond-journal`, {
+        method: "POST",
+        body: JSON.stringify({ approve }),
+      }),
+    getSharedJournals: (id: string) =>
+      apiCall<any>(`/api/bookings/${id}/shared-journals`),
   },
 
   payment: {

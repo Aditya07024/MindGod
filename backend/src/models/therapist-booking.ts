@@ -18,6 +18,7 @@ export interface ITherapistBooking extends Document {
   rating?: number;
   review?: string;
   aiBrief?: string;
+  journalShareState: "none" | "requested" | "approved" | "declined";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,7 +43,12 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
     therapistNotes: { type: String },
     rating: { type: Number, min: 1, max: 5 },
     review: { type: String },
-    aiBrief: { type: String }
+    aiBrief: { type: String },
+    journalShareState: {
+      type: String,
+      enum: ["none", "requested", "approved", "declined"],
+      default: "none"
+    }
   },
   { timestamps: true }
 );

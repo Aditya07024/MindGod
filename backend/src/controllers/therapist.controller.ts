@@ -366,6 +366,7 @@ export class TherapistController {
           fee: b.payment?.amount ?? 0,
           paid: b.payment?.paid ?? false,
           videoRoomId: b.videoRoomId,
+          journalShareState: b.journalShareState || "none",
         })),
         revenueByMonth,
       });

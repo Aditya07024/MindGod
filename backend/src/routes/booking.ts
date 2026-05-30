@@ -13,6 +13,11 @@ router.post("/:bookingId/rate", requireAuth, BookingController.rateSession);
 router.get("/:bookingId/ai-brief", requireAuth, BookingController.getAiBrief);
 router.patch("/:bookingId/notes", requireAuth, BookingController.saveNotes);
 
+// Journal Consent sharing
+router.post("/:bookingId/request-journal", requireAuth, BookingController.requestJournalReport);
+router.post("/:bookingId/respond-journal", requireAuth, BookingController.respondToJournalRequest);
+router.get("/:bookingId/shared-journals", requireAuth, BookingController.getSharedJournals);
+
 export default router;
 
 

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton, useClerk } from '@clerk/clerk-react';
@@ -41,6 +41,7 @@ function TherapistDashboard() {
   const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization' | 'reports'>('schedule');
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [viewJournalsBookingId, setViewJournalsBookingId] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [availability, setAvailability] = useState<{ day: number; slots: string[] }[]>(
     DAYS.map((_, day) => ({ day, slots: day >= 1 && day <= 5 ? ['10:00', '14:00', '16:00'] : [] }))
@@ -88,11 +89,28 @@ function TherapistDashboard() {
     retry: false,
   });
 
-  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
+  const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
     queryKey: ['therapist-bookings'],
     queryFn: () => API.therapist.meBookings(),
     enabled: !subRequired,
     retry: false,
+  });
+
+  const requestJournalMutation = useMutation({
+    mutationFn: (bookingId: string) => API.booking.requestJournal(bookingId),
+    onSuccess: () => {
+      toast.success('Journal access requested successfully');
+      refetchBookings();
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || 'Failed to request journal access');
+    },
+  });
+
+  const { data: sharedJournals, isLoading: loadingJournals } = useQuery({
+    queryKey: ['shared-journals', viewJournalsBookingId],
+    queryFn: () => API.booking.getSharedJournals(viewJournalsBookingId!),
+    enabled: !!viewJournalsBookingId,
   });
 
   const { data: plansData } = useQuery({
@@ -420,18 +438,51 @@ function TherapistDashboard() {
                   </div>
                   <span className="text-lg font-bold text-teal-700">₹{b.fee}</span>
                 </div>
-                <div className="flex gap-3 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4">
                   <button onClick={() => setBriefBookingId(b.id)}
                     className="flex items-center gap-2 text-sm font-bold text-teal-700 bg-teal-50 px-4 py-2.5 rounded-xl hover:bg-teal-100 transition border border-teal-100">
                     <Brain className="size-4" /> AI Brief
                   </button>
+
+                  {(!b.journalShareState || b.journalShareState === 'none') && (
+                    <button
+                      disabled={requestJournalMutation.isPending}
+                      onClick={() => requestJournalMutation.mutate(b.id)}
+                      className="flex items-center gap-2 text-sm font-bold text-amber-700 bg-amber-50 px-4 py-2.5 rounded-xl hover:bg-amber-100 transition border border-amber-100 disabled:opacity-50"
+                    >
+                      <BookOpen className="size-4" />
+                      {requestJournalMutation.isPending && requestJournalMutation.variables === b.id ? "Requesting..." : "Request Journal"}
+                    </button>
+                  )}
+
+                  {b.journalShareState === 'requested' && (
+                    <span className="flex items-center gap-2 text-sm font-semibold text-amber-600 bg-amber-50/50 px-4 py-2.5 rounded-xl border border-amber-100/50">
+                      <Clock className="size-4" /> Pending Consent
+                    </span>
+                  )}
+
+                  {b.journalShareState === 'approved' && (
+                    <button
+                      onClick={() => setViewJournalsBookingId(b.id)}
+                      className="flex items-center gap-2 text-sm font-bold text-emerald-700 bg-emerald-50 px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition border border-emerald-100"
+                    >
+                      <BookOpen className="size-4" /> View Journal
+                    </button>
+                  )}
+
+                  {b.journalShareState === 'declined' && (
+                    <span className="flex items-center gap-2 text-sm font-semibold text-red-500 bg-red-50 px-4 py-2.5 rounded-xl border border-red-100">
+                      Declined Access
+                    </span>
+                  )}
+
                   {canJoin(b.slot) ? (
                     <button onClick={() => navigate({ to: `/session/${b.id}` })}
-                      className="flex items-center gap-2 text-sm font-bold text-white bg-teal-600 px-4 py-2.5 rounded-xl hover:bg-teal-700 transition shadow-md">
+                      className="flex items-center gap-2 text-sm font-bold text-white bg-teal-600 px-4 py-2.5 rounded-xl hover:bg-teal-700 transition shadow-md ml-auto">
                       <Video className="size-4" /> Start Session
                     </button>
                   ) : (
-                    <span className="text-sm font-medium text-slate-400 py-2.5 bg-slate-50 px-4 rounded-xl border border-slate-100">Available 15 min before</span>
+                    <span className="text-sm font-medium text-slate-400 py-2.5 bg-slate-50 px-4 rounded-xl border border-slate-100 ml-auto">Available 15 min before</span>
                   )}
                 </div>
               </motion.div>
@@ -922,6 +973,110 @@ function TherapistDashboard() {
                   )}
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Shared Journal View Modal */}
+      <AnimatePresence>
+        {viewJournalsBookingId && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+            onClick={() => setViewJournalsBookingId(null)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl bg-slate-50 rounded-[2rem] shadow-2xl max-h-[80vh] flex flex-col overflow-hidden border border-slate-200">
+              <div className="sticky top-0 bg-white border-b border-slate-200/60 px-6 py-5 flex items-center justify-between z-10">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-2xl bg-emerald-50 text-emerald-700">
+                    <BookOpen className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-slate-900 text-lg">Shared CBT Journal Entries</h3>
+                    <p className="text-xs text-slate-500">Client's reflections from the 7 days prior to the session</p>
+                  </div>
+                </div>
+                <button onClick={() => setViewJournalsBookingId(null)} className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition">✕</button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {loadingJournals && (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="bg-white rounded-3xl p-5 border border-slate-200/60 space-y-3">
+                        <div className="h-4 bg-slate-200 rounded animate-pulse w-1/3" />
+                        <div className="h-3 bg-slate-200 rounded animate-pulse w-3/4" />
+                        <div className="h-3 bg-slate-200 rounded animate-pulse w-5/6" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {!loadingJournals && (!sharedJournals || sharedJournals.length === 0) && (
+                  <div className="text-center py-12 bg-white rounded-[2rem] border border-slate-200/60 p-6 space-y-2">
+                    <p className="text-slate-500 font-semibold">No journal entries found</p>
+                    <p className="text-xs text-slate-400">The client didn't record any journal entries in the week leading up to this session.</p>
+                  </div>
+                )}
+
+                {!loadingJournals && sharedJournals && sharedJournals.map((j: any) => (
+                  <div key={j._id || j.id} className="bg-white rounded-[2rem] p-5 border border-slate-200/60 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                        <Calendar className="size-3.5" />
+                        {new Date(j.createdAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                      {j.moodScore && (
+                        <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full text-xs font-bold border border-slate-100" style={{ color: moodColor(j.moodScore) }}>
+                          <Smile className="size-3.5" /> Mood: {j.moodScore}/10
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {j.prompt && (
+                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3.5">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prompt / Trigger</p>
+                          <p className="text-xs font-semibold text-slate-700 mt-0.5">{j.prompt}</p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Situation</p>
+                          <p className="text-xs text-slate-800 leading-relaxed mt-1 whitespace-pre-wrap">{j.situation}</p>
+                        </div>
+                        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Automatic Thoughts</p>
+                          <p className="text-xs text-slate-800 leading-relaxed mt-1 whitespace-pre-wrap">{j.thought}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Emotions / Feelings</p>
+                          <p className="text-xs text-slate-800 leading-relaxed mt-1 whitespace-pre-wrap">{j.feeling}</p>
+                        </div>
+                        <div className="bg-emerald-50/30 border border-emerald-100/50 rounded-2xl p-4 shadow-sm">
+                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Reframed Thoughts</p>
+                          <p className="text-xs text-emerald-950 leading-relaxed mt-1 whitespace-pre-wrap">{j.reframe}</p>
+                        </div>
+                      </div>
+
+                      {j.aiResponse && (
+                        <div className="bg-teal-50/50 border border-teal-100/50 rounded-2xl p-3.5 space-y-1">
+                          <div className="flex items-center gap-1.5 text-teal-800">
+                            <Sparkles className="size-3.5" />
+                            <p className="text-[10px] font-bold uppercase tracking-wider">Manas AI Insights</p>
+                          </div>
+                          <p className="text-xs text-teal-900 leading-relaxed whitespace-pre-wrap">{j.aiResponse}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )}
