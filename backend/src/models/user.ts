@@ -32,6 +32,8 @@ export interface IUser extends Document {
     name: string;
     email?: string;
     website?: string;
+    phone?: string;
+    openToCollaboration?: boolean;
     rciNumber?: string;
     verified: boolean;
     verificationStatus: "pending" | "verified" | "rejected";
@@ -112,6 +114,8 @@ const UserSchema = new Schema<IUser>(
         name: { type: String },
         email: { type: String },
         website: { type: String },
+        phone: { type: String },
+        openToCollaboration: { type: Boolean, default: false },
         rciNumber: { type: String },
         verified: { type: Boolean, default: false },
         verificationStatus: { type: String, enum: ["pending", "verified", "rejected"], default: "pending" },

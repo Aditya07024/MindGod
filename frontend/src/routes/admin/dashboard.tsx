@@ -30,6 +30,7 @@ function SuperAdminDashboard() {
     audience: 'therapist', 
     features: '', 
     isActive: true,
+    durationMonths: 1,
     config: {
       dailyChatLimit: 7,
       hasPriorityBooking: false,
@@ -457,6 +458,7 @@ function SuperAdminDashboard() {
                 onClick={() => {
                   setPlanForm({ 
                     name: '', price: 0, audience: 'therapist', features: '', isActive: true,
+                    durationMonths: 1,
                     config: { 
                       dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false,
                       enableChat: true, enableTherapistAccess: true, enableJournaling: true, enableMoodCheck: true, enableBreathe: true,
@@ -486,7 +488,7 @@ function SuperAdminDashboard() {
                     {!p.isActive && <span className="text-[10px] text-red-400 bg-red-950 px-2 py-0.5 rounded font-bold">INACTIVE</span>}
                   </div>
                   <h3 className="font-bold text-white text-xl">{p.name}</h3>
-                  <div className="mt-1 text-3xl font-black text-violet-400">₹{p.price}<span className="text-sm font-bold text-slate-500">/mo</span></div>
+                  <div className="mt-1 text-3xl font-black text-violet-400">₹{p.price}<span className="text-sm font-bold text-slate-500"> / {p.durationMonths || 1} mo</span></div>
                   <ul className="mt-4 mb-6 space-y-2 text-xs font-medium text-slate-400">
                     {p.features.map((f: string, i: number) => (
                       <li key={i} className="flex gap-2"><span className="text-violet-500">✓</span> {f}</li>
@@ -500,6 +502,7 @@ function SuperAdminDashboard() {
                           audience: p.audience, 
                           features: p.features.join('\n'), 
                           isActive: p.isActive,
+                          durationMonths: p.durationMonths ?? 1,
                           config: {
                             dailyChatLimit: p.config?.dailyChatLimit ?? 7,
                             hasPriorityBooking: p.config?.hasPriorityBooking ?? false,
@@ -686,15 +689,20 @@ function SuperAdminDashboard() {
               </div>
               <div className="p-5 overflow-y-auto space-y-4">
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Plan Name</label>
                     <input value={planForm.name} onChange={e => setPlanForm({...planForm, name: e.target.value})}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Price (₹/mo)</label>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Price (₹)</label>
                     <input type="number" value={planForm.price} onChange={e => setPlanForm({...planForm, price: Number(e.target.value)})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Validity (Months)</label>
+                    <input type="number" min={1} value={planForm.durationMonths} onChange={e => setPlanForm({...planForm, durationMonths: Number(e.target.value) || 1})}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton, useClerk } from '@clerk/clerk-react';
 import { toast } from 'sonner';
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export const Route = createFileRoute('/therapist/dashboard')({ component: TherapistDashboard });
 
@@ -47,6 +48,19 @@ function TherapistDashboard() {
     DAYS.map((_, day) => ({ day, slots: day >= 1 && day <= 5 ? ['10:00', '14:00', '16:00'] : [] }))
   );
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('bar');
+  const [chartMetric, setChartMetric] = useState<'gross' | 'net'>('net');
+  const [chartColor, setChartColor] = useState<string>('#0d9488'); // Teal-600 default
+  const [chartLimit, setChartLimit] = useState<string>('all');
+  const [showGrid, setShowGrid] = useState<boolean>(true);
+
+  const COLORS = [
+    { name: 'Teal', value: '#0d9488' },
+    { name: 'Emerald', value: '#10b981' },
+    { name: 'Indigo', value: '#4f46e5' },
+    { name: 'Violet', value: '#8b5cf6' },
+    { name: 'Rose', value: '#f43f5e' }
+  ];
 
   const { data: meData } = useQuery({
     queryKey: ['auth-me'],
@@ -196,6 +210,25 @@ function TherapistDashboard() {
   const profile = statsData?.profile;
   const stats = statsData?.stats;
   const bookings: any[] = bookingsData?.bookings ?? [];
+  const revenueByMonth = bookingsData?.revenueByMonth ?? {};
+  
+  const chartData = Object.entries(revenueByMonth)
+    .map(([monthKey, amount]) => {
+      const [year, month] = monthKey.split('-');
+      const date = new Date(Number(year), Number(month) - 1, 1);
+      const name = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+      return {
+        key: monthKey,
+        name,
+        gross: Number(amount),
+        net: Math.round(Number(amount) * 0.85),
+      };
+    })
+    .sort((a, b) => a.key.localeCompare(b.key));
+
+  const filteredChartData = chartLimit === 'all' 
+    ? chartData 
+    : chartData.slice(-Number(chartLimit));
 
   const [profileForm, setProfileForm] = useState({
     bio: '',
@@ -204,6 +237,8 @@ function TherapistDashboard() {
     introVideoUrl: '',
     email: '',
     website: '',
+    phone: '',
+    openToCollaboration: false,
   });
 
   useEffect(() => {
@@ -227,6 +262,8 @@ function TherapistDashboard() {
         introVideoUrl: profile.introVideoUrl || '',
         email: profile.email || '',
         website: profile.website || '',
+        phone: profile.phone || '',
+        openToCollaboration: !!profile.openToCollaboration,
       });
       if (profile.availability && profile.availability.length > 0) {
         setAvailability(profile.availability);
@@ -554,6 +591,142 @@ function TherapistDashboard() {
               Mindsyncpro retains 15% platform fee. Payouts are processed on the 1st of every month via NEFT.
             </div>
 
+            {/* Customizable Revenue Chart Widget */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-display font-bold text-slate-900 text-lg">Earnings Analytics</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Visualize and customize your monthly earnings reports</p>
+                </div>
+                
+                {/* Control Panel / ToolBar */}
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  {/* Chart Type Selector */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+                    {(['bar', 'line', 'area'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setChartType(t)}
+                        className={`px-2 py-1 rounded-md font-semibold transition capitalize ${
+                          chartType === t ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Metric Toggle */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+                    <button
+                      onClick={() => setChartMetric('net')}
+                      className={`px-2 py-1 rounded-md font-semibold transition ${
+                        chartMetric === 'net' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Net (85%)
+                    </button>
+                    <button
+                      onClick={() => setChartMetric('gross')}
+                      className={`px-2 py-1 rounded-md font-semibold transition ${
+                        chartMetric === 'gross' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Gross
+                    </button>
+                  </div>
+
+                  {/* Time Limit Selector */}
+                  <select
+                    value={chartLimit}
+                    onChange={(e) => setChartLimit(e.target.value)}
+                    className="bg-slate-100 text-slate-700 font-semibold px-2 py-1.5 rounded-lg border-none focus:outline-none"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="6">Last 6 Months</option>
+                    <option value="12">Last 12 Months</option>
+                  </select>
+
+                  {/* Theme Color Selector */}
+                  <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-lg">
+                    {COLORS.map((c) => (
+                      <button
+                        key={c.value}
+                        title={c.name}
+                        onClick={() => setChartColor(c.value)}
+                        className={`size-4 rounded-full border transition-all ${
+                          chartColor === c.value ? 'scale-110 border-slate-600 ring-1 ring-slate-400' : 'border-transparent opacity-80 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: c.value }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Grid Lines Toggle */}
+                  <button
+                    onClick={() => setShowGrid(!showGrid)}
+                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition border ${
+                      showGrid ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    Grid Lines
+                  </button>
+                </div>
+              </div>
+
+              {/* Chart Render Area */}
+              <div className="h-[300px] w-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+                {filteredChartData.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm">
+                    No transaction history available to plot.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    {chartType === 'line' ? (
+                      <LineChart data={filteredChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />}
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
+                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="₹" />
+                        <RechartsTooltip 
+                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(value) => [`₹${value}`, chartMetric === 'net' ? 'Net Payout' : 'Gross Income']}
+                        />
+                        <Line type="monotone" dataKey={chartMetric} stroke={chartColor} strokeWidth={3} activeDot={{ r: 6 }} />
+                      </LineChart>
+                    ) : chartType === 'area' ? (
+                      <AreaChart data={filteredChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={chartColor} stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor={chartColor} stopOpacity={0.0}/>
+                          </linearGradient>
+                        </defs>
+                        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />}
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
+                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="₹" />
+                        <RechartsTooltip 
+                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(value) => [`₹${value}`, chartMetric === 'net' ? 'Net Payout' : 'Gross Income']}
+                        />
+                        <Area type="monotone" dataKey={chartMetric} stroke={chartColor} fillOpacity={1} fill="url(#colorUv)" strokeWidth={2} />
+                      </AreaChart>
+                    ) : (
+                      <BarChart data={filteredChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />}
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
+                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="₹" />
+                        <RechartsTooltip 
+                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(value) => [`₹${value}`, chartMetric === 'net' ? 'Net Payout' : 'Gross Income']}
+                        />
+                        <Bar dataKey={chartMetric} fill={chartColor} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    )}
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
             <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden mt-8 shadow-sm">
               <div className="px-6 py-4 bg-slate-50/80 border-b border-slate-200 font-display font-bold text-slate-900">Recent Transactions</div>
               <div className="overflow-x-auto">
@@ -589,7 +762,7 @@ function TherapistDashboard() {
                 <label className="block text-sm font-bold text-slate-600 mb-2">Intro Video URL (YouTube/Vimeo)</label>
                 <input value={profileForm.introVideoUrl} onChange={e => setProfileForm(p => ({...p, introVideoUrl: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-600 mb-2">Email ID</label>
                   <input type="email" value={profileForm.email} onChange={e => setProfileForm(p => ({...p, email: e.target.value}))} placeholder="dr.rajesh@example.com" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
@@ -597,6 +770,10 @@ function TherapistDashboard() {
                 <div>
                   <label className="block text-sm font-bold text-slate-600 mb-2">Personal Website</label>
                   <input type="url" value={profileForm.website} onChange={e => setProfileForm(p => ({...p, website: e.target.value}))} placeholder="https://drrajesh.com" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Phone Number</label>
+                  <input type="tel" value={profileForm.phone} onChange={e => setProfileForm(p => ({...p, phone: e.target.value}))} placeholder="+919999999999" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
                 </div>
               </div>
               <div>
@@ -620,6 +797,15 @@ function TherapistDashboard() {
               <div>
                 <label className="block text-sm font-bold text-slate-600 mb-2">Bio & Approach</label>
                 <textarea rows={4} value={profileForm.bio} onChange={e => setProfileForm(p => ({...p, bio: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none resize-none transition" />
+              </div>
+              <div className="pt-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" checked={profileForm.openToCollaboration} onChange={e => setProfileForm(p => ({...p, openToCollaboration: e.target.checked}))} className="size-4 text-teal-600 border-slate-350 rounded focus:ring-teal-500 cursor-pointer" />
+                  <div>
+                    <span className="block text-sm font-bold text-slate-700 group-hover:text-slate-900 transition">Open to Organization Collaboration</span>
+                    <span className="block text-xs text-slate-400">Allow companies & organizations to send you linkage/affiliation requests.</span>
+                  </div>
+                </label>
               </div>
               <Button onClick={() => profileMutation.mutate(profileForm)} disabled={profileMutation.isPending} className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-12 font-bold shadow-md">
                 {profileMutation.isPending ? 'Saving...' : 'Save Profile'}

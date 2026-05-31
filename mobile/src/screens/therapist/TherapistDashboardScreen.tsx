@@ -42,7 +42,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   const isSubscribed = 
     !!(userProfile?.orgId) || 
     !!(userProfile?.tier && userProfile.tier !== 'free') || 
-    (subData && subData.status === 'active');
+    (subData && subData.subscription?.status === 'active');
 
   // 3. Fetch Therapist Statistics (Only if subscribed)
   const { data: therapistStats, refetch: refetchStats } = useQuery({

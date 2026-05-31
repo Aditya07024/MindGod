@@ -135,6 +135,7 @@ export class SubscriptionController {
         let planName = tier;
         let razorpaySub: any;
         let isOrgPlan = false;
+        let durationMonths = 1;
 
         if (["mann_shanti", "apna_therapist"].includes(tier)) {
           if (user.tier === tier) {
@@ -158,10 +159,12 @@ export class SubscriptionController {
             isOrgPlan = true;
           }
 
+          durationMonths = dynamicPlan.durationMonths || 1;
+
           // Make sure it has a razorpayPlanId
           if (!dynamicPlan.razorpayPlanId) {
             console.log(`[Upgrade] Creating Razorpay plan for dynamic plan ${dynamicPlan.name}`);
-            dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
+            dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price, durationMonths);
             await SubscriptionPlan.findByIdAndUpdate(dynamicPlan._id, { razorpayPlanId: dynamicPlan.razorpayPlanId });
           }
 
@@ -180,7 +183,7 @@ export class SubscriptionController {
             // If the stored plan ID is invalid (e.g. from a different account), clear it and retry once
             if (err.error?.description?.includes("invalid") || err.error?.code === "BAD_REQUEST_ERROR") {
               console.log(`[Upgrade] Stale Razorpay Plan ID detected (${dynamicPlan.razorpayPlanId}). Recreating...`);
-              dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price);
+              dynamicPlan.razorpayPlanId = await SubscriptionService.createRazorpayPlan(dynamicPlan.name, dynamicPlan.price, durationMonths);
               await SubscriptionPlan.findByIdAndUpdate(dynamicPlan._id, { razorpayPlanId: dynamicPlan.razorpayPlanId });
               
               razorpaySub = await SubscriptionService.createDynamicSubscription(
@@ -205,7 +208,7 @@ export class SubscriptionController {
           status: "pending", // Will be activated via webhook
           razorpaySubscriptionId: razorpaySub.subscriptionId,
           startDate: new Date(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          endDate: new Date(Date.now() + durationMonths * 30 * 24 * 60 * 60 * 1000), // N months
         });
 
         res.json({
@@ -319,10 +322,18 @@ export class SubscriptionController {
         break;
       }
       case "subscription.charged": {
-        // Subscription renewed — extend endDate by 30 days
+        // Subscription renewed — extend endDate by 30 * durationMonths days
         if (sub) {
+          let durationMonths = 1;
+          if (sub.planId) {
+            const { SubscriptionPlan } = await import("@/models");
+            const dbPlan = await SubscriptionPlan.findById(sub.planId).lean();
+            if (dbPlan?.durationMonths) {
+              durationMonths = dbPlan.durationMonths;
+            }
+          }
           sub.endDate = new Date(
-            (sub.endDate ?? new Date()).getTime() + 30 * 24 * 60 * 60 * 1000,
+            (sub.endDate ?? new Date()).getTime() + durationMonths * 30 * 24 * 60 * 60 * 1000,
           );
           await sub.save();
         }

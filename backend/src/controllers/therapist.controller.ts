@@ -8,6 +8,7 @@ export class TherapistController {
   /** GET /therapists — list all verified therapists (for users to browse) with search & filters */
   static list = asyncHandler(async (req: Request, res: Response) => {
     const {
+      search,
       specialization,
       language,
       minFee = 0,
@@ -17,6 +18,7 @@ export class TherapistController {
       location,
       city,
       state,
+      openToCollaboration,
       limit = 50,
       skip = 0,
     } = req.query;
@@ -26,6 +28,17 @@ export class TherapistController {
       role: "therapist",
       deletedAt: null,
     };
+
+    if (search) {
+      filter["therapistProfile.name"] = {
+        $regex: String(search),
+        $options: "i",
+      };
+    }
+
+    if (openToCollaboration === "true") {
+      filter["therapistProfile.openToCollaboration"] = true;
+    }
 
     // Filter by specialization (array contains)
     if (specialization) {
@@ -151,6 +164,10 @@ export class TherapistController {
         name: t.therapistProfile?.name || "Therapist",
         email: t.therapistProfile?.email ?? "",
         website: t.therapistProfile?.website ?? "",
+        phone: t.therapistProfile?.phone ?? "",
+        openToCollaboration: !!t.therapistProfile?.openToCollaboration,
+        qualification: t.therapistProfile?.qualification ?? "",
+        experienceYears: t.therapistProfile?.experienceYears ?? 0,
         specializations: t.therapistProfile?.specializations ?? [],
         languages: t.therapistProfile?.languages ?? [],
         rating: t.therapistProfile?.rating ?? 5.0,
@@ -203,6 +220,8 @@ export class TherapistController {
       name: therapist.therapistProfile.name || "Therapist",
       email: therapist.therapistProfile.email || "",
       website: therapist.therapistProfile.website || "",
+      phone: therapist.therapistProfile.phone || "",
+      openToCollaboration: !!therapist.therapistProfile.openToCollaboration,
       rciNumber: therapist.therapistProfile.rciNumber,
       verified: therapist.therapistProfile.verified,
       specializations: therapist.therapistProfile.specializations,
@@ -319,6 +338,8 @@ export class TherapistController {
         name: therapist.therapistProfile?.name ?? "",
         email: therapist.therapistProfile?.email ?? "",
         website: therapist.therapistProfile?.website ?? "",
+        phone: therapist.therapistProfile?.phone ?? "",
+        openToCollaboration: !!therapist.therapistProfile?.openToCollaboration,
         rciNumber: therapist.therapistProfile?.rciNumber ?? "",
         specializations: therapist.therapistProfile?.specializations ?? [],
         languages: therapist.therapistProfile?.languages ?? [],
@@ -399,7 +420,7 @@ export class TherapistController {
   static updateProfile = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
       const userId = req.user!.sub;
-      const { bio, fee, specializations, introVideoUrl, email, website } = req.body;
+      const { bio, fee, specializations, introVideoUrl, email, website, phone, openToCollaboration } = req.body;
 
       const user = await User.findById(userId);
       if (!user) throw new AppError("User not found", 404);
@@ -432,6 +453,8 @@ export class TherapistController {
       if (introVideoUrl !== undefined) profile.introVideoUrl = introVideoUrl;
       if (email !== undefined) profile.email = email;
       if (website !== undefined) profile.website = website;
+      if (phone !== undefined) profile.phone = phone;
+      if (openToCollaboration !== undefined) profile.openToCollaboration = !!openToCollaboration;
 
       await user.save();
 

@@ -131,6 +131,8 @@ function OrgDashboard() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [manualEmail, setManualEmail] = useState('');
+  const [isWhitelisting, setIsWhitelisting] = useState(false);
   // Member detail panel
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [memberDetail, setMemberDetail] = useState<any>(null);
@@ -173,7 +175,7 @@ function OrgDashboard() {
     if (!extSearch.trim()) return;
     setIsExtSearching(true);
     try {
-      const res = await API.therapist.list({ search: extSearch });
+      const res = await API.therapist.list({ search: extSearch, openToCollaboration: true });
       // Filter out therapists already in an org (if possible, though backend checks too)
       setExtTherapists(res.therapists || []);
     } catch (e: any) {
@@ -305,6 +307,26 @@ function OrgDashboard() {
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleManualWhitelist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualEmail.trim() || !manualEmail.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setIsWhitelisting(true);
+    try {
+      const res = await API.org.whitelistEmail(manualEmail.trim());
+      toast.success(res.message || 'Email whitelisted successfully');
+      setManualEmail('');
+      refetchJoinReqs();
+      refetchMembers();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to whitelist email');
+    } finally {
+      setIsWhitelisting(false);
     }
   };
 
@@ -716,7 +738,9 @@ function OrgDashboard() {
                   {extInvitationsData.invitations.map((inv: any) => (
                     <div key={inv._id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-slate-900">{inv.therapistId?.fullName || 'Therapist'}</p>
+                        <p className="font-bold text-slate-900">
+                          {inv.therapistId?.therapistProfile?.name || inv.therapistId?.fullName || 'Therapist'}
+                        </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                             inv.status === 'accepted' ? 'bg-green-100 text-green-700' :
@@ -724,7 +748,9 @@ function OrgDashboard() {
                           }`}>
                             {inv.status}
                           </span>
-                          <p className="text-[10px] text-slate-400">Sent: {new Date(inv.createdAt).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-slate-400">
+                            Sent: {inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : 'N/A'}
+                          </p>
                         </div>
                       </div>
                       {inv.status === 'pending' && (
@@ -1092,6 +1118,33 @@ function OrgDashboard() {
                 <Loader2 className="size-4 animate-spin mr-2" /> Processing file...
               </div>
             )}
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-slate-500 font-medium">Or Add Manually</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleManualWhitelist} className="flex gap-2">
+              <input 
+                type="email"
+                value={manualEmail}
+                onChange={(e) => setManualEmail(e.target.value)}
+                placeholder="employee@yourcompany.com"
+                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
+                disabled={isWhitelisting}
+              />
+              <button 
+                type="submit"
+                disabled={isWhitelisting || !manualEmail.trim()}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition disabled:opacity-50 flex items-center gap-1"
+              >
+                {isWhitelisting ? <Loader2 className="size-3 animate-spin" /> : 'Add'}
+              </button>
+            </form>
           </motion.div>
         </div>
       )}

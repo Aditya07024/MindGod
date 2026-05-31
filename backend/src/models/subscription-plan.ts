@@ -6,6 +6,7 @@ export interface ISubscriptionPlan extends Document {
   features: string[];
   audience: "therapist" | "user" | "organization";
   isActive: boolean;
+  durationMonths: number;
   config: {
     dailyChatLimit: number | null; // null for unlimited
     hasPriorityBooking: boolean;
@@ -43,6 +44,7 @@ const SubscriptionPlanSchema = new Schema<ISubscriptionPlan>(
       required: true
     },
     isActive: { type: Boolean, default: true },
+    durationMonths: { type: Number, default: 1 },
     config: {
       dailyChatLimit: { type: Number, default: 7 },
       hasPriorityBooking: { type: Boolean, default: false },

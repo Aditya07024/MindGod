@@ -129,19 +129,19 @@ export class SubscriptionService {
   }
 
   /** Create a Razorpay Plan dynamically */
-  static async createRazorpayPlan(name: string, amount: number) {
+  static async createRazorpayPlan(name: string, amount: number, durationMonths: number = 1) {
     try {
       const plan = await getRazorpay().plans.create({
         period: "monthly",
-        interval: 1,
+        interval: durationMonths,
         item: {
           name: name,
           amount: amount * 100, // Convert to paise
           currency: "INR",
-          description: `Mindsyncpro ${name} subscription`,
+          description: `Mindsyncpro ${name} subscription (${durationMonths} months)`,
         },
       });
-      console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name}`);
+      console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name} (${durationMonths} months)`);
       return plan.id;
     } catch (error) {
       console.error(`[Subscription] Failed to create dynamic Razorpay plan for ${name}:`, error);

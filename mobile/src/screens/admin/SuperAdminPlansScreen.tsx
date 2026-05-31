@@ -12,6 +12,7 @@ interface PlanData {
   name: string;
   price: number;
   interval: string;
+  durationMonths?: number;
   audience: 'user' | 'therapist' | 'organization';
   features: string[];
   config?: {
@@ -35,6 +36,7 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
   // Form State
   const [planName, setPlanName] = useState('');
   const [planPrice, setPlanPrice] = useState('');
+  const [planDuration, setPlanDuration] = useState('1');
   const [planAudience, setPlanAudience] = useState<'user' | 'therapist' | 'organization'>('user');
   const [planFeatures, setPlanFeatures] = useState<string[]>([]);
   const [newFeatureText, setNewFeatureText] = useState('');
@@ -65,6 +67,7 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
       setIsEditing(true);
       setPlanName(plan.name);
       setPlanPrice(plan.price.toString());
+      setPlanDuration((plan.durationMonths || 1).toString());
       setPlanAudience(plan.audience);
       setPlanFeatures(plan.features || []);
       
@@ -81,6 +84,7 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
       setIsEditing(false);
       setPlanName('');
       setPlanPrice('');
+      setPlanDuration('1');
       setPlanAudience('user');
       setPlanFeatures([]);
       
@@ -107,6 +111,7 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
       name: planName,
       price: Number(planPrice),
       interval: 'month',
+      durationMonths: Number(planDuration) || 1,
       audience: planAudience,
       features: planFeatures,
       config: {
@@ -215,7 +220,7 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
                         TARGET: {plan.audience.toUpperCase()}
                       </Text>
                     </View>
-                    <Text style={styles.planPriceText}>₹{plan.price}/mo</Text>
+                    <Text style={styles.planPriceText}>₹{plan.price} / {plan.durationMonths || 1} mo</Text>
                   </View>
 
                   {/* Bullet features */}
@@ -299,6 +304,17 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
                   keyboardType="numeric"
                   value={planPrice}
                   onChangeText={setPlanPrice}
+                  style={styles.formInput}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Plan Validity (in months)</Text>
+                <TextInput
+                  placeholder="e.g. 1, 3, 6, 12"
+                  keyboardType="numeric"
+                  value={planDuration}
+                  onChangeText={setPlanDuration}
                   style={styles.formInput}
                 />
               </View>

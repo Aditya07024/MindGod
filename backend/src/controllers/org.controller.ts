@@ -571,9 +571,20 @@ export class OrgController {
       if (!org)
         return res.status(404).json({ error: "Organization not found" });
 
+      const newEmails = uniqueEmails.filter(email => !org.allowedEmails.includes(email));
+
       const merged = [...new Set([...org.allowedEmails, ...uniqueEmails])];
       org.allowedEmails = merged;
       await org.save();
+
+      // Trigger invitation emails in the background
+      if (newEmails.length > 0) {
+        import("@/lib/mail").then(({ sendInviteEmail }) => {
+          const origin = req.headers.origin;
+          Promise.all(newEmails.map(email => sendInviteEmail(email, org.name, origin)))
+            .catch(err => console.error("Error sending bulk invite emails:", err));
+        }).catch(err => console.error("Error loading mail module:", err));
+      }
 
       // Auto-approve any pending join requests that now match
       const autoApproved: string[] = [];
@@ -835,4 +846,67 @@ export class OrgController {
 
     res.json({ message: "Invitation cancelled" });
   });
+
+  /** POST /org/whitelist-email — Org admin manually adds an employee email to whitelist */
+  static whitelistEmail = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const adminUser = await User.findById(req.user!.sub).lean();
+      if (!adminUser || !adminUser.orgId)
+        return res.status(403).json({ error: "Organization access required" });
+
+      const { email } = req.body;
+      if (!email || typeof email !== "string" || !email.includes("@")) {
+        return res.status(400).json({ error: "A valid email address is required" });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const org = await Organization.findById(adminUser.orgId);
+      if (!org)
+        return res.status(404).json({ error: "Organization not found" });
+
+      if (org.allowedEmails.includes(normalizedEmail)) {
+        return res.status(400).json({ error: "Email is already whitelisted" });
+      }
+
+      org.allowedEmails.push(normalizedEmail);
+      
+      // Auto-approve any pending join request matching this email
+      let autoApproved = false;
+      const targetUserId: string[] = [];
+      for (const jr of org.pendingJoinRequests) {
+        if (jr.status === "pending" && jr.email?.toLowerCase() === normalizedEmail) {
+          jr.status = "approved";
+          jr.autoApproved = true;
+          autoApproved = true;
+          targetUserId.push(jr.userId.toString());
+        }
+      }
+      await org.save();
+
+      if (autoApproved && targetUserId.length > 0) {
+        await User.updateMany(
+          { _id: { $in: targetUserId } },
+          { $set: { orgId: org._id } },
+        );
+      }
+
+      // Send invite email
+      try {
+        const { sendInviteEmail } = await import("@/lib/mail");
+        await sendInviteEmail(normalizedEmail, org.name, req.headers.origin);
+      } catch (err) {
+        console.error("Error sending invite email:", err);
+      }
+
+      res.json({
+        message: autoApproved 
+          ? `Successfully whitelisted ${normalizedEmail}. Pending request auto-approved.` 
+          : `Successfully whitelisted ${normalizedEmail} and sent invitation.`,
+        email: normalizedEmail,
+        autoApproved,
+      });
+    }
+  );
 }
+

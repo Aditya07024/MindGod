@@ -86,6 +86,15 @@ router.post(
   OrgController.uploadEmails,
 );
 
+// Manual email whitelist addition
+router.post(
+  "/whitelist-email",
+  requireAuth,
+  requireRole(["org_admin"]),
+  requireSubscription,
+  OrgController.whitelistEmail,
+);
+
 // Member data
 router.get(
   "/members",

@@ -261,6 +261,7 @@ export class AdminController {
         website: org.website,
         documents: org.documents,
         verificationStatus: org.verificationStatus,
+        allowExternalTherapists: org.allowExternalTherapists,
         createdAt: org.createdAt
       }))
     });

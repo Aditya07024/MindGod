@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { User, Lock, CheckCircle, Award, Sparkles, Mail } from 'lucide-react-native';
 import API from '../../lib/api';
@@ -15,6 +15,10 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
   const [sessionFee, setSessionFee] = useState('');
   const [specializations, setSpecializations] = useState('');
   const [bio, setBio] = useState('');
+  const [email, setEmail] = useState('');
+  const [website, setWebsite] = useState('');
+  const [phone, setPhone] = useState('');
+  const [openToCollaboration, setOpenToCollaboration] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
   // Fetch profiles and subscription
@@ -33,7 +37,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
   const isSubscribed = 
     !!(userProfile?.orgId) || 
     !!(userProfile?.tier && userProfile.tier !== 'free') || 
-    (subData && subData.status === 'active');
+    (subData && subData.subscription?.status === 'active');
 
   const { data: therapistStats, refetch: refetchStats } = useQuery({
     queryKey: ['therapistStats'],
@@ -55,6 +59,10 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
       setSessionFee(String(userProfile.therapistProfile.sessionFee || '1500'));
       setSpecializations(userProfile.therapistProfile.specializations?.join(', ') || '');
       setBio(userProfile.therapistProfile.bio || '');
+      setEmail(userProfile.therapistProfile.email || '');
+      setWebsite(userProfile.therapistProfile.website || '');
+      setPhone(userProfile.therapistProfile.phone || '');
+      setOpenToCollaboration(!!userProfile.therapistProfile.openToCollaboration);
     }
   }, [userProfile]);
 
@@ -76,6 +84,10 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
         fee: feeNum,
         specializations,
         introVideoUrl,
+        email,
+        website,
+        phone,
+        openToCollaboration,
       });
       Alert.alert('Success 🎉', 'Your clinical profile has been updated successfully!');
       refetchProfile();
@@ -164,6 +176,30 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
                 {userProfile?.therapistProfile?.specializations?.join(', ') || 'Anxiety, CBT Counseling, Burnout'}
               </Text>
             </View>
+            {userProfile?.therapistProfile?.email ? (
+              <View style={styles.infoBox}>
+                <Text style={styles.infoKey}>Email:</Text>
+                <Text style={styles.infoVal}>{userProfile.therapistProfile.email}</Text>
+              </View>
+            ) : null}
+            {userProfile?.therapistProfile?.website ? (
+              <View style={styles.infoBox}>
+                <Text style={styles.infoKey}>Website:</Text>
+                <Text style={styles.infoVal}>{userProfile.therapistProfile.website}</Text>
+              </View>
+            ) : null}
+            {userProfile?.therapistProfile?.phone ? (
+              <View style={styles.infoBox}>
+                <Text style={styles.infoKey}>Phone:</Text>
+                <Text style={styles.infoVal}>{userProfile.therapistProfile.phone}</Text>
+              </View>
+            ) : null}
+            <View style={styles.infoBox}>
+              <Text style={styles.infoKey}>Collaborative:</Text>
+              <Text style={styles.infoVal}>
+                {userProfile?.therapistProfile?.openToCollaboration ? 'Yes (Open to requests)' : 'No (Private)'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -187,7 +223,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
               />
             </View>
 
-            <View style={styles.inputGroup}>
+            {/* <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Session Fee (₹) (Limits: 500 - 5000)</Text>
               <TextInput
                 value={sessionFee}
@@ -197,7 +233,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
                 style={styles.textInput}
                 keyboardType="numeric"
               />
-            </View>
+            </View> */}
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Specialisations (comma separated)</Text>
@@ -220,6 +256,58 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
                 style={[styles.textInput, styles.textArea]}
                 multiline
                 numberOfLines={4}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Personal Email</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="email@example.com"
+                placeholderTextColor={Theme.colors.textMuted}
+                style={styles.textInput}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Website URL</Text>
+              <TextInput
+                value={website}
+                onChangeText={setWebsite}
+                placeholder="https://yourwebsite.com"
+                placeholderTextColor={Theme.colors.textMuted}
+                style={styles.textInput}
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <TextInput
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="+1234567890"
+                placeholderTextColor={Theme.colors.textMuted}
+                style={styles.textInput}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.switchGroup}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabel}>Open to Organization Collaboration</Text>
+                <Text style={{ fontSize: 11, color: Theme.colors.textMuted, marginTop: 2 }}>
+                  Allow companies & organizations to send you affiliation requests
+                </Text>
+              </View>
+              <Switch
+                value={openToCollaboration}
+                onValueChange={setOpenToCollaboration}
+                trackColor={{ false: '#D1D5DB', true: Theme.colors.primary }}
+                thumbColor={openToCollaboration ? '#FFF' : '#F3F4F6'}
               />
             </View>
 
@@ -568,6 +656,15 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fonts.headline,
     fontSize: 13,
     color: '#FFF',
+  },
+  switchGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.surfaceHigh,
+    marginTop: 8,
   },
 });
 

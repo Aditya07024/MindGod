@@ -155,6 +155,11 @@ const API = {
       }
       return response.json();
     },
+    whitelistEmail: (email: string) =>
+      apiCall<any>("/api/org/whitelist-email", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
     // Member data
     members: () => apiCall<any>("/api/org/members"),
     userDataForOrg: (userId: string) => apiCall<any>(`/api/org/user-data/${userId}`),

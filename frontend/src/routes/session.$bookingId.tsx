@@ -153,6 +153,48 @@ function RoomUI({
     setChatInput("");
   };
 
+  /* LiveKit data channel for report sharing */
+  const [reportPanelOpen, setReportPanelOpen] = useState(false);
+  const [sharedReportId, setSharedReportId] = useState<string | null>(null);
+
+  const { send: sendReportShare } = useDataChannel("report-share", (msg) => {
+    try {
+      const decoded = new TextDecoder().decode(msg.payload);
+      const parsed = JSON.parse(decoded);
+      if (parsed.type === "REPORT_SHARED" && parsed.sharedReportId) {
+        setSharedReportId(parsed.sharedReportId);
+        setReportPanelOpen(true);
+        setNotesPanelOpen(false); // Close notes to avoid overlap
+        toast.success("Client shared a wellness report with you!", { duration: 8000 });
+      }
+    } catch (e) {
+      console.error("Failed to parse report-share message", e);
+    }
+  });
+
+  /* User report share modal states */
+  const [reportShareModalOpen, setReportShareModalOpen] = useState(false);
+  const [sharePeriod, setSharePeriod] = useState<"day" | "week" | "month">("week");
+  const [shareNotes, setShareNotes] = useState("");
+  const [isSharingReport, setIsSharingReport] = useState(false);
+
+  /* Query for shared report details */
+  const { data: sharedReport, isLoading: loadingReport } = useQuery({
+    queryKey: ["meeting-shared-report", sharedReportId],
+    queryFn: () => API.therapist.sharedReportDetail(sharedReportId!),
+    enabled: !!sharedReportId && userRole === "therapist",
+  });
+
+  const toggleNotesPanel = () => {
+    setNotesPanelOpen((v) => !v);
+    setReportPanelOpen(false);
+  };
+  
+  const toggleReportPanel = () => {
+    setReportPanelOpen((v) => !v);
+    setNotesPanelOpen(false);
+  };
+
   /* Therapist notes */
   const notesKey = `therapist-notes-${bookingId}`;
   const [notes, setNotes] = useState(() => sessionStorage.getItem(notesKey) ?? "");
@@ -260,12 +302,37 @@ function RoomUI({
               )}
             </button>
 
-            {userRole === "therapist" && (
+            {userRole === "user" && (
               <button
-                onClick={() => setNotesPanelOpen((v) => !v)}
+                onClick={() => setReportShareModalOpen(true)}
                 className="flex items-center gap-2 rounded-full bg-slate-800/80 backdrop-blur-md px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700/80 transition"
               >
+                <FileText className="size-4" /> Share Report
+              </button>
+            )}
+
+            {userRole === "therapist" && (
+              <button
+                onClick={toggleNotesPanel}
+                className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700/80 transition ${
+                  notesPanelOpen ? "bg-teal-600/90 text-white" : "bg-slate-800/80 text-white"
+                }`}
+              >
                 <FileText className="size-4" /> Notes
+              </button>
+            )}
+
+            {userRole === "therapist" && (
+              <button
+                disabled={!sharedReportId}
+                onClick={toggleReportPanel}
+                className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                  sharedReportId 
+                    ? "bg-slate-800/80 hover:bg-slate-700/80 backdrop-blur-md cursor-pointer text-white" 
+                    : "bg-slate-800/30 text-slate-500 cursor-not-allowed"
+                }`}
+              >
+                <FileText className="size-4" /> Shared Report
               </button>
             )}
 
@@ -352,6 +419,292 @@ function RoomUI({
               placeholder="Clinical notes for this session…&#10;&#10;Auto-saved every 10s and submitted when you leave."
               className="flex-1 bg-transparent text-slate-100 placeholder-slate-500 p-4 text-sm resize-none focus:outline-none"
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Shared Report panel */}
+      <AnimatePresence>
+        {reportPanelOpen && userRole === "therapist" && (
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            className="absolute left-0 top-0 bottom-0 z-30 w-96 flex flex-col bg-slate-900/95 backdrop-blur-md shadow-2xl border-r border-slate-800"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-teal-400" />
+                <span className="font-semibold text-white text-sm">Shared Wellness Report</span>
+              </div>
+              <button onClick={() => setReportPanelOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="size-4" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 text-slate-200">
+              {loadingReport && (
+                <div className="flex flex-col items-center justify-center py-10 space-y-3">
+                  <div className="size-8 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
+                  <p className="text-xs text-slate-400">Loading shared wellness report...</p>
+                </div>
+              )}
+
+              {!loadingReport && !sharedReport && (
+                <p className="text-xs text-slate-500 text-center py-10">No report shared or failed to load.</p>
+              )}
+
+              {sharedReport && (
+                <>
+                  {/* Summary Card */}
+                  <div className="bg-slate-800/50 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-white text-base">{sharedReport.user?.fullName}</h4>
+                        <p className="text-[10px] text-slate-450 uppercase tracking-wider font-semibold mt-0.5">
+                          Shared {sharedReport.period}ly report
+                        </p>
+                      </div>
+                      {sharedReport.avgMood !== null && (
+                        <div className="text-right">
+                          <div className={`inline-flex items-center justify-center size-10 rounded-xl font-bold text-base ${
+                            sharedReport.avgMood >= 7 ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                            : sharedReport.avgMood >= 4 ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            : "bg-red-500/10 text-red-400 border border-red-500/20"
+                          }`}>
+                            {sharedReport.avgMood}
+                          </div>
+                          <p className="text-[9px] text-slate-500 font-semibold mt-1">AVG MOOD</p>
+                        </div>
+                      )}
+                    </div>
+                    {sharedReport.notes && (
+                      <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800/60">
+                        <p className="text-[10px] font-bold text-teal-400 uppercase mb-1">Seeker Note</p>
+                        <p className="text-xs text-slate-350 italic">"{sharedReport.notes}"</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mood Logs */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-bold text-slate-450 uppercase tracking-wider">Mood Check-ins</h5>
+                    {sharedReport.moods?.length === 0 ? (
+                      <p className="text-xs text-slate-500 italic">No mood check-ins in this period.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {sharedReport.moods?.map((m: any) => (
+                          <div key={m.id} className="bg-slate-850 rounded-xl p-3 border border-slate-800/40 flex items-start gap-3">
+                            <span className={`inline-grid place-items-center size-6 rounded-lg text-xs font-bold shrink-0 ${
+                              m.score >= 7 ? "bg-green-500/10 text-green-400"
+                              : m.score >= 4 ? "bg-amber-500/10 text-amber-400"
+                              : "bg-red-500/10 text-red-400"
+                            }`}>{m.score}</span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] text-slate-500 font-medium">
+                                {new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                              </p>
+                              {m.note && <p className="text-xs text-slate-300 mt-1 break-words">"{m.note}"</p>}
+                              {m.tags?.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {m.tags.map((tag: string) => (
+                                    <span key={tag} className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CBT Journal Logs */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-bold text-slate-455 uppercase tracking-wider">CBT Journal Entries</h5>
+                    {sharedReport.journals?.length === 0 ? (
+                      <p className="text-xs text-slate-500 italic">No journal entries in this period.</p>
+                    ) : (
+                      <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                        {sharedReport.journals?.map((j: any) => (
+                          <div key={j.id} className="bg-slate-850 rounded-xl p-3 border border-slate-800/40 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-teal-400 font-bold uppercase tracking-wider">{j.prompt || "CBT Entry"}</span>
+                              <span className="text-[9px] text-slate-500">
+                                {new Date(j.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                            {j.situation && (
+                              <div>
+                                <p className="text-[10px] text-slate-450 font-semibold uppercase">Situation</p>
+                                <p className="text-xs text-slate-300">{j.situation}</p>
+                              </div>
+                            )}
+                            {j.thought && (
+                              <div>
+                                <p className="text-[10px] text-slate-455 font-semibold uppercase">Automatic Thought</p>
+                                <p className="text-xs text-slate-300">{j.thought}</p>
+                              </div>
+                            )}
+                            {j.feeling && (
+                              <div>
+                                <p className="text-[10px] text-slate-455 font-semibold uppercase">Feeling</p>
+                                <p className="text-xs text-slate-300">{j.feeling}</p>
+                              </div>
+                            )}
+                            {j.reframe && (
+                              <div className="bg-teal-950/20 border-l-2 border-teal-500 pl-2 py-1">
+                                <p className="text-[10px] text-teal-400 font-bold uppercase">Rational Reframe</p>
+                                <p className="text-xs text-slate-200">{j.reframe}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Chat Session Summaries */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-bold text-slate-450 uppercase tracking-wider">AI Chat Summaries</h5>
+                    {sharedReport.chats?.length === 0 ? (
+                      <p className="text-xs text-slate-500 italic">No chat sessions in this period.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {sharedReport.chats?.map((c: any, index: number) => (
+                          <div key={index} className="bg-slate-850 rounded-xl p-3 border border-slate-800/40 space-y-1.5">
+                            <div className="flex justify-between items-center">
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                                c.riskLevel === "high" ? "bg-red-500/10 text-red-400"
+                                : c.riskLevel === "medium" ? "bg-amber-500/10 text-amber-400"
+                                : "bg-green-500/10 text-green-400"
+                              }`}>{c.riskLevel || "Low"} Risk</span>
+                              <span className="text-[9px] text-slate-500">
+                                {new Date(c.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-350 break-words">{c.summary}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Share Report Modal (User) */}
+      <AnimatePresence>
+        {reportShareModalOpen && userRole === "user" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => setReportShareModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl text-slate-200 overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+                <div className="flex items-center gap-2">
+                  <FileText className="size-4 text-teal-400" />
+                  <span className="font-bold text-white text-sm">Share Wellness Report</span>
+                </div>
+                <button onClick={() => setReportShareModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Choose a period to compile your mood history, journal reframes, and AI chat topics.
+                  Your therapist will be able to review this report in-session only.
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase">Report Period</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['day', 'week', 'month'] as const).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setSharePeriod(p)}
+                        className={`py-2 rounded-xl text-xs font-bold uppercase transition border ${
+                          sharePeriod === p
+                            ? "bg-teal-600 border-teal-500 text-white shadow-md shadow-teal-600/20"
+                            : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-450 uppercase">Optional Note</label>
+                  <textarea
+                    value={shareNotes}
+                    onChange={(e) => setShareNotes(e.target.value)}
+                    placeholder="Mention anything specific you'd like your therapist to look at..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 outline-none focus:ring-1 focus:ring-teal-500 resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <div className="px-6 py-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+                <button
+                  onClick={() => setReportShareModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isSharingReport}
+                  onClick={async () => {
+                    if (!booking?.therapistId) {
+                      toast.error("Therapist information not loaded yet.");
+                      return;
+                    }
+                    setIsSharingReport(true);
+                    try {
+                      const res = await API.user.shareReport({
+                        therapistId: booking.therapistId,
+                        period: sharePeriod,
+                        notes: shareNotes.trim() || undefined
+                      });
+                      toast.success("Wellness report shared with your therapist!");
+                      
+                      // Notify via LiveKit data channel
+                      const payload = {
+                        type: "REPORT_SHARED",
+                        sharedReportId: res.sharedReportId
+                      };
+                      sendReportShare(new TextEncoder().encode(JSON.stringify(payload)), { reliable: true });
+                      setReportShareModalOpen(false);
+                      setShareNotes('');
+                    } catch (e: any) {
+                      toast.error(e.message || "Failed to share report.");
+                    } finally {
+                      setIsSharingReport(false);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition disabled:opacity-50"
+                >
+                  {isSharingReport ? "Sharing..." : "Share Now"}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
