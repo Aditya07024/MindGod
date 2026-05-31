@@ -27,6 +27,12 @@ import {
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
 import logoUrl from "@/assets/logo.png";
+import user from "@/assets/user.jpg";
+import therapist from "@/assets/therapist.avif";
+import org from "@/assets/org.avif";
+import app from "@/assets/app.png";
+import play from "@/assets/play.webp";
+
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online";
 const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "mindsyncpro@outlook.com";
@@ -243,17 +249,17 @@ function Landing() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#f7fafc] relative text-slate-900">
+    <div className="min-h-screen overflow-x-hidden bg-[#fff9e6] relative text-slate-900">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,214,102,0.18),transparent_35%),radial-gradient(circle_at_top_right,rgba(255,235,153,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(255,193,7,0.10),transparent_35%)]" />
       {/* Header */}
-      <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-lg border border-white/30 bg-white/70 px-5 py-3 shadow-xl backdrop-blur-xl">
+      <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-2xl border border-white/60 bg-white/80 px-6 py-4 shadow-lg backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
             <img src={logoUrl} alt="MindSyncPro AI mental health India" className="size-full object-cover scale-125" />
           </div>
 
           <div>
-            <p className="font-display text-lg font-bold text-slate-900">Mindsyncpro</p>
-
+            <p className="font-display text-lg font-bold text-[#012620]">Mindsyncpro</p>
           </div>
         </div>
 
@@ -273,7 +279,7 @@ function Landing() {
 
           <a
             href="#portals-section"
-            className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] hover:bg-slate-800"
+            className="rounded-full bg-[#004038] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03]"
           >
             Get Started
           </a>
@@ -282,7 +288,7 @@ function Landing() {
 
       <main className="mx-auto max-w-7xl px-5 pb-5 pt-2 sm:px-6 lg:px-8">
         {/* Hero */}
-        <section className="relative grid min-h-[82vh] items-center gap-16 lg:grid-cols-2">
+        <section className="relative grid min-h-[82vh] items-center lg:grid-cols-[55%_50%]">
           <div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -298,15 +304,16 @@ function Landing() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.8 }}
-              className="mt-7 font-display text-5xl font-bold leading-[1.02] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
+              className="mt-7 font-display text-5xl font-bold leading-[1.02] tracking-tight text-[#012620] sm:text-6xl lg:text-7xl"
             >
-              <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium text-slate-600 mb-4">India's AI Mental Health Platform -</span>
-              Healing Starts
+              <span className="block text-xl sm:text-2xl lg:text-3xl font-medium text-[#333942] mb-4">
+                The future-ready wellness platform
+              </span>
+              India's AI-Powered
               <br />
-              With Honest
-              <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
-                {" "}
-                Conversations
+              Mental Wellness
+              <span className="bg-gradient-to-r from-[#004038] to-[#00a693] bg-clip-text text-transparent">
+                {" "}Experience
               </span>
             </motion.h1>
 
@@ -314,17 +321,24 @@ function Landing() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.7 }}
-              className="mt-7 max-w-xl text-lg leading-relaxed text-slate-600"
+              className="mt-7 max-w-xl text-lg leading-relaxed text-[#333942]"
             >
               MindSyncPro is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and RCI-verified online therapist booking into one private, affordable wellness experience. Starting free.
             </motion.p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-4 items-center">
+              <a
+                href="#pricing"
+                className="text-[#004038] font-semibold hover:translate-x-1 transition"
+              >
+                Request a demo →
+              </a>
+
               <a
                 href="#portals-section"
-                className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-xl transition hover:scale-[1.03] hover:bg-slate-800"
+                className="rounded-2xl bg-[#004038] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03]"
               >
-                Start Your Journey
+                Start a free trial →
               </a>
             </div>
 
@@ -349,61 +363,71 @@ function Landing() {
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1, y: [0, -10, 0] }}
-            transition={{ 
-              scale: { duration: 0.8 }, 
-              opacity: { duration: 0.8 }, 
-              y: { duration: 5, repeat: Infinity, ease: "easeInOut" } 
+            transition={{
+              scale: { duration: 0.8 },
+              opacity: { duration: 0.8 },
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
             }}
             className="relative flex items-center justify-center"
           >
-            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-cyan-200/40 to-teal-200/20 blur-3xl" />
-
-            <div className="relative w-full max-w-xl rounded-[36px] border border-white/40 bg-white/70 p-6 shadow-2xl backdrop-blur-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">Manas AI Session</p>
-                  <p className="text-xs text-slate-500">Emotion-aware conversation</p>
+            <div className="relative h-[560px] w-full max-w-xl">
+              <div className="absolute top-10 left-8 rounded-3xl bg-[#87c8ff] p-3 shadow-xl">
+                <div className="h-36 w-36 rounded-2xl bg-white/40 backdrop-blur flex items-center justify-center text-5xl">
+                  <img
+                  src={user}
+                  alt="MindSyncPro"
+                  className="h-full w-full object-cover border-4 border-red rounded-2xl"
+                />
                 </div>
-
-                <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Active
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <div className="max-w-[85%] rounded-3xl rounded-bl-md bg-slate-100 px-4 py-3 text-sm text-slate-700">
-                  I noticed your stress levels were higher this week. Want to talk about it?
-                </div>
-
-                <div className="ml-auto max-w-[80%] rounded-3xl rounded-br-md bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-3 text-sm text-white shadow-lg">
-                  I’ve been overwhelmed with college and work lately.
-                </div>
-
-                <div className="max-w-[85%] rounded-3xl rounded-bl-md bg-slate-100 px-4 py-3 text-sm text-slate-700">
-                  You're doing more than your mind is giving you credit for. Let’s slow things down
-                  together.
+                <div className="absolute -right-10 top-6 rounded-full bg-[#fde8ce] px-4 py-2 text-xs font-semibold">
+                  User
                 </div>
               </div>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                  <Brain className="size-5 text-teal-500" />
-                  <p className="mt-3 text-sm font-semibold text-slate-900">AI Therapy</p>
-                  <p className="mt-1 text-xs text-slate-500">Emotion-aware guidance</p>
+              <div className="absolute top-36 right-4 rounded-3xl bg-[#e8c1b0] p-3 shadow-xl">
+                <div className="h-32 w-32 rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
+                  <img
+                  src={therapist}
+                  alt="MindSyncPro"
+                  className="h-full w-full object-cover border-4 border-white rounded-2xl shadow-lg"
+                />
                 </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                  <Activity className="size-5 text-cyan-500" />
-                  <p className="mt-3 text-sm font-semibold text-slate-900">Mood Tracking</p>
-                  <p className="mt-1 text-xs text-slate-500">Daily emotional insights</p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                  <Heart className="size-5 text-rose-500" />
-                  <p className="mt-3 text-sm font-semibold text-slate-900">Wellness Tools</p>
-                  <p className="mt-1 text-xs text-slate-500">Breathing & calm support</p>
+                <div className="absolute -left-16 top-8 rounded-full bg-[#fde8ce] px-4 py-2 text-xs font-semibold">
+                  therapist
                 </div>
               </div>
+
+              <div className="absolute bottom-10 right-8 rounded-3xl bg-[#ff9a52] p-3 shadow-xl">
+               <div className="h-32 w-32 rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
+                  <img
+                  src={org}
+                  alt="MindSyncPro"
+                  className="h-full w-full object-cover border-4 border-red rounded-2xl shadow-lg"
+                />
+                </div>
+                <div className="absolute -left-20 top-8 rounded-full bg-[#fde8ce] px-4 py-2 text-xs font-semibold">
+                  Organisation
+                </div>
+              </div>
+
+              <div className="absolute left-12 bottom-16 w-64 rounded-[28px] border border-white/30 bg-white/40 p-5 backdrop-blur-xl shadow-2xl">
+                <p className="text-xs text-slate-500">Manas AI</p>
+                <div className="mt-3 rounded-2xl bg-white/70 p-3 text-sm text-slate-700">
+                  You're doing better than you think. Let's take one step at a time.
+                </div>
+              </div>
+
+              <div className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[40px] bg-red shadow-2xl">
+                <img
+                  src={logoUrl}
+                  alt="MindSyncPro"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="absolute top-8 right-24 h-4 w-4 rounded-full bg-yellow-400" />
+              <div className="absolute bottom-24 left-4 h-4 w-4 rounded-full bg-cyan-400" />
+              <div className="absolute top-28 right-32 h-3 w-3 rounded-full bg-violet-400" />
             </div>
           </motion.div>
         </section>
@@ -411,7 +435,7 @@ function Landing() {
         {/* Experience Section */}
         <section
           id="portals-section"
-          className="relative mt-14 overflow-hidden rounded-[40px] border border-teal-100 bg-gradient-to-br from-[#ecfffb] via-[#f4fffd] to-[#e8fffa] px-6 py-20 text-slate-900 shadow-[0_20px_80px_rgba(20,184,166,0.08)] sm:px-10 lg:px-16"
+          className="relative mt-14 overflow-hidden rounded-[40px] border border-teal-100 bg-gradient-to-br from-[#fff5ee] via-[#fff9f4] to-[#fde8ce] px-6 py-20 text-[#012620] shadow-[0_20px_80px_rgba(20,184,166,0.08)] sm:px-10 lg:px-16"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(45,212,191,0.10),transparent_32%)]" />
 
@@ -428,7 +452,7 @@ function Landing() {
                 Designed For Every Mind
               </div>
 
-              <h2 className="mt-6 font-display text-4xl font-bold leading-tight text-slate-900 sm:text-5xl">
+              <h2 className="mt-6 font-display text-4xl font-bold leading-tight text-[#012620] sm:text-5xl">
                 One AI Mental Health Platform
                 <br />
                 for Every Role in India
@@ -463,9 +487,9 @@ function Landing() {
                         <p.icon className="size-7" />
                       </div>
 
-                      <h3 className="mt-6 font-display text-2xl font-bold text-slate-900">
-                        {p.title}
-                      </h3>
+                  <h3 className="mt-6 font-display text-2xl font-bold text-[#012620]">
+                    {p.title}
+                  </h3>
 
                       <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
                         {p.subtitle}
@@ -516,7 +540,7 @@ function Landing() {
                     <feature.icon className="size-6" />
                   </div>
 
-                  <h3 className="mt-5 text-xl font-semibold text-slate-900">{feature.title}</h3>
+                  <h3 className="mt-5 text-xl font-semibold text-[#012620]">{feature.title}</h3>
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-600">{feature.desc}</p>
                 </motion.div>
@@ -530,7 +554,7 @@ function Landing() {
                     Unified Access
                   </p>
 
-                  <h3 className="mt-3 font-display text-3xl font-bold text-slate-900">
+              <h3 className="mt-3 font-display text-3xl font-bold text-[#012620]">
                     One Login. Smart Role Detection.
                   </h3>
 
@@ -542,7 +566,7 @@ function Landing() {
 
                 <a
                   href="#portals-section"
-                  className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-xl transition hover:scale-[1.03] hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-xl transition hover:scale-[1.03]"
                 >
                   Continue To Sign In
                 </a>
@@ -559,7 +583,7 @@ function Landing() {
               Simple, Transparent Pricing
             </div>
 
-            <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
+            <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
               Free Mental Health Support
               <br />
               & Affordable Plans
@@ -622,7 +646,7 @@ function Landing() {
                     onClick={(e) => handlePortalClick(e, plan.portalId, "/sign-in")}
                     className={`mt-auto w-full rounded-2xl px-6 py-3 text-sm font-bold shadow-lg transition hover:scale-[1.02] ${
                       plan.popular 
-                        ? "bg-slate-900 text-white hover:bg-slate-800" 
+                        ? "bg-[#004038] text-white hover:bg-[#00362c]" 
                         : "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50"
                     }`}
                   >
@@ -645,7 +669,7 @@ function Landing() {
               About Mindsyncpro
             </div>
 
-            <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
+            <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
               About MindSyncPro - India's AI Mental Health Platform
             </h2>
 
@@ -658,7 +682,7 @@ function Landing() {
             <div className="mt-10 grid gap-6 text-left md:grid-cols-3">
               <div className="rounded-3xl border border-teal-100 bg-teal-50/60 p-6">
                 <Brain className="size-8 text-teal-600" />
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">AI Emotional Support</h3>
+                <h3 className="mt-4 text-lg font-semibold text-[#012620]">AI Emotional Support</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   Smart conversations that adapt to emotions and provide calming guidance.
                 </p>
@@ -666,7 +690,7 @@ function Landing() {
 
               <div className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-6">
                 <Heart className="size-8 text-rose-500" />
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">Human-Centered Care</h3>
+                <h3 className="mt-4 text-lg font-semibold text-[#012620]">Human-Centered Care</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   Connect with therapists and wellness experiences designed for real people.
                 </p>
@@ -674,7 +698,7 @@ function Landing() {
 
               <div className="rounded-3xl border border-violet-100 bg-violet-50/60 p-6">
                 <ShieldCheck className="size-8 text-violet-600" />
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">Private & Secure</h3>
+                <h3 className="mt-4 text-lg font-semibold text-[#012620]">Private & Secure</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   Your emotional wellness data stays protected with secure and private systems.
                 </p>
@@ -691,7 +715,7 @@ function Landing() {
               Trusted Wellness Experience
             </div>
 
-            <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
+            <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
               Trusted for Employee Mental Wellness
               <br />
               & Student Support
@@ -730,7 +754,7 @@ function Landing() {
                 <p className="mt-5 text-sm leading-relaxed text-slate-600">“{t.quote}”</p>
 
                 <div className="mt-6">
-                  <p className="font-semibold text-slate-900">{t.name}</p>
+                  <p className="font-semibold text-[#012620]">{t.name}</p>
                   <p className="text-xs text-slate-500">Mindsyncpro User</p>
                 </div>
               </div>
@@ -758,36 +782,81 @@ function Landing() {
         </section>
 
         {/* CTA Section */}
-        <section className="relative mt-24 overflow-hidden rounded-[42px] bg-slate-900 px-8 py-20 text-white shadow-[0_30px_100px_rgba(15,23,42,0.35)] sm:px-12 lg:px-16">
+        <section className="relative mt-24 overflow-hidden rounded-[42px] bg-[#004038] px-8 py-20 text-white shadow-[0_30px_100px_rgba(15,23,42,0.35)] sm:px-12 lg:px-16">
           <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-teal-500/20 blur-3xl" />
           <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
 
-          <div className="relative z-10 flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-teal-300 backdrop-blur-xl">
-                <Globe2 className="size-4" />
-                Future Of Emotional Wellness
-              </div>
+          <div className="relative z-10 flex items-center justify-center">
+            <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.5fr_1fr_1fr]">
+              <a
+                href="#portals-section"
+                className="group relative overflow-hidden rounded-[32px] bg-white min-h-[260px] p-5 shadow-2xl transition hover:scale-[1.03]"
+              >
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="mb-3 flex gap-2">
+                    <div className="h-3 w-3 rounded-full bg-red-400" />
+                    <div className="h-3 w-3 rounded-full bg-yellow-400" />
+                    <div className="h-3 w-3 rounded-full bg-green-400" />
+                  </div>
 
-              <h2 className="mt-6 font-display text-4xl font-bold leading-tight sm:text-5xl">
-                Online Therapist Booking India
-                <br />
-                & CBT Tools Online
-              </h2>
+                  <div className="rounded-xl bg-white p-4 shadow-sm">
+                    <div className="h-24 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 p-3 flex flex-col justify-between">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold text-[#004038]">MindSyncPro Dashboard</span>
+                        <div className="h-2 w-2 rounded-full bg-green-500" />
+                      </div>
 
-              <p className="mt-6 text-base leading-relaxed text-slate-300 sm:text-lg">
-                Discover AI-powered emotional support, calming experiences, therapist connectivity,
-                and wellness insights built for modern life.
-              </p>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between rounded-lg bg-white/70 px-2 py-1 text-[9px] text-slate-700">
+                          <span>Manas AI</span>
+                          <span>Online</span>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg bg-white/70 px-2 py-1 text-[9px] text-slate-700">
+                          <span>Mood Score</span>
+                          <span>92%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <div className="h-2 w-full rounded-full bg-slate-100" />
+                      <div className="h-2 w-4/5 rounded-full bg-slate-100" />
+                      <div className="h-2 w-2/3 rounded-full bg-slate-100" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 text-center">
+                  <h3 className="text-xl font-bold text-[#004038]">Web App</h3>
+                  <p className="text-sm text-slate-500">Available Now</p>
+                </div>
+              </a>
+
+              <a
+                href="#"
+                className="flex min-h-[260px] flex-col items-center justify-center rounded-[32px] border border-white/20 bg-white/10 p-6 backdrop-blur-xl transition hover:scale-[1.03]"
+              >
+                <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-3xl">
+                  <img src={play}/>
+                </div>
+
+                <h3 className="text-xl font-bold text-white">Google Play</h3>
+                <p className="mt-2 text-white/70">Coming Soon</p>
+              </a>
+
+              <a
+                href="#"
+                className="flex min-h-[260px] flex-col items-center justify-center rounded-[32px] border border-white/20 bg-white/10 p-6 backdrop-blur-xl transition hover:scale-[1.03]"
+              >
+                <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-3xl ">
+                  <img src={app}/>
+                </div>
+
+                <h3 className="text-xl font-bold text-white">App Store</h3>
+                <p className="mt-2 text-white/70">Coming Soon</p>
+              </a>
             </div>
-
-            <a
-              href="#portals-section"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-semibold text-slate-900 shadow-2xl transition hover:scale-[1.03]"
-            >
-              Start With Mindsyncpro
-              <ArrowRight className="size-4" />
-            </a>
           </div>
         </section>
       </main>
@@ -799,7 +868,7 @@ function Landing() {
             <MessageCircle className="size-4" />
             Got Questions?
           </div>
-          <h2 className="mt-6 font-display text-4xl font-bold text-slate-900 sm:text-5xl">
+          <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
             Frequently Asked Questions
           </h2>
         </div>
@@ -821,7 +890,7 @@ function Landing() {
               </div>
 
               <div>
-                <p className="font-display text-lg font-bold text-slate-900">Mindsyncpro</p>
+                <p className="font-display text-lg font-bold text-[#012620]">Mindsyncpro</p>
               </div>
             </div>
 
@@ -831,7 +900,7 @@ function Landing() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-900">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#012620]">
               Platform
             </h3>
 
@@ -846,7 +915,7 @@ function Landing() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-900">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#012620]">
               Company
             </h3>
 
@@ -859,7 +928,7 @@ function Landing() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-900">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#012620]">
               Stay Connected
             </h3>
 
