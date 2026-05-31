@@ -51,9 +51,25 @@ function TherapistMarketplace() {
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([500, 3500]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<TherapistCard | null>(null);
+
+  // Fetch all therapists' languages dynamically
+  const { data: allTherapistsData } = useQuery({
+    queryKey: ["allTherapistsLanguages"],
+    queryFn: () => API.therapist.list({ limit: 100 }),
+    retry: false,
+  });
+
+  const baseLanguages = ["English", "Hindi"];
+  const dynamicLanguages = Array.from(
+    new Set(
+      (allTherapistsData?.therapists || []).flatMap((t: any) => t.languages || [])
+    )
+  ).filter((lang: string) => lang && !baseLanguages.includes(lang));
+
+  const availableLanguages = [...baseLanguages, ...dynamicLanguages];
 
   // Fetch therapists with filters
   const {
@@ -158,6 +174,7 @@ function TherapistMarketplace() {
                         <SelectItem value="Relationship">Relationship</SelectItem>
                         <SelectItem value="OCD">OCD</SelectItem>
                         <SelectItem value="ADHD">ADHD</SelectItem>
+                        <SelectItem value="Others">Others</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -168,10 +185,11 @@ function TherapistMarketplace() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Languages</SelectItem>
-                        <SelectItem value="English">English</SelectItem>
-                        <SelectItem value="Hindi">Hindi</SelectItem>
-                        <SelectItem value="Marathi">Marathi</SelectItem>
-                        <SelectItem value="Gujarati">Gujarati</SelectItem>
+                        {availableLanguages.map((lang) => (
+                          <SelectItem key={lang} value={lang}>
+                            {lang}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
@@ -225,14 +243,14 @@ function TherapistMarketplace() {
 
                     {/* Price Range */}
                     <div className="flex gap-2 items-center">
-                      <span className="text-sm font-medium text-slate-600">₹{priceRange[0]}</span>
+                      <span className="text-sm font-medium text-slate-600">₹500</span>
                       <input
                         type="range"
                         min="500"
-                        max="5000"
+                        max="3500"
                         step="100"
-                        value={priceRange[0]}
-                        onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                        value={priceRange[1]}
+                        onChange={(e) => setPriceRange([500, Number(e.target.value)])}
                         className="flex-1"
                       />
                       <span className="text-sm font-medium text-slate-600">₹{priceRange[1]}</span>

@@ -9,6 +9,7 @@ export interface PlanData {
   name: string;
   price: number;
   interval: 'month' | 'year' | 'one-time';
+  durationMonths?: number;
   features: string[];
   audience: string;
   highlighted?: boolean;
@@ -63,7 +64,13 @@ export const PlanCard: React.FC<PlanCardProps> = ({
           {plan.price}
         </Text>
         <Text style={[styles.interval, isHighlighted && styles.textWhiteMuted]}>
-          /{plan.interval === 'one-time' ? 'session' : plan.interval === 'year' ? 'yr' : 'mo'}
+          /{plan.durationMonths && plan.durationMonths > 1
+            ? `${plan.durationMonths} mo`
+            : plan.interval === 'one-time'
+            ? 'session'
+            : plan.interval === 'year'
+            ? 'yr'
+            : 'mo'}
         </Text>
       </View>
 

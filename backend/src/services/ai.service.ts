@@ -61,14 +61,16 @@ export class AIService {
     const since = new Date();
     since.setHours(0, 0, 0, 0);
 
-    const conversation = await Conversation.findOne({
+    const userConvs = await Conversation.find({
       userId,
-      createdAt: { $gte: since },
-    }).sort({ createdAt: -1 });
+      "messages.timestamp": { $gte: since },
+    }).lean();
 
-    const userMessagesToday =
-      conversation?.messages.filter((message) => message.role === "user")
-        .length ?? 0;
+    const userMessagesToday = userConvs.reduce((sum, conv) => {
+      return sum + (conv.messages?.filter(
+        (m) => m.role === "user" && new Date(m.timestamp) >= since
+      ).length ?? 0);
+    }, 0);
 
     let limit = this.getDailyMessageLimit(user.tier);
 

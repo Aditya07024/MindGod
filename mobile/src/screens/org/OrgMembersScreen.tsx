@@ -35,7 +35,7 @@ export const OrgMembersScreen: React.FC<{ navigation?: any }> = ({ navigation })
     retry: false
   });
 
-  const isSubscribed = subData?.isActive || subData?.status === 'active';
+  const isSubscribed = subData?.subscription?.status === 'active';
 
   // Query org members
   const { data: membersData, isLoading: isListLoading } = useQuery({

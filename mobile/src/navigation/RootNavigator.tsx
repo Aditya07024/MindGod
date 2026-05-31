@@ -25,6 +25,7 @@ import BreatheScreen from '../screens/user/BreatheScreen';
 import CBTJournalScreen from '../screens/user/CBTJournalScreen';
 import MoodDiaryScreen from '../screens/user/MoodDiaryScreen';
 import NotificationInboxScreen from '../screens/user/NotificationInboxScreen';
+import SessionScreen from '../screens/user/SessionScreen';
 
 // Therapist screens
 import TherapistDashboardScreen from '../screens/therapist/TherapistDashboardScreen';
@@ -334,6 +335,7 @@ export const RootNavigator = () => {
 
       {/* Shared authed screens */}
       <Stack.Screen name="Notifications" component={NotificationInboxScreen} />
+      <Stack.Screen name="Session" component={SessionScreen} />
     </Stack.Navigator>
   );
 };

@@ -220,8 +220,8 @@ function Dashboard() {
           </motion.div>
         ))}
 
-        {/* Free tier message counter */}
-        {tier === 'free' && (
+        {/* Message Counter */}
+        {tier !== 'apna_therapist' && (
           <MessageCounter onCrisisMode={setCrisisMode} />
         )}
 

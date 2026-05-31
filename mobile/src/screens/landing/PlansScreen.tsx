@@ -171,6 +171,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
                           );
                         }
                         queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
                       } catch (err) {
                         console.warn("Auto-sync on return failed:", err);
                         Alert.alert(
@@ -247,6 +248,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
                   const res = await API.subscription.sync();
                   Alert.alert("Sync Status", res.message || "Synced successfully!");
                   queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                  queryClient.invalidateQueries({ queryKey: ['userProfile'] });
                 } catch (err: any) {
                   Alert.alert("Sync Failed", err.message || "Failed to sync status.");
                 } finally {
@@ -274,6 +276,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
                           await API.subscription.cancel();
                           Alert.alert("Cancelled", "Pending subscription cancelled.");
                           queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                          queryClient.invalidateQueries({ queryKey: ['userProfile'] });
                         } catch (err: any) {
                           Alert.alert("Error", err.message || "Failed to cancel.");
                         } finally {

@@ -35,6 +35,12 @@ function Chat() {
     retry: false,
   });
 
+  const { data: subData } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => API.subscription.get().catch(() => null),
+    retry: false,
+  });
+
   const dbMessages = chatData?.messages || [];
   const [localMessages, setLocalMessages] = useState<any[]>([]);
 
@@ -49,12 +55,15 @@ function Chat() {
   }, [messages, streaming]);
 
   const todayStr = new Date().toLocaleDateString('en-CA');
-  const usedToday = messages.filter((m: any) => 
+  const dailyLimit = subData?.usage?.dailyLimit !== undefined ? subData.usage.dailyLimit : FREE_DAILY_LIMIT;
+  const usedToday = subData?.usage?.messagesUsedToday !== undefined ? subData.usage.messagesUsedToday : (messages.filter((m: any) => 
     m.role === 'user' && 
     new Date(m.timestamp || m.createdAt).toLocaleDateString('en-CA') === todayStr
-  ).length || 0;
-  const remaining = Math.max(0, FREE_DAILY_LIMIT - usedToday);
-  const limitHit = remaining === 0;
+  ).length || 0);
+
+  const isUnlimited = dailyLimit === null;
+  const remaining = isUnlimited ? Infinity : Math.max(0, dailyLimit - usedToday);
+  const limitHit = !isUnlimited && remaining === 0;
 
   const send = async () => {
     const text = input.trim();
@@ -159,7 +168,7 @@ function Chat() {
             </div>
           </div>
           <div className={`rounded-full px-3 py-1 text-xs font-medium ${limitHit ? 'bg-crisis/10 text-crisis' : 'bg-primary-soft text-primary'}`}>
-            {remaining} of {FREE_DAILY_LIMIT} messages remaining
+            {isUnlimited ? 'Unlimited messages' : `${remaining} of ${dailyLimit} messages remaining`}
           </div>
         </div>
 
@@ -228,10 +237,12 @@ function Chat() {
           <div className="mx-4 mb-3 rounded-2xl bg-accent/10 p-4 text-sm">
             <div className="flex items-center gap-2 font-semibold text-accent-foreground">
               <AlertTriangle className="size-4" />
-              You've used today's free messages
+              You've reached your daily message limit
             </div>
             <p className="mt-1 text-muted-foreground">
-              Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day.
+              {dailyLimit <= 7 
+                ? "Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day."
+                : "Come back tomorrow, or upgrade to Apna Therapist for unlimited messages."}
             </p>
           </div>
         )}

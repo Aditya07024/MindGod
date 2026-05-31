@@ -53,7 +53,7 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
     retry: false
   });
 
-  const isSubscribed = subData?.isActive || subData?.status === 'active';
+  const isSubscribed = subData?.subscription?.status === 'active';
   const hasRosterFeature = subData?.config?.enableRosterManagement !== false;
 
   // Query join requests
@@ -147,14 +147,14 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
     }
 
     try {
-      // Direct email whitelist addition
+      await API.org.invite({ email: manualEmail.trim().toLowerCase() });
       Alert.alert(
         'Email Whitelisted',
-        `"${manualEmail.trim().toLowerCase()}" has been manually whitelisted. Matching signups will auto-approve.`,
-        [{ text: 'Ok', onPress: () => setManualEmail('') }]
+        `"${manualEmail.trim().toLowerCase()}" has been manually whitelisted and an invitation was sent.`,
+        [{ text: 'Ok', onPress: () => { setManualEmail(''); refetch(); } }]
       );
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Manual whitelisting failed.');
+      Alert.alert('Error', e?.message || 'Manual whitelisting failed.');
     }
   };
 

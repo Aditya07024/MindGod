@@ -206,7 +206,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             </View>
 
             <TouchableOpacity 
-              onPress={() => Alert.alert('Launching secure LiveKit connection...', `Connecting to video room: ${upcomingBooking.videoRoomId}`)}
+              onPress={() => navigation.navigate('Session', { bookingId: upcomingBooking._id || upcomingBooking.id, role: 'user' })}
               style={styles.joinBtn}
             >
               <Text style={styles.joinText}>Join Session</Text>

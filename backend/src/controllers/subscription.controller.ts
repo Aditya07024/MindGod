@@ -58,12 +58,15 @@ export class SubscriptionController {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const { Conversation } = await import("@/models");
-      const conv = await Conversation.findOne({
+      const userConvs = await Conversation.find({
         userId: req.user!.sub,
-        createdAt: { $gte: today },
+        "messages.timestamp": { $gte: today },
       }).lean();
-      const messagesUsedToday =
-        conv?.messages.filter((m) => m.role === "user").length ?? 0;
+      const messagesUsedToday = userConvs.reduce((sum, conv) => {
+        return sum + (conv.messages?.filter(
+          (m) => m.role === "user" && new Date(m.timestamp) >= today
+        ).length ?? 0);
+      }, 0);
 
       // Fetch plan config if available
       let planConfig: {

@@ -223,16 +223,24 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
               {activeBookings && activeBookings.length > 0 ? (
                 activeBookings.map((booking: any) => (
                   <View key={booking._id || booking.id} style={styles.bookingRow}>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.clientName}>{booking.clientName || 'Seeker'}</Text>
                       <Text style={styles.clientTime}>{new Date(booking.slot).toLocaleString()}</Text>
                     </View>
-                    <TouchableOpacity 
-                      onPress={() => navigation.navigate('TherapistBrief', { bookingId: booking.id, clientId: booking.clientId, clientName: booking.clientName })}
-                      style={styles.briefBtn}
-                    >
-                      <Text style={styles.briefBtnText}>AI Brief</Text>
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      <TouchableOpacity 
+                        onPress={() => navigation.navigate('TherapistBrief', { bookingId: booking.id, clientId: booking.clientId, clientName: booking.clientName })}
+                        style={styles.briefBtn}
+                      >
+                        <Text style={styles.briefBtnText}>AI Brief</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={() => navigation.navigate('Session', { bookingId: booking.id, role: 'therapist' })}
+                        style={[styles.briefBtn, { backgroundColor: Theme.colors.primary }]}
+                      >
+                        <Text style={styles.briefBtnText}>Start Session</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ))
               ) : (

@@ -14,7 +14,7 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
   const [search, setSearch] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
   
-  const specialtyFilters = ['All', 'CBT', 'Anxiety', 'Depression', 'Relationships', 'ADHD', 'Career'];
+  const specialtyFilters = ['All', 'CBT', 'Anxiety', 'Depression', 'Relationships', 'ADHD', 'Career', 'Others'];
 
   // Query backend therapists
   const { data: remoteTherapists, isLoading } = useQuery({

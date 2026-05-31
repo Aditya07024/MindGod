@@ -23,6 +23,7 @@ export const ChatScreen: React.FC = () => {
   const [streaming, setStreaming] = useState(false);
   const [crisis, setCrisis] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [subData, setSubData] = useState<any>(null);
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -31,6 +32,9 @@ export const ChatScreen: React.FC = () => {
     useCallback(() => {
       const loadHistory = async () => {
         try {
+          const subInfo = await API.subscription.get().catch(() => null);
+          setSubData(subInfo);
+
           const history = await API.chat.getMessages();
           if (history && Array.isArray(history.messages) && history.messages.length > 0) {
             const mapped: Message[] = history.messages.map((m: any) => ({
@@ -76,12 +80,15 @@ export const ChatScreen: React.FC = () => {
   );
 
   const todayStr = new Date().toLocaleDateString('en-CA');
-  const usedToday = messages.filter(m => 
+  const dailyLimit = subData?.usage?.dailyLimit !== undefined ? subData.usage.dailyLimit : FREE_DAILY_LIMIT;
+  const usedToday = subData?.usage?.messagesUsedToday !== undefined ? subData.usage.messagesUsedToday : (messages.filter(m => 
     m.role === 'user' && 
     new Date(m.timestamp).toLocaleDateString('en-CA') === todayStr
-  ).length;
-  const remaining = Math.max(0, FREE_DAILY_LIMIT - usedToday);
-  const limitHit = remaining === 0;
+  ).length || 0);
+
+  const isUnlimited = dailyLimit === null;
+  const remaining = isUnlimited ? Infinity : Math.max(0, dailyLimit - usedToday);
+  const limitHit = !isUnlimited && remaining === 0;
 
   const handleSend = async () => {
     const text = input.trim();
@@ -118,6 +125,9 @@ export const ChatScreen: React.FC = () => {
     try {
       // Fetch response using API module
       const res = await API.chat.sendMessage({ message: text });
+      
+      // Update subscription info
+      API.subscription.get().then(setSubData).catch(() => null);
       
       let replyText = res?.reply || "I am here with you. Can you tell me more about that?";
       
@@ -196,7 +206,7 @@ export const ChatScreen: React.FC = () => {
             styles.limitText,
             limitHit ? styles.limitTextHit : styles.limitTextNormal
           ]}>
-            {remaining} left
+            {isUnlimited ? 'Unlimited' : `${remaining} left`}
           </Text>
         </View>
       </View>
@@ -255,7 +265,9 @@ export const ChatScreen: React.FC = () => {
             <Text style={styles.warningTitle}>Daily limit reached</Text>
           </View>
           <Text style={styles.warningDesc}>
-            Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day.
+            {dailyLimit <= 7
+              ? 'Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day.'
+              : 'Come back tomorrow, or upgrade to Apna Therapist for unlimited messages.'}
           </Text>
         </View>
       )}

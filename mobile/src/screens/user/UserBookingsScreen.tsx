@@ -60,14 +60,7 @@ export const UserBookingsScreen: React.FC = () => {
   };
 
   const handleLaunchVideo = (booking: Booking) => {
-    Alert.alert(
-      'Enter Video Room',
-      `Connecting to LiveKit secure stream with ${booking.therapistId.name}…`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Start Call', onPress: () => console.log('Connecting to LiveKit wss…') }
-      ]
-    );
+    navigation.navigate('Session', { bookingId: booking._id || booking.id, role: 'user' });
   };
 
   const upcomingBookings = bookings.filter(b => b.status !== 'cancelled');

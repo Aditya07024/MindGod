@@ -101,7 +101,7 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
     retry: false
   });
 
-  const isSubscribed = subData?.isActive || subData?.status === 'active';
+  const isSubscribed = subData?.subscription?.status === 'active';
 
   const handleSendInvite = async () => {
     if (!email.trim() || !email.includes('@')) {

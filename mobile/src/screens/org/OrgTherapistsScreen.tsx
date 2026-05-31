@@ -42,7 +42,7 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
     retry: false
   });
 
-  const isSubscribed = subData?.isActive || subData?.status === 'active';
+  const isSubscribed = subData?.subscription?.status === 'active';
   const hasAffiliationFeature = subData?.config?.enableTherapistAffiliation !== false;
 
   // Queries
@@ -83,6 +83,12 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
     }
   });
 
+  useEffect(() => {
+    if (activeTab === 'invite') {
+      handleSearchExternal();
+    }
+  }, [activeTab, invitationsData]);
+
   const handleVerifyTherapist = async (id: string, verified: boolean) => {
     setActionLoading(id);
     try {
@@ -99,12 +105,24 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
     }
   };
 
-  const handleSearchExternal = async () => {
-    if (!extSearch.trim()) return;
+  const handleSearchExternal = async (queryText = extSearch) => {
     setIsSearching(true);
     try {
-      const res = await API.therapist.list({ search: extSearch });
-      setExtTherapists(res.therapists || []);
+      const res = await API.therapist.list({ 
+        search: queryText.trim() || undefined,
+        openToCollaboration: true 
+      });
+      
+      const invitedIds = (invitationsData?.invitations || []).map((inv: any) => 
+        typeof inv.therapistId === 'object' ? inv.therapistId?._id || inv.therapistId?.id : inv.therapistId
+      );
+      
+      const mapped = (res.therapists || []).map((t: any) => ({
+        ...t,
+        alreadyInvited: invitedIds.includes(t.id || t._id)
+      }));
+      
+      setExtTherapists(mapped);
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Search failed');
     } finally {
