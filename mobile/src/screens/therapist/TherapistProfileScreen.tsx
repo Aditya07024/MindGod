@@ -72,8 +72,8 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
       return;
     }
     const feeNum = Number(sessionFee);
-    if (isNaN(feeNum) || feeNum < 500 || feeNum > 5000) {
-      Alert.alert('Invalid Fee', 'Session Fee must be a number between ₹500 and ₹5000.');
+    if (isNaN(feeNum) || feeNum < 0) {
+      Alert.alert('Invalid Fee', 'Session Fee must be a valid number.');
       return;
     }
 

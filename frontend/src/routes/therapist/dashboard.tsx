@@ -800,20 +800,19 @@ function TherapistDashboard() {
                   <input type="tel" value={profileForm.phone} onChange={e => setProfileForm(p => ({...p, phone: e.target.value}))} placeholder="+919999999999" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-600 mb-2">Session Fee (₹) <span className="font-normal text-slate-400 text-xs ml-2">(Limits: 500 - 5000)</span></label>
-                <input type="number" min={500} max={5000} value={profileForm.fee} onChange={e => {
+              {/* <div>
+                <label className="block text-sm font-bold text-slate-600 mb-2">Session Fee (₹)</label>
+                <input type="number" min={0} value={profileForm.fee} onChange={e => {
                   let val = Number(e.target.value);
                   setProfileForm(p => ({...p, fee: val}));
                 }} 
                 onBlur={e => {
                   let val = Number(e.target.value);
-                  if (val < 500) val = 500;
-                  if (val > 5000) val = 5000;
+                  if (val < 0) val = 0;
                   setProfileForm(p => ({...p, fee: val}));
                 }}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
-              </div>
+              </div> */}
               <div>
                 <label className="block text-sm font-bold text-slate-600 mb-2">Specialisations (comma separated)</label>
                 <input value={profileForm.specializations} onChange={e => setProfileForm(p => ({...p, specializations: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition" />
@@ -897,8 +896,8 @@ function TherapistDashboard() {
                   </div>
                 </div>
               )}
-              {hasActiveSub ? (
-                <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-[2.5rem] p-10 text-white shadow-xl relative overflow-hidden">
+              {hasActiveSub && (
+                <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-[2.5rem] p-10 text-white shadow-xl relative overflow-hidden mb-8">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
                     <Shield className="size-40" />
                   </div>
@@ -917,12 +916,21 @@ function TherapistDashboard() {
                     </div>
                   </div>
                 </div>
-              ) : (
+              )}
+
+              <div className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800">Available Plans</h3>
                 <div className="grid md:grid-cols-3 gap-6">
                   {plans.map((plan: any) => {
+                    const isCurrent = subscriptionData?.subscription?.plan === plan.name && hasActiveSub;
                     const isUpgrading = upgrading === plan._id && upgradeMutation.isPending;
                     return (
-                      <div key={plan._id} className="bg-white rounded-3xl border-2 border-slate-200 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                      <div key={plan._id} className={`bg-white rounded-3xl border-2 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md ${isCurrent ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-slate-200'}`}>
+                        {isCurrent && (
+                          <div className="bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full self-start mb-4">
+                            Active
+                          </div>
+                        )}
                         <h3 className="font-display text-2xl font-bold text-slate-900">{plan.name}</h3>
                         <div className="mt-3 text-4xl font-bold text-teal-700">₹{plan.price}<span className="text-sm font-bold text-slate-400">/{plan.durationMonths && plan.durationMonths > 1 ? ` ${plan.durationMonths} mo` : "mo"}</span></div>
                         <ul className="mt-8 mb-10 space-y-4 flex-1 text-sm font-medium text-slate-600">
@@ -930,21 +938,27 @@ function TherapistDashboard() {
                               <li key={i} className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> {f}</li>
                           ))}
                         </ul>
-                        <Button 
-                          onClick={() => {
-                            setUpgrading(plan._id);
-                            upgradeMutation.mutate(plan._id);
-                          }}
-                          disabled={isUpgrading}
-                          variant="outline" 
-                          className="w-full rounded-xl h-12 font-bold border-slate-200 text-slate-700 hover:bg-slate-50">
-                          {isUpgrading ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</> : 'Upgrade'}
-                        </Button>
+                        {isCurrent ? (
+                          <Button disabled className="w-full rounded-xl h-12 font-bold bg-slate-100 text-slate-400">
+                            ✓ Current Plan
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={() => {
+                              setUpgrading(plan._id);
+                              upgradeMutation.mutate(plan._id);
+                            }}
+                            disabled={isUpgrading}
+                            variant="outline" 
+                            className="w-full rounded-xl h-12 font-bold border-slate-200 text-slate-700 hover:bg-slate-50">
+                            {isUpgrading ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</> : 'Upgrade'}
+                          </Button>
+                        )}
                       </div>
                     );
                   })}
                 </div>
-              )}
+              </div>
             </>
           </motion.div>
         )}

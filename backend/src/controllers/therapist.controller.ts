@@ -443,8 +443,7 @@ export class TherapistController {
       if (bio !== undefined) profile.bio = bio;
       if (fee !== undefined) {
         let f = Number(fee);
-        if (f < 500) f = 500;
-        if (f > 5000) f = 5000;
+        if (f < 0) f = 0;
         profile.sessionFee = f;
       }
       if (specializations !== undefined) {
