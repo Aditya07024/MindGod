@@ -703,9 +703,16 @@ function SuperAdminDashboard() {
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Validity (Months)</label>
-                    <input type="number" min={1} value={planForm.durationMonths} onChange={e => setPlanForm({...planForm, durationMonths: Number(e.target.value) || 1})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none" />
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Validity</label>
+                    <select value={planForm.durationMonths} onChange={e => setPlanForm({...planForm, durationMonths: Number(e.target.value)})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none">
+                      <option value={1}>1 Month</option>
+                      <option value={2}>2 Months</option>
+                      <option value={3}>3 Months</option>
+                      <option value={6}>6 Months</option>
+                      <option value={12}>12 Months</option>
+                      <option value={24}>24 Months</option>
+                    </select>
                   </div>
                 </div>
 
