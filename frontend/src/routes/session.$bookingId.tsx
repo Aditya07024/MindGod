@@ -21,7 +21,7 @@ import {
   Clock, MessageCircle, X, Send, LogOut,
   AlertCircle, Brain, Star, FileText, Save,
 } from "lucide-react";
-import { useStore } from "@/lib/store";
+
 
 export const Route = createFileRoute("/session/$bookingId")({
   component: VideoSession,
@@ -830,10 +830,32 @@ function RoomUI({
 function VideoSession() {
   const { bookingId } = useParams({ from: "/session/$bookingId" });
   const navigate = useNavigate();
-  const { user } = useStore();
-  const userRole = (user as any)?.role ?? "user";
+
+  // Query to resolve the current user's profile and role correctly
+  const { data: me } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => API.auth.me(),
+  });
+  const userRole = me?.role ?? "user";
 
   const [showBrief, setShowBrief] = useState(false);
+
+  // Explicitly prompt the browser for camera/microphone permissions on mount.
+  // This ensures that the therapist is also prompted for permissions by the browser.
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true, video: true })
+        .then((stream) => {
+          // Immediately stop all tracks to release the device for LiveKit to use
+          stream.getTracks().forEach((track) => track.stop());
+        })
+        .catch((err) => {
+          console.warn("Pre-session permission check/request failed:", err);
+          toast.error("Please allow microphone and camera access to participate in the meeting.");
+        });
+    }
+  }, []);
 
   const { data: booking, isLoading: bookingLoading, error: bookingError } = useQuery({
     queryKey: ["booking", bookingId],
@@ -855,6 +877,32 @@ function VideoSession() {
 
   const isLoading = bookingLoading || tokenLoading;
   const error = bookingError || tokenError;
+
+  // Optimized LiveKit RoomOptions for high quality and bandwidth management
+  const roomOptions = {
+    adaptiveStream: true,
+    dynacast: true,
+    videoPublishDefaults: {
+      simulcast: true,
+      videoCodec: 'vp8' as const,
+      videoEncoding: {
+        maxBitrate: 2_500_000, // HD quality up to 2.5 Mbps
+        maxFramerate: 30,
+      },
+    },
+    audioPublishDefaults: {
+      audioPreset: {
+        maxBitrate: 96_000, // High quality audio
+      },
+    },
+    screenSharePublishDefaults: {
+      videoCodec: 'vp8' as const,
+      videoEncoding: {
+        maxBitrate: 3_000_000,
+        maxFramerate: 15,
+      },
+    },
+  };
 
   if (isLoading) {
     return (
@@ -886,8 +934,6 @@ function VideoSession() {
     );
   }
 
-
-
   return (
     <LiveKitRoom
       token={tokenData.token}
@@ -895,6 +941,7 @@ function VideoSession() {
       connect={true}
       video={true}
       audio={true}
+      options={roomOptions}
       style={{ height: "100vh" }}
       data-lk-theme="default"
     >

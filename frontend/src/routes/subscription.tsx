@@ -8,6 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { openSubscriptionCheckout } from "@/lib/razorpay";
 
 export const Route = createFileRoute("/subscription")({
   component: SubscriptionPage,
@@ -115,13 +116,34 @@ function SubscriptionPage() {
   const upgradeMutation = useMutation({
     mutationFn: (tier: string) =>
       API.subscription.upgrade({ tier: tier as any }),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["subscription"] });
+    onSuccess: async (data, variables) => {
       setUpgrading(null);
-      if (data.shortUrl) {
+      if (data.subscriptionId) {
+        try {
+          const planName = allTiers.find((t: any) => t.id === variables)?.name || "Premium Plan";
+          await openSubscriptionCheckout({
+            subscriptionId: data.subscriptionId,
+            planName,
+            userEmail: user?.therapistProfile?.email || user?.email || "",
+            onSuccess: () => {
+              qc.invalidateQueries({ queryKey: ["subscription"] });
+              qc.invalidateQueries({ queryKey: ["me"] });
+              toast.success("Subscription activated successfully!");
+              navigate({ to: "/dashboard" });
+            },
+            onCancel: () => {
+              qc.invalidateQueries({ queryKey: ["subscription"] });
+              toast.info("Payment cancelled");
+            }
+          });
+        } catch (err: any) {
+          toast.error(err.message || "Failed to launch Razorpay checkout");
+        }
+      } else if (data.shortUrl) {
         window.open(data.shortUrl, "_blank");
         toast.success("Redirecting to payment…");
       } else {
+        qc.invalidateQueries({ queryKey: ["subscription"] });
         toast.success("Subscription activated!");
       }
     },

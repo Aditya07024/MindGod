@@ -9,7 +9,7 @@ const PROMPTS = [
 ];
 
 export class JournalService {
-  static getWeeklyLimit(tier: "free" | "mann_shanti" | "apna_therapist") {
+  static getWeeklyLimit(tier: string) {
     return tier === "free" ? 3 : Number.POSITIVE_INFINITY;
   }
 

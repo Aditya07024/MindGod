@@ -7,10 +7,17 @@ import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';
 
-interface BookingScreenProps {
-  navigation: any;
-  route: any;
-}
+const formatSlotDisplay = (slot: string) => {
+  if (!slot) return '';
+  if (slot.includes('AM') || slot.includes('PM')) {
+    return slot;
+  }
+  const [hourStr, minStr] = slot.split(':');
+  const hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${String(displayHour).padStart(2, '0')}:${minStr} ${ampm}`;
+};
 
 export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route }) => {
   const therapist: TherapistData = route.params?.therapist;
@@ -48,7 +55,10 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
     retry: false,
   });
 
-  const slots = remoteSlots?.slots || ['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'];
+  const defaultFallbackSlots = [
+    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+  ];
+  const slots = remoteSlots?.slots || defaultFallbackSlots;
 
   const handleBooking = async () => {
     if (!selectedSlot) {
@@ -182,7 +192,7 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
                     active && styles.slotBtnActive
                   ]}
                 >
-                  <Text style={[styles.slotText, active && styles.textWhite]}>{s}</Text>
+                  <Text style={[styles.slotText, active && styles.textWhite]}>{formatSlotDisplay(s)}</Text>
                 </TouchableOpacity>
               );
             })}

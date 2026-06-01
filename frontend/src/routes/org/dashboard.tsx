@@ -12,6 +12,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import { toast } from 'sonner';
+import { openSubscriptionCheckout } from "@/lib/razorpay";
 
 export const Route = createFileRoute('/org/dashboard')({ component: OrgDashboard });
 
@@ -254,13 +255,32 @@ function OrgDashboard() {
 
   const upgradeMutation = useMutation({
     mutationFn: (tier: string) => API.subscription.upgrade({ tier: tier as any }),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['subscription'] });
+    onSuccess: async (data, variables) => {
       setUpgrading(null);
-      if (data.shortUrl) {
+      if (data.subscriptionId) {
+        try {
+          const planName = orgPlans?.plans?.find((p: any) => p._id === variables)?.name || "Premium Plan";
+          await openSubscriptionCheckout({
+            subscriptionId: data.subscriptionId,
+            planName,
+            userEmail: orgData?.officialEmail || "",
+            onSuccess: () => {
+              qc.invalidateQueries({ queryKey: ['subscription'] });
+              toast.success("Subscription activated successfully!");
+            },
+            onCancel: () => {
+              qc.invalidateQueries({ queryKey: ['subscription'] });
+              toast.info("Payment cancelled");
+            }
+          });
+        } catch (err: any) {
+          toast.error(err.message || "Failed to launch Razorpay checkout");
+        }
+      } else if (data.shortUrl) {
         window.open(data.shortUrl, '_blank');
         toast.success('Redirecting to payment…');
       } else {
+        qc.invalidateQueries({ queryKey: ['subscription'] });
         toast.success('Subscription activated!');
       }
     },

@@ -7,9 +7,38 @@ import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 
-interface TherapistScheduleScreenProps {
-  navigation: any;
-}
+const ALL_24H_SLOTS = [
+  '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
+];
+
+const convertTo24Hour = (slotStr: string) => {
+  if (!slotStr) return '';
+  if (!slotStr.includes('AM') && !slotStr.includes('PM')) {
+    return slotStr;
+  }
+  const [time, modifier] = slotStr.split(' ');
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+  if (modifier === 'PM') {
+    hours = String(parseInt(hours, 10) + 12);
+  }
+  return `${hours.padStart(2, '0')}:${minutes}`;
+};
+
+const formatSlotDisplay = (slot: string) => {
+  if (!slot) return '';
+  if (slot.includes('AM') || slot.includes('PM')) {
+    return slot;
+  }
+  const [hourStr, minStr] = slot.split(':');
+  const hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${String(displayHour).padStart(2, '0')}:${minStr} ${ampm}`;
+};
 
 export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = ({ navigation }) => {
   const [activationLoading, setActivationLoading] = useState(false);
@@ -52,7 +81,7 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
       const todayNum = new Date().getDay();
       const todayConfig = userProfile.therapistProfile.availability.find((a: any) => a.day === todayNum);
       if (todayConfig?.slots) {
-        setAvailability(todayConfig.slots);
+        setAvailability(todayConfig.slots.map(convertTo24Hour));
       }
     }
   }, [userProfile]);
@@ -64,11 +93,11 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
       if (availability.includes(slot)) {
         updatedSlots = availability.filter(s => s !== slot);
         setAvailability(updatedSlots);
-        Alert.alert('Slot Removed', `Removed ${slot} from availability.`);
+        Alert.alert('Slot Removed', `Removed ${formatSlotDisplay(slot)} from availability.`);
       } else {
         updatedSlots = [...availability, slot];
         setAvailability(updatedSlots);
-        Alert.alert('Slot Added', `Added ${slot} to availability.`);
+        Alert.alert('Slot Added', `Added ${formatSlotDisplay(slot)} to availability.`);
       }
       await API.therapist.updateAvailability({
         availability: [{ day: new Date().getDay(), slots: updatedSlots }]
@@ -199,7 +228,7 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
               </View>
               <Text style={styles.cardDesc}>Tap slots to open/close them for seeker booking:</Text>
               <View style={styles.slotsGrid}>
-                {['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'].map((slot) => {
+                {ALL_24H_SLOTS.map((slot) => {
                   const isSelected = availability.includes(slot);
                   return (
                     <TouchableOpacity
@@ -207,7 +236,7 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
                       onPress={() => handleToggleSlot(slot)}
                       style={[styles.slotPill, isSelected && styles.slotPillActive]}
                     >
-                      <Text style={[styles.slotText, isSelected && styles.textWhite]}>{slot}</Text>
+                      <Text style={[styles.slotText, isSelected && styles.textWhite]}>{formatSlotDisplay(slot)}</Text>
                     </TouchableOpacity>
                   );
                 })}

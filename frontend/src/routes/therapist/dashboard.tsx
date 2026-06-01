@@ -7,12 +7,24 @@ import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton, useClerk } from '@clerk/clerk-react';
 import { toast } from 'sonner';
+import { openSubscriptionCheckout } from "@/lib/razorpay";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export const Route = createFileRoute('/therapist/dashboard')({ component: TherapistDashboard });
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const DEFAULT_SLOTS = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+const DEFAULT_SLOTS = [
+  '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
+];
+
+const formatSlotDisplay = (slot: string) => {
+  const [hourStr, minStr] = slot.split(':');
+  const hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minStr} ${ampm}`;
+};
 
 function riskBadge(level: string) {
   const map: Record<string, string> = {
@@ -80,13 +92,33 @@ function TherapistDashboard() {
   const upgradeMutation = useMutation({
     mutationFn: (planId: string) =>
       API.subscription.upgrade({ tier: planId as "mann_shanti" | "apna_therapist" }),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+    onSuccess: async (data, variables) => {
       setUpgrading(null);
-      if (data.shortUrl) {
+      if (data.subscriptionId) {
+        try {
+          const planName = plans.find((p: any) => p._id === variables)?.name || "Premium Plan";
+          await openSubscriptionCheckout({
+            subscriptionId: data.subscriptionId,
+            planName,
+            userEmail: meData?.therapistProfile?.email || meData?.email || "",
+            onSuccess: () => {
+              qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+              qc.invalidateQueries({ queryKey: ["auth-me"] });
+              toast.success("Subscription activated successfully!");
+            },
+            onCancel: () => {
+              qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+              toast.info("Payment cancelled");
+            }
+          });
+        } catch (err: any) {
+          toast.error(err.message || "Failed to launch Razorpay checkout");
+        }
+      } else if (data.shortUrl) {
         window.open(data.shortUrl, "_blank");
         toast.success("Redirecting to payment…");
       } else {
+        qc.invalidateQueries({ queryKey: ["therapist-stats"] });
         toast.success("Subscription activated!");
       }
     },
@@ -566,16 +598,17 @@ function TherapistDashboard() {
             </h2>
             <p className="text-sm font-medium text-slate-500">Click a slot to toggle availability. Green slots are open for booking.</p>
             
-            <div className="bg-white rounded-3xl border border-slate-200 overflow-x-auto p-6 shadow-sm hover:shadow-md transition">
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-x-auto max-h-[600px] overflow-y-auto p-6 shadow-sm hover:shadow-md transition">
               <div className="min-w-[600px] grid grid-cols-8 gap-3">
-                <div className="space-y-3 pt-10">
+                <div className="space-y-3">
+                  <div className="sticky top-0 bg-white pb-3 border-b border-slate-100 mb-3 h-[32px] z-10" />
                   {DEFAULT_SLOTS.map(s => (
-                    <div key={s} className="h-11 flex items-center justify-end pr-3 text-xs font-bold text-slate-400 uppercase tracking-wide">{s}</div>
+                    <div key={s} className="h-11 flex items-center justify-end pr-3 text-xs font-bold text-slate-400 uppercase tracking-wide">{formatSlotDisplay(s)}</div>
                   ))}
                 </div>
                 {DAYS.map((day, i) => (
                   <div key={i} className="space-y-3">
-                    <div className="text-center font-display font-bold text-sm text-slate-700 pb-3 border-b border-slate-100 mb-3">{day}</div>
+                    <div className="sticky top-0 bg-white text-center font-display font-bold text-sm text-slate-700 pb-3 border-b border-slate-100 mb-3 z-10">{day}</div>
                     {DEFAULT_SLOTS.map((slot) => {
                       const active = availability.find((d) => d.day === i)?.slots.includes(slot);
                       return (

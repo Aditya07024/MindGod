@@ -14,6 +14,15 @@ export const Route = createFileRoute("/booking/$therapistId")({
   component: BookingFlow,
 });
 
+const formatTime = (time24: string) => {
+  if (!time24) return "";
+  const [h, m] = time24.split(":");
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${ampm}`;
+};
+
 function BookingFlow() {
   const { therapistId } = useParams({ from: "/booking/$therapistId" });
   const navigate = useNavigate();
@@ -251,7 +260,7 @@ function BookingFlow() {
                                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                             }`}
                           >
-                            {slot}
+                            {formatTime(slot)}
                           </button>
                         ))}
                       </div>
@@ -287,7 +296,7 @@ function BookingFlow() {
                 <h2 className="text-lg font-bold text-green-900 mb-4">✓ Booking Created</h2>
                 <div className="space-y-3 text-slate-700">
                   <p>
-                    <strong>Date & Time:</strong> {selectedDate} at {selectedSlot}
+                    <strong>Date & Time:</strong> {selectedDate} at {formatTime(selectedSlot)}
                   </p>
                   <p>
                     <strong>Session Fee:</strong> ₹{therapist.sessionFee}

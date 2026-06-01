@@ -1,6 +1,6 @@
 import mongoose, { Schema, type Document, type Types } from "mongoose";
 
-export type UserTier = "free" | "mann_shanti" | "apna_therapist";
+export type UserTier = "free" | "mann_shanti" | "apna_therapist" | string;
 export type UserRole = "user" | "therapist" | "org_admin" | "super_admin";
 
 export interface IOnboardingState {
@@ -96,7 +96,6 @@ const UserSchema = new Schema<IUser>(
     },
     tier: {
       type: String,
-      enum: ["free", "mann_shanti", "apna_therapist"],
       default: "free"
     },
     language: { type: String, default: "en-IN" },
