@@ -5,6 +5,7 @@ import { TherapistBooking, User } from "@/models";
 import { AppError } from "@/lib/app-error";
 import PaymentService from "@/services/payment.service";
 import mongoose from "mongoose";
+import { sendPaymentConfirmedToTherapist } from "@/services/email.service";
 
 export class PaymentController {
   /**
@@ -106,8 +107,24 @@ export class PaymentController {
       booking.status = "confirmed";
       await booking.save();
 
-      // TODO: Send SMS confirmation to user
-      // TODO: Send notification to therapist
+      // Send payment-confirmed email to therapist
+      try {
+        const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
+        const seeker = await User.findById(booking.userId).select("fullName").lean();
+        const therapistEmail = therapist?.therapistProfile?.email;
+        if (therapistEmail) {
+          sendPaymentConfirmedToTherapist({
+            therapistEmail,
+            therapistName: therapist?.therapistProfile?.name || "Therapist",
+            seekerName: seeker?.fullName || "Client",
+            slot: booking.slot,
+            fee: booking.payment.amount,
+            bookingId: booking._id.toString(),
+          }).catch(err => console.error("[Email] Payment confirmed email failed:", err));
+        }
+      } catch (err) {
+        console.error("[Email] Could not send payment confirmed email:", err);
+      }
 
       res.json({
         message: "Payment verified and booking confirmed",
@@ -140,6 +157,25 @@ export class PaymentController {
       booking.payment.paid = true;
       booking.status = "confirmed";
       await booking.save();
+
+      // Send payment-confirmed email to therapist (demo mode)
+      try {
+        const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
+        const seeker = await User.findById(booking.userId).select("fullName").lean();
+        const therapistEmail = therapist?.therapistProfile?.email;
+        if (therapistEmail) {
+          sendPaymentConfirmedToTherapist({
+            therapistEmail,
+            therapistName: therapist?.therapistProfile?.name || "Therapist",
+            seekerName: seeker?.fullName || "Client",
+            slot: booking.slot,
+            fee: booking.payment.amount,
+            bookingId: booking._id.toString(),
+          }).catch(err => console.error("[Email] Demo payment confirmed email failed:", err));
+        }
+      } catch (err) {
+        console.error("[Email] Could not send demo payment email:", err);
+      }
 
       res.json({
         message: "Demo Payment verified",

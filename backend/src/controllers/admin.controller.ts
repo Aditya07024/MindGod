@@ -346,5 +346,60 @@ export class AdminController {
       message: allow ? "External therapists allowed" : "External therapists disallowed",
     });
   });
+
+  /** GET /admin/platform-counts — total user/therapist/org counts for admin dashboard */
+  static platformCounts = asyncHandler(async (_req: AuthedRequest, res: Response) => {
+    const [userCount, therapistCount, orgCount] = await Promise.all([
+      User.countDocuments({ role: "user", deletedAt: null }),
+      User.countDocuments({ role: "therapist", deletedAt: null }),
+      Organization.countDocuments({ deletedAt: null }),
+    ]);
+
+    res.json({ userCount, therapistCount, orgCount });
+  });
+
+  /** PATCH /admin/therapist/:id/mark-paid — Mark a therapist's pending bookings as paid out */
+  static markTherapistPaid = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { password } = req.body as { password?: string };
+
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    const result = await TherapistBooking.updateMany(
+      {
+        therapistId: id,
+        $or: [
+          { status: "completed" },
+          { status: "confirmed", "payment.paid": true },
+        ],
+        payoutStatus: { $ne: "paid" }
+      },
+      { $set: { payoutStatus: "paid" } }
+    );
+
+    // Notify the therapist
+    try {
+      const therapist = await User.findById(id).select("therapistProfile").lean();
+      if (therapist) {
+        await NotificationController.createNotification(
+          id,
+          "Payout Processed ✅",
+          `Your earnings have been transferred to your registered bank/UPI. Please check your account.`,
+          "approval",
+          { payoutProcessed: true }
+        );
+      }
+    } catch (err) {
+      console.error("[Payout] Failed sending payout notification:", err);
+    }
+
+    res.json({
+      success: true,
+      modifiedCount: result.modifiedCount,
+      message: `Payout marked for ${result.modifiedCount} bookings`,
+    });
+  });
 }
 

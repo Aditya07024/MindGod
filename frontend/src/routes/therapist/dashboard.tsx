@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton, useClerk } from '@clerk/clerk-react';
@@ -792,17 +792,34 @@ function TherapistDashboard() {
                     <tr><th className="px-6 py-4">Date</th><th className="px-6 py-4">Session ID</th><th className="px-6 py-4">Gross Amount</th><th className="px-6 py-4">Commission (30%)</th><th className="px-6 py-4">Net Payout</th><th className="px-6 py-4">Status</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {bookings.slice(0, 10).map((b) => (
-                      <tr key={b.id} className="hover:bg-slate-50/50 transition">
-                        <td className="px-6 py-4 text-slate-500 font-medium">{new Date(b.slot).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 text-slate-900 font-bold">#{b.id.slice(-5)}</td>
-                        <td className="px-6 py-4 font-medium">₹{b.fee}</td>
-                        <td className="px-6 py-4 text-red-500 font-medium">-₹{b.fee * 0.30}</td>
-                        <td className="px-6 py-4 font-bold text-teal-700">₹{b.fee * 0.70}</td>
-                        <td className="px-6 py-4"><span className="bg-teal-50 border border-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide">PROCESSED</span></td>
-                      </tr>
-                    ))}
-                    {bookings.length === 0 && <tr><td colSpan={6} className="px-6 py-10 text-center font-medium text-slate-500">No recent transactions.</td></tr>}
+                    {bookings
+                      .filter((b) => b.status === 'completed' || (b.status === 'confirmed' && b.paid))
+                      .slice(0, 20)
+                      .map((b) => {
+                        const gross = b.fee ?? 0;
+                        const commission = Math.round(gross * 0.30);
+                        const net = gross - commission;
+                        return (
+                          <tr key={b.id} className="hover:bg-slate-50/50 transition">
+                            <td className="px-6 py-4 text-slate-500 font-medium">{new Date(b.slot).toLocaleDateString('en-IN')}</td>
+                            <td className="px-6 py-4 text-slate-900 font-bold">#{b.id.slice(-5)}</td>
+                            <td className="px-6 py-4 font-medium">₹{gross.toLocaleString('en-IN')}</td>
+                            <td className="px-6 py-4 text-red-500 font-medium">-₹{commission.toLocaleString('en-IN')}</td>
+                            <td className="px-6 py-4 font-bold text-teal-700">₹{net.toLocaleString('en-IN')}</td>
+                            <td className="px-6 py-4">
+                              {b.status === 'completed' ? (
+                                <span className="bg-teal-50 border border-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide">SETTLED</span>
+                              ) : (
+                                <span className="bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide">PAID</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    }
+                    {bookings.filter((b) => b.status === 'completed' || (b.status === 'confirmed' && b.paid)).length === 0 && (
+                      <tr><td colSpan={6} className="px-6 py-10 text-center font-medium text-slate-500">No completed transactions yet. Sessions will appear here once they are marked as completed or paid.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1135,14 +1152,14 @@ function TherapistDashboard() {
 
             {sharedReportsLoading ? (
               <div className="h-32 rounded-3xl bg-slate-100 animate-pulse border border-slate-200" />
-            ) : sharedReports.length === 0 ? (
+            ) : (sharedReportsData?.reports ?? []).length === 0 ? (
               <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-500 shadow-sm">
                 <FileText className="size-12 mx-auto mb-4 text-slate-200" />
                 <p className="font-medium">No shared wellness reports yet.</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
-                {sharedReports.map((r: any) => (
+                {(sharedReportsData?.reports ?? []).map((r: any) => (
                   <div key={r.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
                     <div className="flex justify-between items-start mb-4">
                       <div>

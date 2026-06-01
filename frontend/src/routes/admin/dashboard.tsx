@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Users, BarChart2, CheckCircle, XCircle, Search,
-  TrendingUp, LogOut, AlertTriangle, Star, Eye, EyeOff, Building2
+  TrendingUp, LogOut, AlertTriangle, Star, Eye, EyeOff, Building2,
+  DollarSign, CreditCard, ArrowUpRight, BadgeCheck, Banknote
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton } from '@clerk/clerk-react';
 import { toast } from 'sonner';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
@@ -18,7 +20,7 @@ export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdmin
 function SuperAdminDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'flags'>('overview');
+  const [tab, setTab] = useState<'overview' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings'>('overview');
   const [search, setSearch] = useState('');
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
   const [verifyModal, setVerifyModal] = useState<{ open: boolean; id: string; name: string; verify: boolean, type: 'therapist' | 'org' } | null>(null);
@@ -75,6 +77,11 @@ function SuperAdminDashboard() {
     enabled: tab === 'plans',
   });
 
+  const { data: countsData } = useQuery({
+    queryKey: ['admin-platform-counts'],
+    queryFn: () => API.admin.platformCounts(),
+  });
+
   const verifyMutation = useMutation({
     mutationFn: ({ id, verified, password, type }: { id: string; verified: boolean; password?: string, type: 'therapist' | 'org' }) => {
       return type === 'therapist' 
@@ -120,6 +127,17 @@ function SuperAdminDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const markPaidMutation = useMutation({
+    mutationFn: ({ therapistId, password }: { therapistId: string; password: string }) =>
+      API.admin.markTherapistPaid(therapistId, { password }),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Payout marked successfully ✓');
+      setAdminPassword('');
+      qc.invalidateQueries({ queryKey: ['admin-therapists'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const therapists: any[] = therapistsData?.therapists ?? [];
   const filteredTherapists = therapists.filter((t) =>
     t.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -139,9 +157,20 @@ function SuperAdminDashboard() {
     verified: therapists.filter((t) => t.verified).length,
     pending: therapists.filter((t) => !t.verified).length + orgs.filter((o) => o.verificationStatus !== 'verified').length,
     paidSubs: subscriptions.filter((s) => s.status === 'active').length,
+    totalUsers: countsData?.userCount ?? 0,
+    totalOrgs: countsData?.orgCount ?? orgs.length,
   };
 
-
+  // Build chart data from all therapists (only those with earnings)
+  const earningsChartData = therapists
+    .filter(t => (t.grossEarnings ?? 0) > 0)
+    .sort((a, b) => (b.grossEarnings ?? 0) - (a.grossEarnings ?? 0))
+    .slice(0, 10)
+    .map(t => ({
+      name: (t.name ?? 'Unknown').split(' ')[0],
+      Gross: t.grossEarnings ?? 0,
+      'Net (70%)': t.totalPayout ?? 0,
+    }));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -169,7 +198,7 @@ function SuperAdminDashboard() {
       {/* Tab Nav */}
       <div className="bg-slate-900 border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 flex gap-1">
-          {(['overview', 'therapists', 'organizations', 'subscriptions', 'plans', 'flags'] as const).map((t) => (
+          {(['overview', 'therapists', 'organizations', 'subscriptions', 'plans', 'earnings'] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-3 text-sm font-semibold capitalize transition border-b-2 ${
                 tab === t ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -188,9 +217,9 @@ function SuperAdminDashboard() {
             <h2 className="text-lg font-bold text-white">Platform Analytics</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Therapists', value: platformStats.totalTherapists, icon: Users, color: 'bg-blue-600' },
-                { label: 'RCI Verified', value: platformStats.verified, icon: CheckCircle, color: 'bg-green-600' },
-                { label: 'Pending Review', value: platformStats.pending, icon: AlertTriangle, color: 'bg-amber-600' },
+                { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
+                { label: 'Total Therapists', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
+                { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600' },
                 { label: 'Active Subscriptions', value: platformStats.paidSubs, icon: TrendingUp, color: 'bg-violet-600' },
               ].map((s, i) => (
                 <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -202,6 +231,20 @@ function SuperAdminDashboard() {
                   <p className="text-3xl font-black text-white">{s.value}</p>
                   <p className="text-xs text-slate-400 mt-1">{s.label}</p>
                 </motion.div>
+              ))}
+            </div>
+
+            {/* Secondary stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                { label: 'RCI Verified Therapists', value: platformStats.verified, color: 'text-green-400' },
+                { label: 'Pending Review', value: platformStats.pending, color: 'text-amber-400' },
+                { label: 'Total Gross Revenue', value: `₹${therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`, color: 'text-violet-400' },
+              ].map((s) => (
+                <div key={s.label} className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+                  <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                </div>
               ))}
             </div>
 
@@ -557,28 +600,160 @@ function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* FLAGS TAB */}
-        {tab === 'flags' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-white">Crisis Flags</h2>
-            <div className="bg-slate-800 rounded-xl border border-red-900/50 p-6 text-center">
-              <AlertTriangle className="size-10 text-red-400 mx-auto mb-3" />
-              <p className="font-semibold text-slate-300">Crisis Detection Active</p>
-              <p className="text-sm text-slate-500 mt-2">
-                Conversations with high-risk keywords are flagged automatically.
-                User identifiers are hashed — only escalation counts are shown here.
-              </p>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                {[
-                  { label: 'This week', value: 3 },
-                  { label: 'This month', value: 11 },
-                  { label: 'Total', value: 47 },
-                ].map((s) => (
-                  <div key={s.label} className="bg-slate-900 rounded-lg p-3">
-                    <p className="text-2xl font-black text-red-400">{s.value}</p>
-                    <p className="text-xs text-slate-500">{s.label}</p>
-                  </div>
-                ))}
+        {/* EARNINGS TAB */}
+        {tab === 'earnings' && (
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white">Therapist Earnings Ledger</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Track gross earnings, calculate platform commission (30%), and distribute payouts (70%).
+                </p>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search therapist..."
+                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                />
+              </div>
+            </div>
+
+            {/* Financial Totals Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                {
+                  label: "Total Gross Revenue (100%)",
+                  value: `₹${therapists.reduce((sum, t) => sum + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`,
+                  color: "text-blue-400",
+                  sub: `Across ${therapists.filter(t => (t.grossEarnings ?? 0) > 0).length} active therapists`,
+                },
+                {
+                  label: "Platform Share (30%)",
+                  value: `₹${therapists.reduce((sum, t) => sum + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}`,
+                  color: "text-red-400",
+                  sub: "MindsyncPro retained commission",
+                },
+                {
+                  label: "Net Distribution Due (70%)",
+                  value: `₹${filteredTherapists.reduce((sum, t) => sum + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')}`,
+                  color: "text-emerald-400",
+                  sub: "To be disbursed to therapists",
+                },
+              ].map((card) => (
+                <div key={card.label} className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                  <p className="text-xs text-slate-400 font-semibold">{card.label}</p>
+                  <p className={`text-2xl font-black mt-2 ${card.color}`}>{card.value}</p>
+                  <p className="text-[11px] text-slate-500 mt-1">{card.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Bar Chart — Top Earners */}
+            {earningsChartData.length > 0 && (
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <p className="text-sm font-bold text-slate-300 mb-4">Top Earners — Gross vs Net Payout (₹)</p>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={earningsChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}`} />
+                      <RechartsTooltip
+                        contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', color: '#e2e8f0' }}
+                        formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, undefined]}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
+                      <Bar dataKey="Gross" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Net (70%)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Payout Distribution Table */}
+            <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left whitespace-nowrap">
+                  <thead>
+                    <tr className="border-b border-slate-700 bg-slate-900/50 text-slate-400 font-semibold text-xs uppercase tracking-wider">
+                      <th className="px-4 py-3">Therapist</th>
+                      <th className="px-4 py-3">Sessions</th>
+                      <th className="px-4 py-3">Gross Earned</th>
+                      <th className="px-4 py-3">Platform Fee (30%)</th>
+                      <th className="px-4 py-3 font-bold text-emerald-400">Payout Due (70%)</th>
+                      <th className="px-4 py-3">Payment Details</th>
+                      <th className="px-4 py-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {filteredTherapists.map((t) => (
+                      <tr key={t.id} className="hover:bg-slate-750 transition text-slate-300">
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-white">{t.name}</div>
+                          <div className="text-xs text-slate-500">{t.email || t.phoneMasked || 'No Email'}</div>
+                          {t.verified && <span className="text-[10px] bg-green-900/40 text-green-400 px-1.5 py-0.5 rounded mt-0.5 inline-block">RCI Verified</span>}
+                        </td>
+                        <td className="px-4 py-4 text-xs">
+                          <div>Total: <span className="font-medium text-white">{t.totalBookings}</span></div>
+                          <div className="mt-0.5">Paid: <span className="font-medium text-white">{t.sessionsGiven}</span></div>
+                        </td>
+                        <td className="px-4 py-4 font-medium text-white">
+                          ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-4 text-red-400 font-medium">
+                          -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-4 font-bold text-emerald-400">
+                          ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-4 max-w-xs">
+                          {t.paymentDetails?.upiId ? (
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs bg-slate-900 border border-slate-700 px-2 py-1 rounded select-all text-violet-300">
+                                {t.paymentDetails.upiId}
+                              </span>
+                            </div>
+                          ) : null}
+                          {t.paymentDetails?.bankDetails ? (
+                            <div className="mt-1 font-mono text-[11px] bg-slate-900 border border-slate-700 px-2 py-1 rounded select-all text-slate-400 whitespace-pre-wrap max-h-16 overflow-y-auto">
+                              {t.paymentDetails.bankDetails}
+                            </div>
+                          ) : null}
+                          {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
+                            <span className="text-xs text-slate-500 italic">No details added</span>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-4">
+                          {(t.totalPayout ?? 0) > 0 ? (
+                            <button
+                              disabled={markPaidMutation.isPending}
+                              onClick={() => {
+                                const pwd = prompt('Enter Admin Password to confirm payout:');
+                                if (pwd) markPaidMutation.mutate({ therapistId: t.id, password: pwd });
+                              }}
+                              className="flex items-center gap-1.5 text-xs font-bold bg-emerald-900/40 text-emerald-400 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-900/60 transition disabled:opacity-50"
+                            >
+                              <Banknote className="size-3.5" /> Mark Paid
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-600 italic">No payout due</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredTherapists.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                          No therapists found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -767,7 +942,7 @@ function SuperAdminDashboard() {
                             value={planForm.config.dailyChatLimit === null ? '' : planForm.config.dailyChatLimit} 
                             onChange={e => setPlanForm({
                               ...planForm, 
-                              config: { ...planForm.config, dailyChatLimit: e.target.value === '' ? null : Number(e.target.value) }
+                              config: { ...planForm.config, dailyChatLimit: e.target.value === '' ? (null as unknown as number) : Number(e.target.value) }
                             })}
                             placeholder="Unlimited"
                             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none" />

@@ -6,6 +6,7 @@ import { AppError } from "@/lib/app-error";
 import LiveKitService from "@/services/livekit.service";
 import mongoose from "mongoose";
 import { NotificationController } from "./notification.controller";
+import { sendBookingNotificationToTherapist, sendBookingConfirmationToSeeker } from "@/services/email.service";
 
 
 export class BookingController {
@@ -89,7 +90,8 @@ export class BookingController {
 
       // Send live notifications
       try {
-        const seekerName = (await User.findById(req.user!.sub).select("fullName"))?.fullName || "A Seeker";
+        const seekerUser = await User.findById(req.user!.sub).select("fullName");
+        const seekerName = seekerUser?.fullName || "A Seeker";
         const formattedSlot = slotDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
         // Seeker confirmation notification
@@ -109,6 +111,20 @@ export class BookingController {
           "booking",
           { bookingId: booking._id.toString(), seekerId: req.user!.sub }
         );
+
+        // Send EMAIL to therapist if they have an email on file
+        const therapistEmail = therapist.therapistProfile.email;
+        if (therapistEmail) {
+          sendBookingNotificationToTherapist({
+            therapistEmail,
+            therapistName: therapist.therapistProfile.name || "Therapist",
+            seekerName,
+            slot: slotDate,
+            fee: therapist.therapistProfile.sessionFee ?? 0,
+            bookingId: booking._id.toString(),
+          }).catch(err => console.error("[Email] Therapist booking email failed:", err));
+        }
+
       } catch (err) {
         console.error("[Notifications] Failed sending booking alerts:", err);
       }

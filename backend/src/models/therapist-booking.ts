@@ -19,6 +19,7 @@ export interface ITherapistBooking extends Document {
   review?: string;
   aiBrief?: string;
   journalShareState: "none" | "requested" | "approved" | "declined";
+  payoutStatus?: "pending" | "paid";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +49,13 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
       type: String,
       enum: ["none", "requested", "approved", "declined"],
       default: "none"
+    },
+    payoutStatus: {
+      type: String,
+      enum: ["pending", "paid"],
+      default: "pending",
+      required: true,
+      index: true
     }
   },
   { timestamps: true }

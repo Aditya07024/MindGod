@@ -21,4 +21,7 @@ router.post("/plans", requireAuth, requireRole(["super_admin"]), PlanController.
 router.put("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanController.updatePlan);
 router.delete("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanController.deletePlan);
 
+router.get("/platform-counts", requireAuth, requireRole(["super_admin"]), AdminController.platformCounts);
+router.patch("/therapist/:id/mark-paid", requireAuth, requireRole(["super_admin"]), AdminController.markTherapistPaid);
+
 export default router;
