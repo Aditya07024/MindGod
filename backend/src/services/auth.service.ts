@@ -117,6 +117,13 @@ export class AuthService {
     };
 
     user.lastActiveAt = new Date();
+
+    // Sanitize tier: if it contains an invalid value (e.g. ObjectId from old subscription bug), reset to "free"
+    const VALID_TIERS = ["free", "mann_shanti", "apna_therapist"];
+    if (!VALID_TIERS.includes(user.tier as string)) {
+      user.tier = "free" as any;
+    }
+
     await user.save();
     return user;
   }
@@ -172,6 +179,13 @@ export class AuthService {
     }
 
     user.lastActiveAt = new Date();
+
+    // Sanitize tier: if it contains an invalid value (e.g. ObjectId from old subscription bug), reset to "free"
+    const VALID_TIERS = ["free", "mann_shanti", "apna_therapist"];
+    if (!VALID_TIERS.includes(user.tier as string)) {
+      user.tier = "free" as any;
+    }
+
     await user.save();
     return user;
   }

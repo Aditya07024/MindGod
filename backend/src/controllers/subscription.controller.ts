@@ -303,7 +303,9 @@ export class SubscriptionController {
               const { SubscriptionPlan } = await import("@/models");
               const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: planId }).lean();
               if (dbPlan) {
-                tier = dbPlan._id.toString();
+                // Dynamic plans use "apna_therapist" as the tier enum fallback
+                // (actual plan details tracked via Subscription.planId)
+                tier = dbPlan.audience === "user" ? "mann_shanti" : "apna_therapist";
               }
             }
             if (tier) {
@@ -504,7 +506,8 @@ export class SubscriptionController {
                 const { SubscriptionPlan } = await import("@/models");
                 const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: razorpaySub.plan_id }).lean();
                 if (dbPlan) {
-                  tier = dbPlan._id.toString();
+                  // Dynamic plans use enum fallback, not ObjectId
+                  tier = dbPlan.audience === "user" ? "mann_shanti" : "apna_therapist";
                 }
               }
             }
