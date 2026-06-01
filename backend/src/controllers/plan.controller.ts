@@ -26,16 +26,24 @@ export class PlanController {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
-    if (!name || typeof price !== 'number' || !audience) {
+    if (!name || price === undefined || price === null || !audience) {
       return res.status(400).json({ error: "Missing required fields (name, price, audience)" });
     }
 
+    const parsedPrice = Number(price);
+    if (isNaN(parsedPrice)) {
+      return res.status(400).json({ error: "Price must be a valid number" });
+    }
+
+    const parsedDuration = (durationMonths !== undefined && durationMonths !== null && durationMonths !== "") ? Number(durationMonths) : 1;
+    const finalDuration = (isNaN(parsedDuration) || parsedDuration < 1) ? 1 : Math.round(parsedDuration);
+
     const plan = new SubscriptionPlan({
       name,
-      price,
+      price: parsedPrice,
       features: features || [],
       audience,
-      durationMonths: typeof durationMonths === 'number' ? durationMonths : 1,
+      durationMonths: finalDuration,
       config: config || {
         dailyChatLimit: 7,
         hasPriorityBooking: false,
@@ -58,17 +66,21 @@ export class PlanController {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
+    const parsedPrice = (price !== undefined && price !== null) ? Number(price) : undefined;
+    const parsedDuration = (durationMonths !== undefined && durationMonths !== null && durationMonths !== "") ? Number(durationMonths) : undefined;
+
+    const updateFields: any = {};
+    if (name) updateFields.name = name;
+    if (parsedPrice !== undefined && !isNaN(parsedPrice)) updateFields.price = parsedPrice;
+    if (features) updateFields.features = features;
+    if (audience) updateFields.audience = audience;
+    if (config) updateFields.config = config;
+    if (parsedDuration !== undefined && !isNaN(parsedDuration) && parsedDuration >= 1) updateFields.durationMonths = Math.round(parsedDuration);
+    if (typeof isActive === 'boolean') updateFields.isActive = isActive;
+
     const plan = await SubscriptionPlan.findByIdAndUpdate(
       id,
-      {
-        ...(name && { name }),
-        ...(typeof price === 'number' && { price }),
-        ...(features && { features }),
-        ...(audience && { audience }),
-        ...(config && { config }),
-        ...(typeof durationMonths === 'number' && { durationMonths }),
-        ...(typeof isActive === 'boolean' && { isActive })
-      },
+      updateFields,
       { new: true }
     );
 

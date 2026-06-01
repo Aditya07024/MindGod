@@ -279,6 +279,15 @@ function OrgDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const demoActivateMutation = useMutation({
+    mutationFn: () => API.subscription.demoActivate(),
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ['subscription'] });
+      toast.success("Subscription activated (Dev Mode)!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   useEffect(() => {
     if (subscription?.subscription?.status === 'pending') {
       API.subscription.sync()
@@ -933,20 +942,24 @@ function OrgDashboard() {
                     We've registered your organization plan, but the payment confirmation is pending. If you have already completed the transaction on Razorpay, click sync to activate benefits instantly.
                   </p>
                 </div>
-                <button
-                  onClick={() => syncMutation.mutate()}
-                  disabled={syncMutation.isPending}
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50"
-                >
-                  {syncMutation.isPending ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin" />
-                      Syncing...
-                    </>
-                  ) : (
-                    'Sync Payment Status'
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => syncMutation.mutate()}
+                    disabled={syncMutation.isPending}
+                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50"
+                  >
+                    {syncMutation.isPending ? 'Syncing...' : 'Sync Payment Status'}
+                  </button>
+                  {import.meta.env.DEV && (
+                    <button
+                      onClick={() => demoActivateMutation.mutate()}
+                      disabled={demoActivateMutation.isPending}
+                      className="bg-white border border-amber-300 text-amber-700 hover:bg-amber-50 font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50"
+                    >
+                      {demoActivateMutation.isPending ? 'Bypassing...' : 'Bypass Payment'}
+                    </button>
                   )}
-                </button>
+                </div>
               </div>
             )}
 
@@ -957,6 +970,15 @@ function OrgDashboard() {
               </div>
 
               <div className="flex items-center gap-3">
+                {import.meta.env.DEV && !hasActiveOrgSub && (
+                  <button
+                    onClick={() => demoActivateMutation.mutate()}
+                    disabled={demoActivateMutation.isPending}
+                    className="border border-blue-500 text-blue-600 hover:bg-blue-50 font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  >
+                    {demoActivateMutation.isPending ? 'Activating...' : 'Dev: Bypass Payment'}
+                  </button>
+                )}
                 {subscription?.subscription?.status === 'active' && (
                   <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
                     <ShieldCheck className="size-5 text-green-600" />

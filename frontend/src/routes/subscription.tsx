@@ -157,6 +157,21 @@ function SubscriptionPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const demoActivateMutation = useMutation({
+    mutationFn: () => API.subscription.demoActivate(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["subscription"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["userStats"] });
+      toast.success("Subscription activated (Dev Mode)!");
+      setTimeout(() => {
+        navigate({ to: "/dashboard" });
+      }, 1500);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const currentTier = subscription?.tier ?? "free";
 
   useEffect(() => {
@@ -193,6 +208,16 @@ function SubscriptionPage() {
           <p className="text-muted-foreground text-sm max-w-xs mx-auto">
             Recurring billing via Razorpay. Cancel anytime.
           </p>
+          {import.meta.env.DEV && currentTier === "free" && (
+            <Button
+              onClick={() => demoActivateMutation.mutate()}
+              disabled={demoActivateMutation.isPending}
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary-soft/30 rounded-xl mt-2"
+            >
+              {demoActivateMutation.isPending ? "Activating..." : "Dev: Bypass Payment"}
+            </Button>
+          )}
         </motion.div>
 
         {/* Usage summary for current user */}
@@ -221,20 +246,32 @@ function SubscriptionPage() {
             <p className="text-xs text-amber-700 leading-relaxed">
               If you have already paid via Razorpay, it might take a moment to activate. Click below to verify and sync your status instantly.
             </p>
-            <Button 
-              onClick={() => syncMutation.mutate()} 
-              disabled={syncMutation.isPending}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
-            >
-              {syncMutation.isPending ? (
-                <>
-                  <Loader className="size-3.5 animate-spin" />
-                  Syncing Status...
-                </>
-              ) : (
-                "Sync Payment Status"
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button 
+                onClick={() => syncMutation.mutate()} 
+                disabled={syncMutation.isPending}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {syncMutation.isPending ? (
+                  <>
+                    <Loader className="size-3.5 animate-spin" />
+                    Syncing Status...
+                  </>
+                ) : (
+                  "Sync Payment Status"
+                )}
+              </Button>
+              {import.meta.env.DEV && (
+                <Button 
+                  onClick={() => demoActivateMutation.mutate()} 
+                  disabled={demoActivateMutation.isPending}
+                  variant="outline"
+                  className="border-amber-300 text-amber-700 hover:bg-amber-100 font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2"
+                >
+                  {demoActivateMutation.isPending ? "Bypassing..." : "Demo: Bypass Payment"}
+                </Button>
               )}
-            </Button>
+            </div>
           </div>
         )}
 

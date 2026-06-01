@@ -23,28 +23,32 @@ export async function createTransporter() {
     process.env.GOOGLE_CLIENT_SECRET &&
     process.env.GOOGLE_REFRESH_TOKEN
   ) {
-    const accessTokenResponse = await oauth2Client.getAccessToken();
-    const accessToken =
-      typeof accessTokenResponse === "string"
-        ? accessTokenResponse
-        : accessTokenResponse?.token;
+    try {
+      const accessTokenResponse = await oauth2Client.getAccessToken();
+      const accessToken =
+        typeof accessTokenResponse === "string"
+          ? accessTokenResponse
+          : accessTokenResponse?.token;
 
-    const oauthTransportOptions: SMTPTransport.Options = {
-      service: "gmail",
-      auth: {
-        type: "OAUTH2",
-        user: process.env.EMAIL_USER,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        accessToken: accessToken ?? undefined,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    };
+      const oauthTransportOptions: SMTPTransport.Options = {
+        service: "gmail",
+        auth: {
+          type: "OAUTH2",
+          user: process.env.EMAIL_USER,
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+          accessToken: accessToken ?? undefined,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      };
 
-    return nodemailer.createTransport(oauthTransportOptions);
+      return nodemailer.createTransport(oauthTransportOptions);
+    } catch (error) {
+      console.warn("[Mail] Google OAuth token retrieval failed, trying SMTP fallback...", error);
+    }
   }
 
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {

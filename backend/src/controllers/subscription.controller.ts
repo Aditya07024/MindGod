@@ -357,28 +357,50 @@ export class SubscriptionController {
       const userId = req.user!.sub;
       console.log(`[demoActivate] userId=${userId}`);
 
-      // Find any existing pending sub
-      let sub = await Subscription.findOne({ userId, status: "pending" }).sort({ createdAt: -1 });
+      const userObj = await User.findById(userId).select("role orgId").lean();
+      if (!userObj) throw new AppError("User not found", 404);
+
+      // Find any existing pending sub for this user or their organization
+      const query: any = { status: "pending" };
+      if (userObj.orgId) {
+        query.$or = [{ userId }, { orgId: userObj.orgId }];
+      } else {
+        query.userId = userId;
+      }
+
+      let sub = await Subscription.findOne(query).sort({ createdAt: -1 });
       console.log(`[demoActivate] existing pending sub=${sub?._id ?? "NONE"}`);
 
       if (sub) {
         sub.status = "active";
+        if (userObj.orgId && !sub.orgId) {
+          sub.orgId = userObj.orgId;
+        }
         await sub.save();
         console.log(`[demoActivate] activated existing pending sub`);
       } else {
         // Check if already active
-        const existing = await Subscription.findOne({ userId, status: "active" }).sort({ createdAt: -1 });
+        const activeQuery: any = { status: "active" };
+        if (userObj.orgId) {
+          activeQuery.$or = [{ userId }, { orgId: userObj.orgId }];
+        } else {
+          activeQuery.userId = userId;
+        }
+        const existing = await Subscription.findOne(activeQuery).sort({ createdAt: -1 });
         console.log(`[demoActivate] existing active sub=${existing?._id ?? "NONE"}`);
         if (existing) {
-          // Already active — just make sure tier is set correctly
-          await User.findByIdAndUpdate(userId, { tier: "apna_therapist" });
+          // Already active — just make sure tier is set correctly for non-org users
+          if (!userObj.orgId) {
+            await User.findByIdAndUpdate(userId, { tier: "apna_therapist" });
+          }
           return res.json({ message: "Already active", status: "active" });
         }
 
         // Create a brand new active dev subscription
         sub = await Subscription.create({
           userId,
-          plan: "Dev Plan",
+          orgId: userObj.orgId || undefined,
+          plan: userObj.orgId ? "Dev Org Plan" : "Dev Plan",
           status: "active",
           startDate: new Date(),
           endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -386,12 +408,20 @@ export class SubscriptionController {
         console.log(`[demoActivate] created new sub=${sub._id}`);
       }
 
-      // Update user tier to non-free so middleware fallback also passes
-      const updateResult = await User.findByIdAndUpdate(userId, { tier: "apna_therapist" }, { new: true }).select("tier _id");
-      console.log(`[demoActivate] updated user tier: ${updateResult?.tier} for userId=${updateResult?._id}`);
+      // Update user tier to non-free so middleware fallback also passes (only if not an org subscription)
+      if (!userObj.orgId) {
+        const updateResult = await User.findByIdAndUpdate(userId, { tier: "apna_therapist" }, { new: true }).select("tier _id");
+        console.log(`[demoActivate] updated user tier: ${updateResult?.tier} for userId=${updateResult?._id}`);
+      }
 
       // Verify it was actually saved
-      const verifySub = await Subscription.findOne({ userId, status: "active" }).lean();
+      const verifyQuery: any = { status: "active" };
+      if (userObj.orgId) {
+        verifyQuery.$or = [{ userId }, { orgId: userObj.orgId }];
+      } else {
+        verifyQuery.userId = userId;
+      }
+      const verifySub = await Subscription.findOne(verifyQuery).lean();
       console.log(`[demoActivate] verify: activeSub=${verifySub?._id ?? "NONE"} status=${verifySub?.status}`);
 
       res.json({ message: "Subscription activated (Dev Mode)", status: "active" });
@@ -424,11 +454,19 @@ export class SubscriptionController {
     async (req: AuthedRequest, res: Response) => {
       const userId = req.user!.sub;
 
-      // Find the most recent pending or active subscription for this user
-      const sub = await Subscription.findOne({
-        userId,
+      const userObj = await User.findById(userId).select("orgId").lean();
+
+      // Find the most recent pending or active subscription for this user or their organization
+      const query: any = {
         status: { $in: ["pending", "active"] },
-      }).sort({ createdAt: -1 });
+      };
+      if (userObj?.orgId) {
+        query.$or = [{ userId }, { orgId: userObj.orgId }];
+      } else {
+        query.userId = userId;
+      }
+
+      const sub = await Subscription.findOne(query).sort({ createdAt: -1 });
 
       if (!sub) {
         throw new AppError("No pending or active subscription found to sync.", 404);

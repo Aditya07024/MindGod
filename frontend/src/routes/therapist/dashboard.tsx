@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { UserButton, useClerk } from '@clerk/clerk-react';
@@ -94,6 +94,30 @@ function TherapistDashboard() {
       setUpgrading(null);
       toast.error(e.message);
     },
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: () => API.subscription.sync(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["subscription"] });
+      qc.invalidateQueries({ queryKey: ["auth-me"] });
+      qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+      qc.invalidateQueries({ queryKey: ["therapist-bookings"] });
+      toast.success(data.message || "Subscription status synced successfully!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const demoActivateMutation = useMutation({
+    mutationFn: () => API.subscription.demoActivate(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["subscription"] });
+      qc.invalidateQueries({ queryKey: ["auth-me"] });
+      qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+      qc.invalidateQueries({ queryKey: ["therapist-bookings"] });
+      toast.success("Subscription activated (Dev Mode)!");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -813,7 +837,6 @@ function TherapistDashboard() {
             </div>
           </motion.div>
         )}
-
         {/* SUBSCRIPTION TAB */}
         {tab === 'subscription' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -821,6 +844,16 @@ function TherapistDashboard() {
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Your Subscription</h2>
                 <div className="flex items-center gap-3">
+                  {import.meta.env.DEV && !hasActiveSub && (
+                    <Button
+                      onClick={() => demoActivateMutation.mutate()}
+                      disabled={demoActivateMutation.isPending}
+                      variant="outline"
+                      className="border-teal-500 text-teal-600 hover:bg-teal-50 rounded-xl"
+                    >
+                      {demoActivateMutation.isPending ? "Activating..." : "Dev: Bypass Payment"}
+                    </Button>
+                  )}
                   {subscriptionData?.subscription && (
                     <div className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 ${
                       hasActiveSub ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-amber-50 border-amber-200 text-amber-700'
@@ -831,6 +864,39 @@ function TherapistDashboard() {
                 </div>
               </div>
 
+              {/* Sync Banner if pending */}
+              {subscriptionData?.subscription?.status === 'pending' && (
+                <div className="rounded-3xl bg-amber-50 border border-amber-200 p-6 text-center space-y-4 max-w-md mx-auto shadow-sm">
+                  <div className="flex items-center justify-center gap-2 text-amber-800">
+                    <AlertCircle className="size-5 text-amber-600 shrink-0" />
+                    <p className="text-sm font-bold">
+                      Payment Confirmation Pending
+                    </p>
+                  </div>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    If you have already paid via Razorpay, it might take a moment to activate. Click below to verify and sync your status instantly.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={() => syncMutation.mutate()} 
+                      disabled={syncMutation.isPending}
+                      className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {syncMutation.isPending ? "Syncing..." : "Sync Payment Status"}
+                    </Button>
+                    {import.meta.env.DEV && (
+                      <Button 
+                        onClick={() => demoActivateMutation.mutate()} 
+                        disabled={demoActivateMutation.isPending}
+                        variant="outline"
+                        className="border-amber-300 text-amber-700 hover:bg-amber-100 font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2"
+                      >
+                        {demoActivateMutation.isPending ? "Bypassing..." : "Demo: Bypass Payment"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
               {hasActiveSub ? (
                 <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-[2.5rem] p-10 text-white shadow-xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
