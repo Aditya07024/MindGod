@@ -1022,7 +1022,7 @@ function OrgDashboard() {
                           <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
                           <div className="mt-2 flex items-baseline gap-1">
                             <span className="text-4xl font-black text-slate-900">₹{plan.price}</span>
-                            <span className="text-slate-500 text-sm font-medium">/month</span>
+                            <span className="text-slate-500 text-sm font-medium">/{plan.durationMonths && plan.durationMonths > 1 ? ` ${plan.durationMonths} months` : "month"}</span>
                           </div>
                         </div>
 

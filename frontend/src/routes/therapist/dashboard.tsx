@@ -924,7 +924,7 @@ function TherapistDashboard() {
                     return (
                       <div key={plan._id} className="bg-white rounded-3xl border-2 border-slate-200 p-8 flex flex-col shadow-sm transition hover:-translate-y-1 hover:shadow-md">
                         <h3 className="font-display text-2xl font-bold text-slate-900">{plan.name}</h3>
-                        <div className="mt-3 text-4xl font-bold text-teal-700">₹{plan.price}<span className="text-sm font-bold text-slate-400">/mo</span></div>
+                        <div className="mt-3 text-4xl font-bold text-teal-700">₹{plan.price}<span className="text-sm font-bold text-slate-400">/{plan.durationMonths && plan.durationMonths > 1 ? ` ${plan.durationMonths} mo` : "mo"}</span></div>
                         <ul className="mt-8 mb-10 space-y-4 flex-1 text-sm font-medium text-slate-600">
                           {plan.features.map((f: string, i: number) => (
                               <li key={i} className="flex gap-3"><span className="text-teal-500 font-bold">✓</span> {f}</li>

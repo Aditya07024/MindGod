@@ -71,7 +71,7 @@ function SubscriptionPage() {
       id: p._id,
       name: p.name,
       price: p.price,
-      period: "/mo",
+      period: p.durationMonths && p.durationMonths > 1 ? `/ ${p.durationMonths} mo` : "/mo",
       description: "Premium wellness plan",
       icon: Sparkles,
       features: [

@@ -38,6 +38,9 @@ export class PlanController {
     const parsedDuration = (durationMonths !== undefined && durationMonths !== null && durationMonths !== "") ? Number(durationMonths) : 1;
     const finalDuration = (isNaN(parsedDuration) || parsedDuration < 1) ? 1 : Math.round(parsedDuration);
 
+    console.log("[CreatePlan] Incoming req.body:", req.body);
+    console.log("[CreatePlan] Parsed durationMonths:", finalDuration);
+
     const plan = new SubscriptionPlan({
       name,
       price: parsedPrice,
@@ -54,6 +57,7 @@ export class PlanController {
     });
 
     await plan.save();
+    console.log("[CreatePlan] Saved plan document:", plan);
     res.status(201).json({ plan, message: "Plan created successfully" });
   });
 
@@ -61,6 +65,8 @@ export class PlanController {
   static updatePlan = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
     const { name, price, features, audience, config, durationMonths, isActive, password } = req.body;
+
+    console.log("[UpdatePlan] Incoming req.body:", req.body);
 
     if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
       return res.status(401).json({ error: "Invalid admin password" });
@@ -78,11 +84,15 @@ export class PlanController {
     if (parsedDuration !== undefined && !isNaN(parsedDuration) && parsedDuration >= 1) updateFields.durationMonths = Math.round(parsedDuration);
     if (typeof isActive === 'boolean') updateFields.isActive = isActive;
 
+    console.log("[UpdatePlan] updateFields object:", updateFields);
+
     const plan = await SubscriptionPlan.findByIdAndUpdate(
       id,
       updateFields,
       { new: true }
     );
+
+    console.log("[UpdatePlan] Updated plan document from DB:", plan);
 
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 

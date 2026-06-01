@@ -114,6 +114,8 @@ function SuperAdminDashboard() {
       setAdminPassword('');
       toast.success(isDelete ? 'Plan marked inactive' : 'Plan saved successfully');
       qc.invalidateQueries({ queryKey: ['admin-plans'] });
+      qc.invalidateQueries({ queryKey: ['subscription-plans'] });
+      qc.invalidateQueries({ queryKey: ['plans'] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
