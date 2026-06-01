@@ -277,7 +277,7 @@ function TherapistDashboard() {
         key: monthKey,
         name,
         gross: Number(amount),
-        net: Math.round(Number(amount) * 0.85),
+        net: Math.round(Number(amount) * 0.70),
       };
     })
     .sort((a, b) => a.key.localeCompare(b.key));
@@ -434,7 +434,7 @@ function TherapistDashboard() {
               { label: "Today's sessions", value: todayBookings.length },
               { label: 'This month', value: stats?.monthBookings ?? 0 },
               { label: 'Month earned', value: `₹${(stats?.monthEarned ?? 0).toLocaleString('en-IN')}` },
-              { label: 'Payout (85%)', value: `₹${(stats?.nextPayout ?? 0).toLocaleString('en-IN')}` },
+              { label: 'Payout (70%)', value: `₹${(stats?.nextPayout ?? 0).toLocaleString('en-IN')}` },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="font-display text-2xl font-bold">{s.value}</p>
@@ -635,7 +635,7 @@ function TherapistDashboard() {
               {[
                 { label: 'Total Earned', value: `₹${(stats?.totalEarned ?? 0).toLocaleString('en-IN')}` },
                 { label: 'This Month', value: `₹${(stats?.monthEarned ?? 0).toLocaleString('en-IN')}` },
-                { label: 'Next Payout (85%)', value: `₹${(stats?.nextPayout ?? 0).toLocaleString('en-IN')}` },
+                { label: 'Next Payout (70%)', value: `₹${(stats?.nextPayout ?? 0).toLocaleString('en-IN')}` },
                 { label: 'Total Sessions', value: stats?.completedSessions ?? 0 },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-3xl border border-slate-200 p-6 text-center shadow-sm hover:shadow-md transition">
@@ -644,9 +644,9 @@ function TherapistDashboard() {
                 </div>
               ))}
             </div>
-            <div className="bg-amber-50/50 rounded-2xl border border-amber-200/50 p-5 text-sm font-medium text-amber-800">
-              Mindsyncpro retains 15% platform fee. Payouts are processed on the 1st of every month via NEFT.
-            </div>
+            {/* <div className="bg-amber-50/50 rounded-2xl border border-amber-200/50 p-5 text-sm font-medium text-amber-800">
+              Mindsyncpro retains 30% platform fee. Payouts are processed on the 1st of every month via NEFT.
+            </div> */}
 
             {/* Customizable Revenue Chart Widget */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
@@ -681,7 +681,7 @@ function TherapistDashboard() {
                         chartMetric === 'net' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                       }`}
                     >
-                      Net (85%)
+                      Net (70%)
                     </button>
                     <button
                       onClick={() => setChartMetric('gross')}
@@ -789,7 +789,7 @@ function TherapistDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-500 uppercase text-xs font-bold tracking-wider">
-                    <tr><th className="px-6 py-4">Date</th><th className="px-6 py-4">Session ID</th><th className="px-6 py-4">Gross Amount</th><th className="px-6 py-4">Commission (15%)</th><th className="px-6 py-4">Net Payout</th><th className="px-6 py-4">Status</th></tr>
+                    <tr><th className="px-6 py-4">Date</th><th className="px-6 py-4">Session ID</th><th className="px-6 py-4">Gross Amount</th><th className="px-6 py-4">Commission (30%)</th><th className="px-6 py-4">Net Payout</th><th className="px-6 py-4">Status</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {bookings.slice(0, 10).map((b) => (
@@ -797,8 +797,8 @@ function TherapistDashboard() {
                         <td className="px-6 py-4 text-slate-500 font-medium">{new Date(b.slot).toLocaleDateString()}</td>
                         <td className="px-6 py-4 text-slate-900 font-bold">#{b.id.slice(-5)}</td>
                         <td className="px-6 py-4 font-medium">₹{b.fee}</td>
-                        <td className="px-6 py-4 text-red-500 font-medium">-₹{b.fee * 0.15}</td>
-                        <td className="px-6 py-4 font-bold text-teal-700">₹{b.fee * 0.85}</td>
+                        <td className="px-6 py-4 text-red-500 font-medium">-₹{b.fee * 0.30}</td>
+                        <td className="px-6 py-4 font-bold text-teal-700">₹{b.fee * 0.70}</td>
                         <td className="px-6 py-4"><span className="bg-teal-50 border border-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide">PROCESSED</span></td>
                       </tr>
                     ))}

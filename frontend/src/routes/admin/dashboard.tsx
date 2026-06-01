@@ -270,7 +270,9 @@ function SuperAdminDashboard() {
                         <p className="text-xs text-slate-400 font-semibold mb-1">Earnings & Payouts</p>
                         <p className="text-xs text-slate-300">Total Bookings: {t.totalBookings}</p>
                         <p className="text-xs text-slate-300">Sessions Given: {t.sessionsGiven}</p>
-                        <p className="text-xs text-slate-300 font-bold text-teal-400">Payout Due (70%): ₹{t.totalPayout?.toLocaleString('en-IN')}</p>
+                        <p className="text-xs text-slate-300">Gross Earned (100%): ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
+                        <p className="text-xs text-red-400">Platform Fee (30%): -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
+                        <p className="text-xs font-bold text-emerald-450 text-emerald-400">Payout Due (70%): ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
                         <div className="flex flex-col gap-1 mt-1">
                           {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
                           {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License / RCI ↗</a>}

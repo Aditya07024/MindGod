@@ -128,17 +128,20 @@ export class AuthService {
     const user = await this.getCurrentUser(userId);
 
     if (user.role === "therapist") {
-      const existing: any = user.therapistProfile ?? {
-        name: "",
-        verified: false,
-        verificationStatus: "pending",
-        specializations: [],
-        languages: [],
-        sessionFee: 0,
-        rating: 0,
-        sessionCount: 0,
-        availability: [],
-      };
+      const existingProfile: any = user.therapistProfile;
+      const existing = existingProfile && typeof existingProfile.toObject === "function"
+        ? existingProfile.toObject()
+        : {
+            name: "",
+            verified: false,
+            verificationStatus: "pending",
+            specializations: [],
+            languages: [],
+            sessionFee: 0,
+            rating: 0,
+            sessionCount: 0,
+            availability: [],
+          };
       user.therapistProfile = {
         ...existing,
         name: payload["Full name"] ?? existing.name ?? "",

@@ -64,7 +64,7 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   });
 
   const monthEarned = isSubscribed ? (therapistStats?.earningsTotal || therapistStats?.monthEarned || 0) : 0;
-  const netPayout = Math.round(monthEarned * 0.85);
+  const netPayout = Math.round(monthEarned * 0.70);
   const totalSessionsCount = isSubscribed ? ((therapistStats?.hoursCompleted || therapistStats?.totalSessions) ?? 0) : 0;
   const therapistName = userProfile?.fullName || 'Therapist';
 
@@ -88,7 +88,7 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   
   const chartData = filteredMonths.map(month => {
     const rawVal = mergedRevenue[month];
-    const value = metric === 'net' ? Math.round(rawVal * 0.85) : rawVal;
+    const value = metric === 'net' ? Math.round(rawVal * 0.70) : rawVal;
     
     // Format month label (e.g. 2026-05 -> May)
     const [year, m] = month.split('-');
@@ -411,8 +411,8 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
                   <Text style={styles.ledgerVal}>₹{monthEarned}</Text>
                 </View>
                 <View style={styles.ledgerLine}>
-                  <Text style={styles.ledgerLabel}>Platform Service Share (15%)</Text>
-                  <Text style={styles.ledgerVal}>- ₹{Math.round(monthEarned * 0.15)}</Text>
+                  <Text style={styles.ledgerLabel}>Platform Service Share (30%)</Text>
+                  <Text style={styles.ledgerVal}>- ₹{Math.round(monthEarned * 0.30)}</Text>
                 </View>
                 <View style={[styles.ledgerLine, styles.ledgerTotalLine]}>
                   <Text style={styles.ledgerTotalLabel}>Net Payout Transferred</Text>

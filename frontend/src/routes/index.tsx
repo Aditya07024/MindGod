@@ -53,7 +53,7 @@ const PRICING_PLANS = [
     price: "₹499",
     period: "/mo",
     description: "Deepen your healing with extended AI support.",
-    features: ["100 Daily AI Messages", "Advanced Mood Analytics", "Priority Therapist Booking", "Unlimited Digital Journal"],
+    features: ["Unlimited AI Messages", "Advanced Mood Analytics", "Priority Therapist Booking", "Unlimited Digital Journal"],
     buttonText: "Upgrade Now",
     portalId: "user",
     color: "bg-teal-50 border-teal-200",
@@ -62,7 +62,7 @@ const PRICING_PLANS = [
   {
     name: "Therapist Pro",
     price: "₹999",
-    period: "/mo",
+    period: "/6 mo",
     description: "Manage your practice with AI-powered insights.",
     features: ["Live Video Sessions", "AI Pre-Session Briefs", "Earnings Dashboard", "RCI Verified Badge"],
     buttonText: "Join as Therapist",

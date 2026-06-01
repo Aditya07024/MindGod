@@ -310,12 +310,21 @@ export class TherapistController {
           therapistId: userId,
           createdAt: { $gte: startOfMonth },
         }),
-        TherapistBooking.find({ therapistId: userId, status: "completed" })
+        TherapistBooking.find({
+          therapistId: userId,
+          $or: [
+            { status: "completed" },
+            { status: "confirmed", "payment.paid": true },
+          ],
+        })
           .select("payment")
           .lean(),
         TherapistBooking.find({
           therapistId: userId,
-          status: "completed",
+          $or: [
+            { status: "completed" },
+            { status: "confirmed", "payment.paid": true },
+          ],
           updatedAt: { $gte: startOfMonth },
         })
           .select("payment")
@@ -331,7 +340,7 @@ export class TherapistController {
       0,
     );
     const sessionFee = therapist.therapistProfile?.sessionFee ?? 1800;
-    const nextPayout = Math.round(monthEarned * 0.85);
+    const nextPayout = Math.round(monthEarned * 0.70);
 
     res.json({
       profile: {
@@ -375,7 +384,7 @@ export class TherapistController {
       // Build monthly revenue buckets for chart
       const revenueByMonth: Record<string, number> = {};
       for (const b of bookings) {
-        if (b.status !== "completed") continue;
+        if (b.status !== "completed" && !(b.status === "confirmed" && b.payment?.paid)) continue;
         const key = `${b.slot.getFullYear()}-${String(b.slot.getMonth() + 1).padStart(2, "0")}`;
         revenueByMonth[key] =
           (revenueByMonth[key] ?? 0) + (b.payment?.amount ?? 0);

@@ -516,12 +516,17 @@ Write a therapist pre-session brief:`;
       const { bookingId } = req.params;
       const therapistId = req.user!.sub;
 
+      console.log(`[Journal Request] bookingId: ${bookingId}, therapistId: ${therapistId}`);
+
       const booking = await TherapistBooking.findOne({
-        _id: bookingId,
-        therapistId,
+        _id: new mongoose.Types.ObjectId(bookingId as string),
+        therapistId: new mongoose.Types.ObjectId(therapistId),
       });
 
-      if (!booking) throw new AppError("Booking not found or not authorized", 404);
+      if (!booking) {
+        console.error(`[Journal Request Error] Booking not found or not authorized. bookingId: ${bookingId}, therapistId: ${therapistId}`);
+        throw new AppError("Booking not found or not authorized", 404);
+      }
       if (booking.status !== "confirmed") {
         throw new AppError("Access can only be requested for confirmed bookings", 400);
       }

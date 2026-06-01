@@ -209,9 +209,9 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
     return d >= currentMonthStart;
   });
 
-  const completedMonthSessions = monthSessions.filter((b: any) => b.status === 'completed');
+  const completedMonthSessions = monthSessions.filter((b: any) => b.status === 'completed' || (b.status === 'confirmed' && b.paid));
   const monthEarnedAmount = completedMonthSessions.reduce((sum: number, b: any) => sum + Number(b.fee || 0), 0);
-  const netPayoutAmount = Math.round(monthEarnedAmount * 0.85);
+  const netPayoutAmount = Math.round(monthEarnedAmount * 0.70);
 
   const todaySessionsCount = isSubscribed ? todaySessions.length : 0;
   const monthSessionsCount = isSubscribed ? monthSessions.length : 0;
@@ -457,8 +457,8 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                             <Text style={styles.payoutVal}>₹{monthEarned}</Text>
                           </View>
                           <View style={styles.payoutLine}>
-                            <Text style={styles.payoutLabel}>Platform Processing (15%)</Text>
-                            <Text style={styles.payoutVal}>- ₹{Math.round(monthEarned * 0.15)}</Text>
+                            <Text style={styles.payoutLabel}>Platform Processing (30%)</Text>
+                            <Text style={styles.payoutVal}>- ₹{Math.round(monthEarned * 0.30)}</Text>
                           </View>
                           <View style={[styles.payoutLine, styles.payoutTotalLine]}>
                             <Text style={styles.payoutTotalLabel}>Net Payout Amount</Text>

@@ -33,7 +33,12 @@ export class AdminController {
       User.countDocuments({ role: "user", deletedAt: null }),
       User.countDocuments({ role: "therapist", deletedAt: null }),
       TherapistBooking.countDocuments(),
-      TherapistBooking.find({ status: "completed" }).select("payment").lean(),
+      TherapistBooking.find({
+        $or: [
+          { status: "completed" },
+          { status: "confirmed", "payment.paid": true }
+        ]
+      }).select("payment").lean(),
       Organization.countDocuments({ deletedAt: null })
     ]);
 
@@ -164,10 +169,12 @@ export class AdminController {
       pending.map(async (t) => {
         const bookings = await TherapistBooking.find({ therapistId: t._id }).select("status payment.amount payment.paid").lean();
         const totalBookings = bookings.length;
-        const sessionsGiven = bookings.filter((b: any) => b.status === "completed").length;
-        const totalPayout = bookings
-          .filter((b: any) => b.status === "completed" && b.payment?.paid)
-          .reduce((sum: number, b: any) => sum + (b.payment?.amount || 0), 0) * 0.70;
+        const sessionsGiven = bookings.filter((b: any) => b.status === "completed" || (b.status === "confirmed" && b.payment?.paid)).length;
+        const grossEarnings = bookings
+          .filter((b: any) => b.status === "completed" || (b.status === "confirmed" && b.payment?.paid))
+          .reduce((sum: number, b: any) => sum + (b.payment?.amount || 0), 0);
+        const platformCommission = Math.round(grossEarnings * 0.30);
+        const totalPayout = grossEarnings - platformCommission;
 
         return {
           id: t._id,
@@ -189,6 +196,8 @@ export class AdminController {
           paymentDetails: t.therapistProfile?.paymentDetails ?? null,
           totalBookings,
           sessionsGiven,
+          grossEarnings,
+          platformCommission,
           totalPayout
         };
       })
