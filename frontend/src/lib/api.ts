@@ -41,7 +41,7 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 const API = {
   health: () => apiCall<{ ok: boolean }>("/api/health"),
   auth: {
-    me: () => apiCall<any>("/api/auth/me"),
+    me: () => apiCall<any>(`/api/auth/me?_t=${Date.now()}`),
     setRole: async (role: string) => {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       try {
@@ -105,7 +105,7 @@ const API = {
   },
 
   org: {
-    me: () => apiCall<any>("/api/org/me"),
+    me: () => apiCall<any>(`/api/org/me?_t=${Date.now()}`),
     verifiedOrgs: () => apiCall<any>("/api/org/verified"),
     onboarding: (data: any) =>
       apiCall<any>("/api/org/onboarding", { method: "POST", body: JSON.stringify(data) }),
