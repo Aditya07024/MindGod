@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Text, Modal, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Lock, Eye, EyeOff } from 'lucide-react-native';
 import { Theme } from '../theme';
-import { ADMIN_PASSWORD } from '../lib/store';
+import { API_URL } from '../lib/store';
 
 interface PasswordModalProps {
   open: boolean;
@@ -21,13 +21,28 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
 }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (password === ADMIN_PASSWORD) {
-      setPassword('');
-      onSuccess();
-    } else {
-      Alert.alert('Access Denied', 'Invalid access code. Please try again.');
+  const handleSubmit = async () => {
+    if (!password) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/verify-password-public`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setPassword('');
+        onSuccess();
+      } else {
+        Alert.alert('Access Denied', 'Invalid access code. Please try again.');
+      }
+    } catch {
+      Alert.alert('Error', 'Could not reach the server. Please check your connection.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,6 +71,8 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
               style={styles.input}
               placeholderTextColor={Theme.colors.outline}
               autoFocus
+              onSubmitEditing={handleSubmit}
+              returnKeyType="done"
             />
             <TouchableOpacity 
               onPress={() => setShowPassword(!showPassword)} 
@@ -70,16 +87,19 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
           </View>
 
           <View style={styles.btnRow}>
-            <TouchableOpacity onPress={onCancel} style={[styles.btn, styles.cancelBtn]}>
+            <TouchableOpacity onPress={onCancel} style={[styles.btn, styles.cancelBtn]} disabled={loading}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               onPress={handleSubmit} 
-              disabled={!password}
-              style={[styles.btn, styles.submitBtn, !password && styles.disabledBtn]}
+              disabled={!password || loading}
+              style={[styles.btn, styles.submitBtn, (!password || loading) && styles.disabledBtn]}
             >
-              <Text style={styles.submitText}>Submit</Text>
+              {loading
+                ? <ActivityIndicator size="small" color="#FFF" />
+                : <Text style={styles.submitText}>Submit</Text>
+              }
             </TouchableOpacity>
           </View>
         </View>

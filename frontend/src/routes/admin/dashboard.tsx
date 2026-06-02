@@ -21,6 +21,7 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'overview' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings'>('overview');
+  const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
   const [verifyModal, setVerifyModal] = useState<{ open: boolean; id: string; name: string; verify: boolean, type: 'therapist' | 'org' } | null>(null);
@@ -248,14 +249,14 @@ function SuperAdminDashboard() {
               ))}
             </div>
 
-            {/* Subscription revenue estimate */}
-            <div className="bg-gradient-to-r from-violet-900/50 to-purple-900/50 rounded-xl border border-violet-800 p-6">
-              <p className="text-xs text-violet-400 uppercase tracking-wider font-bold mb-3">MRR Estimate</p>
+            {/* Booking-based revenue summary */}
+            <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 rounded-xl border border-emerald-800 p-6">
+              <p className="text-xs text-emerald-400 uppercase tracking-wider font-bold mb-3">Total Booking Revenue</p>
               <p className="text-4xl font-black text-white">
-                ₹{((platformStats.paidSubs * 199) + 0).toLocaleString('en-IN')}
+                ₹{therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}
               </p>
-              <p className="text-sm text-violet-300 mt-1">
-                Based on {platformStats.paidSubs} active subscriptions (avg ₹199)
+              <p className="text-sm text-emerald-300 mt-1">
+                Payout due (70%): ₹{therapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')} · Commission (30%): ₹{therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}
               </p>
             </div>
           </div>
@@ -605,9 +606,9 @@ function SuperAdminDashboard() {
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-white">Therapist Earnings Ledger</h2>
+                <h2 className="text-xl font-bold text-white">Therapist Booking Earnings</h2>
                 <p className="text-xs text-slate-400 mt-1">
-                  Track gross earnings, calculate platform commission (30%), and distribute payouts (70%).
+                  Booking-based revenue only. Click a therapist row to expand all individual bookings.
                 </p>
               </div>
               <div className="relative">
@@ -621,26 +622,26 @@ function SuperAdminDashboard() {
               </div>
             </div>
 
-            {/* Financial Totals Row */}
+            {/* Platform-wide totals */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 {
-                  label: "Total Gross Revenue (100%)",
-                  value: `₹${therapists.reduce((sum, t) => sum + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`,
-                  color: "text-blue-400",
-                  sub: `Across ${therapists.filter(t => (t.grossEarnings ?? 0) > 0).length} active therapists`,
+                  label: 'Total Gross (Bookings)',
+                  value: `₹${therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`,
+                  color: 'text-blue-400',
+                  sub: `${therapists.reduce((s, t) => s + (t.sessionsGiven ?? 0), 0)} paid sessions across all therapists`,
                 },
                 {
-                  label: "Platform Share (30%)",
-                  value: `₹${therapists.reduce((sum, t) => sum + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}`,
-                  color: "text-red-400",
-                  sub: "MindsyncPro retained commission",
+                  label: 'Platform Commission (30%)',
+                  value: `₹${therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}`,
+                  color: 'text-red-400',
+                  sub: 'MindsyncPro retained',
                 },
                 {
-                  label: "Net Distribution Due (70%)",
-                  value: `₹${filteredTherapists.reduce((sum, t) => sum + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')}`,
-                  color: "text-emerald-400",
-                  sub: "To be disbursed to therapists",
+                  label: 'Total Payout Due (70%)',
+                  value: `₹${filteredTherapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')}`,
+                  color: 'text-emerald-400',
+                  sub: 'To be disbursed to therapists',
                 },
               ].map((card) => (
                 <div key={card.label} className="bg-slate-800 border border-slate-700 rounded-xl p-5">
@@ -651,110 +652,119 @@ function SuperAdminDashboard() {
               ))}
             </div>
 
-            {/* Bar Chart — Top Earners */}
-            {earningsChartData.length > 0 && (
-              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-slate-300 mb-4">Top Earners — Gross vs Net Payout (₹)</p>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={earningsChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(1)}k` : v}`} />
-                      <RechartsTooltip
-                        contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', color: '#e2e8f0' }}
-                        formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, undefined]}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
-                      <Bar dataKey="Gross" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="Net (70%)" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
+            {/* Per-therapist expandable ledger */}
+            <div className="space-y-3">
+              {filteredTherapists.length === 0 && (
+                <p className="text-slate-500 text-sm text-center py-8">No therapists found.</p>
+              )}
+              {filteredTherapists.map((t) => {
+                const isExpanded = expandedTherapistId === t.id;
+                const bookings: any[] = t.bookingDetails ?? [];
+                return (
+                  <div key={t.id} className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+                    {/* Therapist summary row */}
+                    <button
+                      onClick={() => setExpandedTherapistId(isExpanded ? null : t.id)}
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-750 transition text-left"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="grid size-10 place-items-center rounded-xl bg-slate-700 text-slate-200 font-bold text-sm">
+                          {t.name?.charAt(0) ?? 'T'}
+                        </div>
+                        <div>
+                          <p className="font-bold text-white">{t.name}</p>
+                          <p className="text-xs text-slate-400">{t.email || 'No email'} · {t.sessionsGiven} paid sessions</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6 text-right">
+                        <div>
+                          <p className="text-xs text-slate-500">Gross</p>
+                          <p className="font-bold text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Platform (30%)</p>
+                          <p className="font-medium text-red-400">-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Payout (70%)</p>
+                          <p className="font-bold text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
+                        </div>
+                        {(t.totalPayout ?? 0) > 0 && (
+                          <button
+                            disabled={markPaidMutation.isPending}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const pwd = prompt('Enter Admin Password to confirm payout:');
+                              if (pwd) markPaidMutation.mutate({ therapistId: t.id, password: pwd });
+                            }}
+                            className="flex items-center gap-1.5 text-xs font-bold bg-emerald-900/40 text-emerald-400 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-900/60 transition disabled:opacity-50"
+                          >
+                            <Banknote className="size-3.5" /> Mark Paid
+                          </button>
+                        )}
+                        <span className="text-slate-500 text-xs">{isExpanded ? '▲' : '▼'} {bookings.length} bookings</span>
+                      </div>
+                    </button>
 
-            {/* Payout Distribution Table */}
-            <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left whitespace-nowrap">
-                  <thead>
-                    <tr className="border-b border-slate-700 bg-slate-900/50 text-slate-400 font-semibold text-xs uppercase tracking-wider">
-                      <th className="px-4 py-3">Therapist</th>
-                      <th className="px-4 py-3">Sessions</th>
-                      <th className="px-4 py-3">Gross Earned</th>
-                      <th className="px-4 py-3">Platform Fee (30%)</th>
-                      <th className="px-4 py-3 font-bold text-emerald-400">Payout Due (70%)</th>
-                      <th className="px-4 py-3">Payment Details</th>
-                      <th className="px-4 py-3">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {filteredTherapists.map((t) => (
-                      <tr key={t.id} className="hover:bg-slate-750 transition text-slate-300">
-                        <td className="px-4 py-4">
-                          <div className="font-semibold text-white">{t.name}</div>
-                          <div className="text-xs text-slate-500">{t.email || t.phoneMasked || 'No Email'}</div>
-                          {t.verified && <span className="text-[10px] bg-green-900/40 text-green-400 px-1.5 py-0.5 rounded mt-0.5 inline-block">RCI Verified</span>}
-                        </td>
-                        <td className="px-4 py-4 text-xs">
-                          <div>Total: <span className="font-medium text-white">{t.totalBookings}</span></div>
-                          <div className="mt-0.5">Paid: <span className="font-medium text-white">{t.sessionsGiven}</span></div>
-                        </td>
-                        <td className="px-4 py-4 font-medium text-white">
-                          ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}
-                        </td>
-                        <td className="px-4 py-4 text-red-400 font-medium">
-                          -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}
-                        </td>
-                        <td className="px-4 py-4 font-bold text-emerald-400">
-                          ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}
-                        </td>
-                        <td className="px-4 py-4 max-w-xs">
-                          {t.paymentDetails?.upiId ? (
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs bg-slate-900 border border-slate-700 px-2 py-1 rounded select-all text-violet-300">
-                                {t.paymentDetails.upiId}
-                              </span>
-                            </div>
-                          ) : null}
-                          {t.paymentDetails?.bankDetails ? (
-                            <div className="mt-1 font-mono text-[11px] bg-slate-900 border border-slate-700 px-2 py-1 rounded select-all text-slate-400 whitespace-pre-wrap max-h-16 overflow-y-auto">
-                              {t.paymentDetails.bankDetails}
-                            </div>
-                          ) : null}
-                          {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
-                            <span className="text-xs text-slate-500 italic">No details added</span>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-4">
-                          {(t.totalPayout ?? 0) > 0 ? (
-                            <button
-                              disabled={markPaidMutation.isPending}
-                              onClick={() => {
-                                const pwd = prompt('Enter Admin Password to confirm payout:');
-                                if (pwd) markPaidMutation.mutate({ therapistId: t.id, password: pwd });
-                              }}
-                              className="flex items-center gap-1.5 text-xs font-bold bg-emerald-900/40 text-emerald-400 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-900/60 transition disabled:opacity-50"
-                            >
-                              <Banknote className="size-3.5" /> Mark Paid
-                            </button>
-                          ) : (
-                            <span className="text-xs text-slate-600 italic">No payout due</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredTherapists.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                          No therapists found
-                        </td>
-                      </tr>
+                    {/* Expanded booking rows */}
+                    {isExpanded && (
+                      <div className="border-t border-slate-700">
+                        {bookings.length === 0 ? (
+                          <p className="text-slate-500 text-xs px-5 py-3">No bookings yet.</p>
+                        ) : (
+                          <table className="w-full text-xs text-left">
+                            <thead>
+                              <tr className="bg-slate-900/60 text-slate-500 uppercase tracking-wider">
+                                <th className="px-5 py-2">Booking ID</th>
+                                <th className="px-5 py-2">Date & Slot</th>
+                                <th className="px-5 py-2">Fee</th>
+                                <th className="px-5 py-2">Status</th>
+                                <th className="px-5 py-2">Payout (70%)</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/60">
+                              {bookings.map((b: any) => {
+                                const isEarned = b.status === 'completed' || (b.status === 'confirmed' && b.paid);
+                                return (
+                                  <tr key={b.id} className="text-slate-300 hover:bg-slate-700/30">
+                                    <td className="px-5 py-2 font-mono text-[11px] text-slate-400">#{String(b.id).slice(-6)}</td>
+                                    <td className="px-5 py-2">
+                                      {b.date ? new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                    </td>
+                                    <td className="px-5 py-2 font-semibold text-white">₹{(b.fee ?? 0).toLocaleString('en-IN')}</td>
+                                    <td className="px-5 py-2">
+                                      <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${
+                                        b.status === 'completed' ? 'bg-blue-900/40 text-blue-400' :
+                                        b.status === 'confirmed' ? 'bg-green-900/40 text-green-400' :
+                                        b.status === 'cancelled' ? 'bg-red-900/40 text-red-400' :
+                                        'bg-slate-700 text-slate-400'
+                                      }`}>{b.status}</span>
+                                    </td>
+                                    <td className="px-5 py-2 font-semibold">
+                                      {isEarned
+                                        ? <span className="text-emerald-400">₹{Math.round((b.fee ?? 0) * 0.7).toLocaleString('en-IN')}</span>
+                                        : <span className="text-slate-600">—</span>
+                                      }
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                            <tfoot>
+                              <tr className="bg-slate-900/40 font-bold border-t border-slate-600">
+                                <td colSpan={2} className="px-5 py-3 text-slate-300">Total ({t.sessionsGiven} paid)</td>
+                                <td className="px-5 py-3 text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</td>
+                                <td className="px-5 py-3"></td>
+                                <td className="px-5 py-3 text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        )}
+                      </div>
                     )}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

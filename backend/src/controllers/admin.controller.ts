@@ -167,7 +167,7 @@ export class AdminController {
 
     const therapistStats = await Promise.all(
       pending.map(async (t) => {
-        const bookings = await TherapistBooking.find({ therapistId: t._id }).select("status payment.amount payment.paid").lean();
+        const bookings = await TherapistBooking.find({ therapistId: t._id }).select("status payment.amount payment.paid slot createdAt").lean();
         const totalBookings = bookings.length;
         const sessionsGiven = bookings.filter((b: any) => b.status === "completed" || (b.status === "confirmed" && b.payment?.paid)).length;
         const grossEarnings = bookings
@@ -175,6 +175,15 @@ export class AdminController {
           .reduce((sum: number, b: any) => sum + (b.payment?.amount || 0), 0);
         const platformCommission = Math.round(grossEarnings * 0.30);
         const totalPayout = grossEarnings - platformCommission;
+
+        const bookingDetails = bookings.map((b: any) => ({
+          id: b._id,
+          slot: b.slot,
+          date: b.slot || b.createdAt,
+          fee: b.payment?.amount || 0,
+          status: b.status,
+          paid: !!b.payment?.paid,
+        })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         return {
           id: t._id,
@@ -198,7 +207,8 @@ export class AdminController {
           sessionsGiven,
           grossEarnings,
           platformCommission,
-          totalPayout
+          totalPayout,
+          bookingDetails,
         };
       })
     );
