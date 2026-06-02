@@ -384,7 +384,7 @@ export class AdminController {
       const therapist = await User.findById(id).select("therapistProfile").lean();
       if (therapist) {
         await NotificationController.createNotification(
-          id,
+          String(id),
           "Payout Processed ✅",
           `Your earnings have been transferred to your registered bank/UPI. Please check your account.`,
           "approval",
