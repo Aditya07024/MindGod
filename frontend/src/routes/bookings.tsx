@@ -39,14 +39,7 @@ function MyBookings() {
     queryFn: () => API.booking.list(),
   });
 
-  const cancelMutation = useMutation({
-    mutationFn: (id: string) => API.booking.cancel(id),
-    onSuccess: () => {
-      toast.success('Booking cancelled');
-      qc.invalidateQueries({ queryKey: ['bookings'] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+
 
   const rateMutation = useMutation({
     mutationFn: ({ id, rating, feedback }: { id: string; rating: number; feedback: string }) =>
@@ -118,13 +111,7 @@ function MyBookings() {
                         {b.status === 'pending' ? 'Payment Pending' : 'Available 15 min before'}
                       </div>
                     )}
-                    {b.status === 'confirmed' && (
-                      <Button size="sm" variant="outline" className="rounded-xl"
-                        onClick={() => cancelMutation.mutate(b.id)}
-                        disabled={cancelMutation.isPending}>
-                        Cancel
-                      </Button>
-                    )}
+
                   </div>
                 </motion.div>
               ))}

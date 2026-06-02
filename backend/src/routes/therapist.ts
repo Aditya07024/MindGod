@@ -30,17 +30,15 @@ router.patch(
 router.get("/me/invitations", requireAuth, TherapistController.listInvitations);
 router.patch("/me/invitations/:id/respond", requireAuth, TherapistController.respondToInvitation);
 
-// Shared Reports
+// Shared Reports (no subscription check — reports are shared directly to therapist)
 router.get(
   "/me/shared-reports",
   requireAuth,
-  requireSubscription,
   ReportController.getTherapistSharedReports,
 );
 router.get(
   "/me/shared-reports/:id",
   requireAuth,
-  requireSubscription,
   ReportController.getTherapistSharedReportDetail,
 );
 
