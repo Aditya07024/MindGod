@@ -45,6 +45,7 @@ import SuperAdminOverviewScreen from '../screens/admin/SuperAdminOverviewScreen'
 import SuperAdminApprovalsScreen from '../screens/admin/SuperAdminApprovalsScreen';
 import SuperAdminSubscriptionsScreen from '../screens/admin/SuperAdminSubscriptionsScreen';
 import SuperAdminPlansScreen from '../screens/admin/SuperAdminPlansScreen';
+import SuperAdminEarningsScreen from '../screens/admin/SuperAdminEarningsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -282,10 +283,18 @@ const AdminTabNavigator = () => {
         }}
       />
       <Tab.Screen 
+        name="AdminEarnings" 
+        component={SuperAdminEarningsScreen}
+        options={{
+          tabBarLabel: 'Earnings',
+          tabBarIcon: ({ color, size }) => <DollarSign size={size} color={color} />
+        }}
+      />
+      <Tab.Screen 
         name="AdminSubscriptions" 
         component={SuperAdminSubscriptionsScreen}
         options={{
-          tabBarLabel: 'Subscriptions',
+          tabBarLabel: 'Subs',
           tabBarIcon: ({ color, size }) => <Award size={size} color={color} />
         }}
       />

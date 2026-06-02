@@ -9,11 +9,7 @@ const router = Router();
 // Public: list all therapists with search & filters
 router.get("/", TherapistController.list);
 
-// Public: get single therapist details
-router.get("/:id", TherapistController.getDetail);
-
-// Public: check therapist's available slots
-router.get("/:id/availability", TherapistController.getAvailability);
+// ⚠️ /me/* routes MUST come before /:id to avoid "me" being matched as an ID param
 
 // Therapist's own portal data (authenticated)
 router.get("/me/stats", requireAuth, requireSubscription, TherapistController.myStats);
@@ -47,5 +43,11 @@ router.get(
   requireSubscription,
   ReportController.getTherapistSharedReportDetail,
 );
+
+// Public: get single therapist details (must be AFTER all /me/* routes)
+router.get("/:id", TherapistController.getDetail);
+
+// Public: check therapist's available slots
+router.get("/:id/availability", TherapistController.getAvailability);
 
 export default router;

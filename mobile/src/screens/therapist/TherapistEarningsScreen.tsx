@@ -63,9 +63,10 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
     enabled: isSubscribed,
   });
 
-  const monthEarned = isSubscribed ? (therapistStats?.earningsTotal || therapistStats?.monthEarned || 0) : 0;
+  const monthEarned = isSubscribed ? (therapistStats?.stats?.monthEarned ?? 0) : 0;
+  const totalEarned = isSubscribed ? (therapistStats?.stats?.totalEarned ?? 0) : 0;
   const netPayout = Math.round(monthEarned * 0.70);
-  const totalSessionsCount = isSubscribed ? ((therapistStats?.hoursCompleted || therapistStats?.totalSessions) ?? 0) : 0;
+  const totalSessionsCount = isSubscribed ? (therapistStats?.stats?.completedSessions ?? 0) : 0;
   const therapistName = userProfile?.fullName || 'Therapist';
 
   // 1. Build revenue chart dataset (merge mock data with actual database records)
@@ -283,12 +284,20 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
         {/* 2 Stats Cards */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statVal}>₹{monthEarned}</Text>
-            <Text style={styles.statLabel}>Month earned</Text>
+            <Text style={styles.statVal}>₹{totalEarned.toLocaleString('en-IN')}</Text>
+            <Text style={styles.statLabel}>Total earned</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statVal}>₹{netPayout}</Text>
-            <Text style={styles.statLabel}>Payout (85%)</Text>
+            <Text style={styles.statVal}>₹{monthEarned.toLocaleString('en-IN')}</Text>
+            <Text style={styles.statLabel}>This month</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>₹{netPayout.toLocaleString('en-IN')}</Text>
+            <Text style={styles.statLabel}>Payout (70%)</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statVal}>{totalSessionsCount}</Text>
+            <Text style={styles.statLabel}>Sessions</Text>
           </View>
         </View>
 
@@ -407,16 +416,20 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
 
               <View style={styles.ledgerCard}>
                 <View style={styles.ledgerLine}>
-                  <Text style={styles.ledgerLabel}>Total Gross Earned</Text>
-                  <Text style={styles.ledgerVal}>₹{monthEarned}</Text>
+                  <Text style={styles.ledgerLabel}>Total Gross Earned (All Time)</Text>
+                  <Text style={styles.ledgerVal}>₹{totalEarned.toLocaleString('en-IN')}</Text>
+                </View>
+                <View style={styles.ledgerLine}>
+                  <Text style={styles.ledgerLabel}>This Month Gross</Text>
+                  <Text style={styles.ledgerVal}>₹{monthEarned.toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={styles.ledgerLine}>
                   <Text style={styles.ledgerLabel}>Platform Service Share (30%)</Text>
-                  <Text style={styles.ledgerVal}>- ₹{Math.round(monthEarned * 0.30)}</Text>
+                  <Text style={styles.ledgerVal}>- ₹{Math.round(monthEarned * 0.30).toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={[styles.ledgerLine, styles.ledgerTotalLine]}>
-                  <Text style={styles.ledgerTotalLabel}>Net Payout Transferred</Text>
-                  <Text style={styles.ledgerTotalVal}>₹{netPayout}</Text>
+                  <Text style={styles.ledgerTotalLabel}>Net Payout This Month</Text>
+                  <Text style={styles.ledgerTotalVal}>₹{netPayout.toLocaleString('en-IN')}</Text>
                 </View>
               </View>
 
@@ -523,10 +536,12 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Theme.spacing.sm,
   },
   statCard: {
     flex: 1,
+    minWidth: '45%',
     backgroundColor: '#FFF',
     borderRadius: Theme.radius.xl,
     padding: Theme.spacing.md,

@@ -152,6 +152,12 @@ const API = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    platformCounts: () => apiCall<any>("/api/admin/platform-counts"),
+    markTherapistPaid: (id: string, data: { amount: number; password?: string }) =>
+      apiCall<any>(`/api/admin/therapist/${id}/mark-paid`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
   },
 
   org: {

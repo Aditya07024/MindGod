@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Switch } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { User, Lock, CheckCircle, Award, Sparkles, Mail } from 'lucide-react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { User, Lock, CheckCircle, Award, Sparkles, Mail, CreditCard, RefreshCw, XCircle, Bell, BellOff, LogOut } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface TherapistProfileScreenProps {
   navigation: any;
 }
 
 export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ navigation }) => {
+  const queryClient = useQueryClient();
   const [introVideoUrl, setIntroVideoUrl] = useState('');
   const [sessionFee, setSessionFee] = useState('');
   const [specializations, setSpecializations] = useState('');
@@ -20,6 +22,77 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
   const [phone, setPhone] = useState('');
   const [openToCollaboration, setOpenToCollaboration] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  // Load notification preference
+  useEffect(() => {
+    AsyncStorage.getItem('notifications_enabled').then(val => {
+      setNotificationsEnabled(val === 'true');
+    });
+  }, []);
+
+  const handleNotificationToggle = async (value: boolean) => {
+    setNotificationsEnabled(value);
+    await AsyncStorage.setItem('notifications_enabled', value ? 'true' : 'false');
+    if (value) {
+      Alert.alert(
+        '🔔 Notifications Enabled',
+        'You will be notified when new bookings arrive. Keep the app installed for background alerts.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleSyncPlan = async () => {
+    setSyncLoading(true);
+    try {
+      const res = await API.subscription.sync();
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      Alert.alert('Synced ✅', res?.message || 'Subscription status updated.');
+    } catch (err: any) {
+      Alert.alert('Sync Failed', err?.message || 'Could not sync subscription.');
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  const handleCancelPlan = () => {
+    Alert.alert(
+      'Cancel Subscription',
+      'Are you sure you want to cancel your MindsyncPro subscription? You will lose access to your schedule and bookings at end of billing period.',
+      [
+        { text: 'Keep Plan', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            setCancelLoading(true);
+            try {
+              await API.subscription.cancel();
+              queryClient.invalidateQueries({ queryKey: ['subscription'] });
+              queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+              Alert.alert('Cancelled', 'Your subscription has been cancelled.');
+            } catch (err: any) {
+              Alert.alert('Error', err?.message || 'Could not cancel subscription.');
+            } finally {
+              setCancelLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSignOut = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: () => navigation.replace('Landing') },
+    ]);
+  };
+
 
   // Fetch profiles and subscription
   const { data: userProfile, refetch: refetchProfile } = useQuery({
@@ -324,6 +397,109 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* My Plan Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <CreditCard size={18} color={Theme.colors.primary} />
+            <Text style={styles.cardTitle}>My Plan</Text>
+          </View>
+
+          {/* Current plan info */}
+          <View style={styles.planStatusRow}>
+            {isSubscribed ? (
+              <View style={styles.planActiveBadge}>
+                <CheckCircle size={14} color={Theme.colors.primary} />
+                <Text style={styles.planActiveText}>
+                  {subData?.subscription?.plan || 'Active Plan'}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.planFreeBadge}>
+                <Text style={styles.planFreeText}>Free Plan</Text>
+              </View>
+            )}
+            {subData?.subscription?.endDate ? (
+              <Text style={styles.planExpiry}>
+                Renews {new Date(subData.subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </Text>
+            ) : null}
+          </View>
+
+          {/* Upgrade button */}
+          {!isSubscribed && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Plans')}
+              style={styles.upgradeBtn}
+            >
+              <Award size={15} color="#FFF" />
+              <Text style={styles.upgradeBtnText}>Upgrade Plan</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Sync + Cancel row */}
+          <View style={styles.planActionRow}>
+            <TouchableOpacity
+              onPress={handleSyncPlan}
+              disabled={syncLoading}
+              style={styles.planSyncBtn}
+            >
+              {syncLoading ? (
+                <ActivityIndicator size="small" color={Theme.colors.primary} />
+              ) : (
+                <RefreshCw size={14} color={Theme.colors.primary} />
+              )}
+              <Text style={styles.planSyncText}>Sync Status</Text>
+            </TouchableOpacity>
+
+            {isSubscribed && (
+              <TouchableOpacity
+                onPress={handleCancelPlan}
+                disabled={cancelLoading}
+                style={styles.planCancelBtn}
+              >
+                {cancelLoading ? (
+                  <ActivityIndicator size="small" color={Theme.colors.error} />
+                ) : (
+                  <XCircle size={14} color={Theme.colors.error} />
+                )}
+                <Text style={styles.planCancelText}>Cancel Plan</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Notifications Toggle Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            {notificationsEnabled ? (
+              <Bell size={18} color={Theme.colors.primary} />
+            ) : (
+              <BellOff size={18} color={Theme.colors.outline} />
+            )}
+            <Text style={styles.cardTitle}>Booking Notifications</Text>
+          </View>
+          <View style={styles.switchGroup}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.inputLabel}>Allow Booking Alerts</Text>
+              <Text style={{ fontSize: 11, color: Theme.colors.textMuted, marginTop: 2 }}>
+                Get notified instantly when a client books a session with you
+              </Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleNotificationToggle}
+              trackColor={{ false: '#D1D5DB', true: Theme.colors.primary }}
+              thumbColor={notificationsEnabled ? '#FFF' : '#F3F4F6'}
+            />
+          </View>
+        </View>
+
+        {/* Sign Out */}
+        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
+          <LogOut size={16} color={Theme.colors.error} />
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
 
         {/* Invitations Card */}
         <View style={styles.card}>
@@ -665,6 +841,116 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Theme.colors.surfaceHigh,
     marginTop: 8,
+  },
+  planStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  planActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Theme.colors.primary + '12',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Theme.radius.full,
+    borderWidth: 1,
+    borderColor: Theme.colors.primary + '30',
+  },
+  planActiveText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 12.5,
+    color: Theme.colors.primary,
+  },
+  planFreeBadge: {
+    backgroundColor: Theme.colors.surfaceLow,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Theme.radius.full,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+  },
+  planFreeText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 12.5,
+    color: Theme.colors.textMuted,
+  },
+  planExpiry: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11,
+    color: Theme.colors.textMuted,
+  },
+  upgradeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Theme.colors.primary,
+    paddingVertical: 12,
+    borderRadius: Theme.radius.full,
+    marginBottom: 10,
+  },
+  upgradeBtnText: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 13,
+    color: '#FFF',
+  },
+  planActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  planSyncBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.primary + '50',
+    paddingVertical: 10,
+    borderRadius: Theme.radius.full,
+    backgroundColor: Theme.colors.primary + '08',
+  },
+  planSyncText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 12,
+    color: Theme.colors.primary,
+  },
+  planCancelBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.error + '40',
+    paddingVertical: 10,
+    borderRadius: Theme.radius.full,
+    backgroundColor: Theme.colors.error + '08',
+  },
+  planCancelText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 12,
+    color: Theme.colors.error,
+  },
+  signOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.error + '40',
+    paddingVertical: 13,
+    borderRadius: Theme.radius.full,
+    backgroundColor: Theme.colors.error + '06',
+  },
+  signOutText: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 13.5,
+    color: Theme.colors.error,
   },
 });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase } from 'lucide-react-native';
+import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase, FileText } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
@@ -98,41 +98,61 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   });
 
   // Local state for dynamic availability calendar slots synced with database
+  // availabilityPerDay: { day: 0..6, slots: string[] }[]
+  const [availabilityPerDay, setAvailabilityPerDay] = useState<{ day: number; slots: string[] }[]>(
+    [0,1,2,3,4,5,6].map(d => ({ day: d, slots: d >= 1 && d <= 5 ? ['09:00','10:00','14:00'] : [] }))
+  );
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+  // Keep flat availability for backward compat
   const [availability, setAvailability] = useState<string[]>([]);
 
   useEffect(() => {
     if (userProfile?.therapistProfile?.availability) {
-      const todayNum = new Date().getDay();
-      const todayConfig = userProfile.therapistProfile.availability.find((a: any) => a.day === todayNum);
-      if (todayConfig?.slots) {
-        setAvailability(todayConfig.slots.map(convertTo24Hour));
+      const savedAvail = userProfile.therapistProfile.availability;
+      if (Array.isArray(savedAvail) && savedAvail.length > 0 && typeof savedAvail[0] === 'object') {
+        // New day-based format: [{day, slots}]
+        setAvailabilityPerDay(savedAvail.map((a: any) => ({
+          day: a.day,
+          slots: (a.slots || []).map(convertTo24Hour),
+        })));
+        const todayNum = new Date().getDay();
+        const todayConfig = savedAvail.find((a: any) => a.day === todayNum);
+        setAvailability(todayConfig?.slots?.map(convertTo24Hour) || []);
+      } else {
+        // Legacy flat format
+        setAvailability((savedAvail as string[]).map(convertTo24Hour));
       }
     }
   }, [userProfile]);
 
-  // Handle slot adjustments
+  // Handle slot adjustments per day
   const handleToggleSlot = async (slot: string) => {
     if (!isSubscribed) return;
     try {
-      let updatedSlots = [];
-      if (availability.includes(slot)) {
-        updatedSlots = availability.filter(s => s !== slot);
-        setAvailability(updatedSlots);
-        Alert.alert('Slot Removed', `Removed ${formatSlotDisplay(slot)} from your availability.`);
-      } else {
-        updatedSlots = [...availability, slot];
-        setAvailability(updatedSlots);
-        Alert.alert('Slot Added', `Added ${formatSlotDisplay(slot)} to your availability.`);
-      }
-      
-      // Update on backend if supported
-      await API.therapist.updateAvailability({
-        availability: [
-          { day: new Date().getDay(), slots: updatedSlots }
-        ]
-      }).catch(() => null);
+      const dayEntry = availabilityPerDay.find(d => d.day === selectedDay);
+      const currentSlots = dayEntry?.slots || [];
+      const updatedSlots = currentSlots.includes(slot)
+        ? currentSlots.filter(s => s !== slot)
+        : [...currentSlots, slot].sort();
+
+      const updatedPerDay = availabilityPerDay.map(d =>
+        d.day === selectedDay ? { ...d, slots: updatedSlots } : d
+      );
+      setAvailabilityPerDay(updatedPerDay);
+      if (selectedDay === new Date().getDay()) setAvailability(updatedSlots);
+
+      await API.therapist.updateAvailability({ availability: updatedPerDay }).catch(() => null);
     } catch (err) {
-      console.warn("Could not save availability to database:", err);
+      console.warn('Could not save availability to database:', err);
+    }
+  };
+
+  const handleSaveAvailability = async () => {
+    try {
+      await API.therapist.updateAvailability({ availability: availabilityPerDay });
+      Alert.alert('Saved ✅', 'Availability updated for all days.');
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Could not save availability.');
     }
   };
 
@@ -412,12 +432,21 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                         {activeBookings && activeBookings.length > 0 ? (
                           activeBookings.map((booking: any) => (
                             <View key={booking._id || booking.id} style={styles.rosterItem}>
-                              <View>
+                              <View style={{ flex: 1 }}>
                                 <Text style={styles.clientName}>{booking.clientName || booking.userName || 'Seeker'}</Text>
-                                <Text style={styles.clientTime}>{new Date(booking.slot).toLocaleString()}</Text>
+                                <Text style={styles.clientTime}>{new Date(booking.slot).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text>
                               </View>
-                              <View style={styles.badgeWrapper}>
-                                <Text style={styles.badgeText}>{booking.status}</Text>
+                              <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                                <View style={styles.badgeWrapper}>
+                                  <Text style={styles.badgeText}>{booking.status}</Text>
+                                </View>
+                                <TouchableOpacity
+                                  onPress={() => navigation.navigate('TherapistBrief', { bookingId: booking._id || booking.id })}
+                                  style={styles.sharedReportBtn}
+                                >
+                                  <FileText size={11} color={Theme.colors.primary} />
+                                  <Text style={styles.sharedReportBtnText}>Shared Report</Text>
+                                </TouchableOpacity>
                               </View>
                             </View>
                           ))
@@ -430,10 +459,33 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                     {item.id === 'availability' && (
                       <View style={styles.panelContent}>
                         <Text style={styles.panelTitle}>Set Weekly Availability</Text>
-                        <Text style={styles.panelDesc}>Select hours to make them open on user lists:</Text>
+                        <Text style={styles.panelDesc}>Select day then tap hours to mark as available:</Text>
+
+                        {/* Day Selector */}
+                        <View style={styles.dayRow}>
+                          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, idx) => {
+                            const daySlots = availabilityPerDay.find(a => a.day === idx)?.slots || [];
+                            const isActive = selectedDay === idx;
+                            return (
+                              <TouchableOpacity
+                                key={d}
+                                onPress={() => setSelectedDay(idx)}
+                                style={[styles.dayPill, isActive && styles.dayPillActive]}
+                              >
+                                <Text style={[styles.dayPillText, isActive && styles.dayPillTextActive]}>{d}</Text>
+                                {daySlots.length > 0 && (
+                                  <View style={styles.dayDot} />
+                                )}
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+
+                        {/* Slots for selected day */}
                         <View style={styles.slotsGrid}>
                           {ALL_24H_SLOTS.map((slot) => {
-                            const isSelected = availability.includes(slot);
+                            const daySlots = availabilityPerDay.find(a => a.day === selectedDay)?.slots || [];
+                            const isSelected = daySlots.includes(slot);
                             return (
                               <TouchableOpacity
                                 key={slot}
@@ -445,6 +497,11 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                             );
                           })}
                         </View>
+
+                        {/* Save Button */}
+                        <TouchableOpacity onPress={handleSaveAvailability} style={styles.saveAvailBtn}>
+                          <Text style={styles.saveAvailBtnText}>Save All Days</Text>
+                        </TouchableOpacity>
                       </View>
                     )}
 
@@ -787,6 +844,72 @@ const styles = StyleSheet.create({
     color: Theme.colors.onSurfaceVariant,
   },
   textWhite: {
+    color: '#FFF',
+  },
+  sharedReportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Theme.colors.primary + '10',
+    borderWidth: 1,
+    borderColor: Theme.colors.primary + '30',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Theme.radius.full,
+  },
+  sharedReportBtnText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 10.5,
+    color: Theme.colors.primary,
+  },
+  dayRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  dayPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: Theme.radius.full,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  dayPillActive: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  dayPillText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 11,
+    color: Theme.colors.onSurfaceVariant,
+  },
+  dayPillTextActive: {
+    color: '#FFF',
+  },
+  dayDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Theme.colors.gold,
+  },
+  saveAvailBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingVertical: 11,
+    borderRadius: Theme.radius.full,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  saveAvailBtnText: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 13,
     color: '#FFF',
   },
   payoutCard: {
